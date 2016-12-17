@@ -6,7 +6,7 @@
 These document outlines the different guidelines for contributing to this repository.
 
 ## Unity version
-Aquatic Warfare is using Unity version 5.4.2f2. All pull requests must build in Unity version 5.4.2f2 to be considered valid.
+Base Building Game is using Unity version 5.5.0f3. All pull requests must build in Unity version 5.4.2f2 to be considered valid.
 
 ## Style Guidelines
 
@@ -36,12 +36,12 @@ That's it! Following these guidelines will ensure that your additions are approv
 
 ## File Formats
 
-Aquatic Warfare **only accepts** files in the following formats:
+Base Buliding Game **only accepts** files in the following formats:
 
 ### Images
 
-Image files should be in a compressed, openly accessible file format such as: PNG or JPEG. The original source (Photoshop/GIMP/etc...) files are not to be commited to the repository but instead hosted on the Aquatic Warfare Google Drive asset directory.
+Image files should be in a compressed, openly accessible file format such as: PNG or JPEG. The original source (Photoshop/GIMP/etc...) files are not to be commited to the repository but instead hosted on the Google Drive asset directory.
 
 ### Sound Files and Music
 
-Audio files should be in the OGG audio format, as opposed to MP3 or uncompressed WAV files. Small sound effects that are played frequently should be set to: "Decompress on Load" in Unity's inspector, whereas longer sounds (such as songs) should not be. Uncompressed (such as WAV) files should be hosted on the Aquatic Warfare Google Drive asset directory.
+Audio files should be in the OGG audio format, as opposed to MP3 or uncompressed WAV files. Small sound effects that are played frequently should be set to: "Decompress on Load" in Unity's inspector, whereas longer sounds (such as songs) should not be. Uncompressed (such as WAV) files should be hosted on the Google Drive asset directory.
