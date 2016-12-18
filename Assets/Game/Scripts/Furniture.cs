@@ -10,7 +10,6 @@ public class Furniture : IXmlSerializable
     // Pseudo "scripting" system
     protected Dictionary<string, float> FurnitureParameters { get; set; }
     public Action<Furniture, float> UpdateBehaviours { get; set; }
-
     public Func<Furniture, TileEnterability> TryEnter { get; set; }
 
     public Tile Tile { get; protected set; }
@@ -48,8 +47,8 @@ public class Furniture : IXmlSerializable
         {
             UpdateBehaviours = (Action<Furniture, float>) furniture.UpdateBehaviours.Clone();
         }
-        TryEnter = furniture.TryEnter;
 
+        TryEnter = furniture.TryEnter;
         Type = furniture.Type;
         MovementCost = furniture.MovementCost;
         width = furniture.width;

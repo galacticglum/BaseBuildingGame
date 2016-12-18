@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ConstructionController : MonoBehaviour
 {
-    private bool furnitureConstruction = false;
+    private bool furnitureConstruction;
     private TileType constructionTileType = TileType.Floor;
     private string buildModeObjectType;
     
@@ -38,20 +38,25 @@ public class ConstructionController : MonoBehaviour
 
             if (!WorldController.Instance.World.IsFurniturePlacementValid(furnitureType, tile) || tile.PendingFurnitureJob != null) return;
 
-            Job j = new Job(tile, furnitureType, (sender, args) =>
+            Job job;
+            if (WorldController.Instance.World.FurnitureJobPrototypes.ContainsKey(furnitureType))
             {
-                WorldController.Instance.World.PlaceFurniture(furnitureType, args.Job.Tile);
-                tile.PendingFurnitureJob = null;
-            });
+                job = WorldController.Instance.World.FurnitureJobPrototypes[furnitureType].Clone();
+                job.Tile = tile;
+            }
+            else
+            {
+                Debug.LogWarning("ConstructionController::DoBuild: There is no furniture job prototype for '" + furnitureType + "'.");
+                job = new Job(tile, furnitureType, FurnitureBehaviours.BuildFurniture, 0.1f);
+            }
 
-            tile.PendingFurnitureJob = j;
-
-            j.JobCancel += ((sender, args) =>
+            tile.PendingFurnitureJob = job;
+            job.JobCancel += (sender, args) =>
             {
                 args.Job.Tile.PendingFurnitureJob = null;
-            });
+            };
 
-            WorldController.Instance.World.JobQueue.Enqueue(j);
+            WorldController.Instance.World.JobQueue.Enqueue(job);
         }
         else
         {

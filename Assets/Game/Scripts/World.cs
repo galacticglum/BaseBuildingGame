@@ -64,7 +64,9 @@ public class World : IXmlSerializable
     public JobQueue JobQueue;
 
     private Tile[,] tiles;
+
     private Dictionary<string, Furniture> furniturePrototypes;
+    public Dictionary<string, Job> FurnitureJobPrototypes { get; set; }
 
     public World() { }
 
@@ -171,6 +173,14 @@ public class World : IXmlSerializable
                     false, // Links to neighbours and "sort of" becomes part of a large object
                     true // Enclose rooms
                 )
+            }
+        };
+
+        FurnitureJobPrototypes = new Dictionary<string, Job>
+        {
+            {
+                "Wall",
+                new Job(null, "Wall", FurnitureBehaviours.BuildFurniture, 1f, new[] { new Inventory("Steel Plate", 5, 0) })
             }
         };
 

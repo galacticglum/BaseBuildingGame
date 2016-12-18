@@ -10,6 +10,13 @@ public class Inventory
     public Tile Tile { get; set; }
     public Character Character { get; set; }
 
+    public Inventory(string type, int maxStackSize, int stackSize)
+    {
+        Type = type;
+        MaxStackSize = maxStackSize;
+        StackSize = stackSize;
+    }
+
     protected Inventory(Inventory inventory)
     {
         Type = inventory.Type;
