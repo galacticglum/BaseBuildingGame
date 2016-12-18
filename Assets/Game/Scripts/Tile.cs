@@ -27,7 +27,7 @@ public class Tile : IXmlSerializable
 
     public World World { get; protected set; }
     public Furniture Furniture { get; protected set; }
-    public Inventory Inventory { get; protected set; }
+    public Inventory Inventory { get; set; }
 
     public Room Room { get; set; }
 

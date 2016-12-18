@@ -62,19 +62,32 @@ public class InventoryGraphicController : MonoBehaviour
             uiGameObject.GetComponentInChildren<Text>().text = args.Inventory.StackSize.ToString();
         }
 
-        // TODO: Inventory changed event
-        //args.Inventory.InventoryChanged += OnCharacterChanged;
+        args.Inventory.InventoryChanged += OnInventoryChanged;
     }
 
-    //private void OnCharacterChanged(object sender, CharacterChangedEventArgs args)
-    //{
-    //    if (inventoryGameObjectMap.ContainsKey(args.Character) == false)
-    //    {
-    //        Debug.LogError("CharacterGraphicController::OnCharacterChanged: Trying to change visuals for character not in our map.");
-    //        return;
-    //    }
+    private void OnInventoryChanged(object sender, InventoryChangedEventArgs args)
+    {
+        if (inventoryGameObjectMap.ContainsKey(args.Inventory) == false)
+        {
+            Debug.LogError("InventoryGraphicController::OnInventoryChanged: Trying to change visuals for inventory not in our map.");
+            return;
+        }
 
-    //    GameObject characterGameObject = inventoryGameObjectMap[args.Character];
-    //    characterGameObject.transform.position = new Vector2(args.Character.X, args.Character.Y);
-    //}
+        GameObject inventoryGameObject = inventoryGameObjectMap[args.Inventory];
+        if (args.Inventory.StackSize > 0)
+        {
+
+            Text text = inventoryGameObject.GetComponentInChildren<Text>();
+            if (text != null)
+            {
+                text.text = args.Inventory.StackSize.ToString();
+            }
+        }
+        else
+        {
+            Destroy(inventoryGameObject);
+            inventoryGameObjectMap.Remove(args.Inventory);
+            args.Inventory.InventoryChanged -= OnInventoryChanged;
+        }
+    }
 }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class Job 
 {
     public Tile Tile { get; set; }
     public string Type { get; protected set; }
+    public Dictionary<string, Inventory> InventoryRequirements { get; protected set; }
 
     public event JobCompleteEventHandler JobComplete;
     public void OnJobComplete(JobCompleteEventArgs args)
@@ -26,7 +28,6 @@ public class Job
         }
     }
 
-    private Dictionary<string, Inventory> inventoryRequirements;
     private float jobTime;
 
     public Job(Tile tile, string type, Action<object, JobCompleteEventArgs> jobComplete, float jobTime, IEnumerable<Inventory> inventoryRequirements = null)
@@ -34,14 +35,14 @@ public class Job
         Tile = tile;
         Type = type;
         JobComplete += (sender, args) => jobComplete(sender, args);
+        InventoryRequirements = new Dictionary<string, Inventory>();
 
         this.jobTime = jobTime;
-        this.inventoryRequirements = new Dictionary<string, Inventory>();
 
         if (inventoryRequirements == null) return;
         foreach (Inventory inventoryRequirement in inventoryRequirements)
         {
-            this.inventoryRequirements[inventoryRequirement.Type] = inventoryRequirement.Clone();
+            InventoryRequirements[inventoryRequirement.Type] = inventoryRequirement.Clone();
         }
     }
 
@@ -52,12 +53,12 @@ public class Job
         JobComplete += (sender, args) => job.JobComplete(sender, args);
 
         jobTime = job.jobTime;
-        inventoryRequirements = new Dictionary<string, Inventory>();
+        InventoryRequirements = new Dictionary<string, Inventory>();
 
-        if (inventoryRequirements == null) return;
-        foreach (Inventory inventoryRequirement in job.inventoryRequirements.Values)
+        if (InventoryRequirements == null) return;
+        foreach (Inventory inventoryRequirement in job.InventoryRequirements.Values)
         {
-            inventoryRequirements[inventoryRequirement.Type] = inventoryRequirement.Clone();
+            InventoryRequirements[inventoryRequirement.Type] = inventoryRequirement.Clone();
         }
     }
 
@@ -72,5 +73,47 @@ public class Job
 
         if (!(jobTime <= 0)) return;
         OnJobComplete(new JobCompleteEventArgs(this));
+    }
+
+    public bool HasAllMaterials()
+    {
+        foreach (Inventory inventoryRequirement in InventoryRequirements.Values)
+        {
+            if (inventoryRequirement.MaxStackSize > inventoryRequirement.StackSize)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public int GetRequiredInventoryAmount(Inventory inventory)
+    {
+        if (inventory == null) return 0;
+
+        if (InventoryRequirements.ContainsKey(inventory.Type) == false)
+        {
+            return 0;
+        }
+
+        if (InventoryRequirements[inventory.Type].StackSize >= InventoryRequirements[inventory.Type].MaxStackSize)
+        {
+            return 0;
+        }
+
+        return InventoryRequirements[inventory.Type].MaxStackSize - InventoryRequirements[inventory.Type].StackSize;
+    }
+
+    public Inventory GetFirstRequiredInventory()
+    {
+        foreach (Inventory inventoryRequirement in InventoryRequirements.Values)
+        {
+            if (inventoryRequirement.MaxStackSize > inventoryRequirement.StackSize)
+            {
+                return inventoryRequirement;
+            }
+        }
+
+        return null;
     }
 }

@@ -106,7 +106,7 @@ public class World : IXmlSerializable
             }
         }
 
-        CreateCharacter(GetTileAt(Width / 2, Height / 2));
+        CreateCharacter(GetTileAt(Width / 2 - 3, Height / 2 - 3));
         CreateFurniturePrototypes();
     }
 
@@ -357,10 +357,28 @@ public class World : IXmlSerializable
         // DEBUGGING ONLY! REMOVE ME!!!!
         Inventory inventory = new Inventory
         {
-            StackSize = 10
+            StackSize = 2
         };
 
         Tile tile = GetTileAt(width / 2, height / 2);
+        InventoryManager.PlaceInventory(tile, inventory);
+        OnInventoryCreated(new InventoryCreatedEventArgs(tile.Inventory));
+
+        inventory = new Inventory
+        {
+            StackSize = 3
+        };
+
+        tile = GetTileAt(width / 2 + 1, height / 2 + 2);
+        InventoryManager.PlaceInventory(tile, inventory);
+        OnInventoryCreated(new InventoryCreatedEventArgs(tile.Inventory));
+
+        inventory = new Inventory
+        {
+            StackSize = 4
+        };
+
+        tile = GetTileAt(width / 2 +2, height / 2);
         InventoryManager.PlaceInventory(tile, inventory);
         OnInventoryCreated(new InventoryCreatedEventArgs(tile.Inventory));
     }
