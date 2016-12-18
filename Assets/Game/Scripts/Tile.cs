@@ -177,7 +177,7 @@ public class Tile : IXmlSerializable
             return Furniture.TryEnter(Furniture);
         }
 
-        return TileEnterability.Yes;
+        return TileEnterability.Immediate;
     }
 
     public XmlSchema GetSchema()

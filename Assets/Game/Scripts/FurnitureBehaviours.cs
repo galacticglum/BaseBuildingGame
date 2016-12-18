@@ -25,7 +25,7 @@ public static class FurnitureBehaviours
     public static TileEnterability DoorTryEnter(Furniture furniture)
     {
         furniture.SetParamater("isOpening", 1);
-        return furniture.GetParameter("openness") >= 1 ? TileEnterability.Immediate : TileEnterability.Wait;
+        return furniture.GetParameter("openness") >= 1 ? TileEnterability.Immediate : TileEnterability.Soon;
     }
 
     public static void BuildFurniture(object sender, JobCompleteEventArgs args)
