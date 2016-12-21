@@ -3,9 +3,11 @@ using System;
 using System.Linq;
 
 public class Job
-{
+{ 
 	public Tile Tile { get; set; }
+    public Furniture Furniture { get; set; }
     public string Type { get; protected set; }
+
     public Dictionary<string, Inventory> InventoryRequirements;
 
     public float WorkTime { get; protected set; }

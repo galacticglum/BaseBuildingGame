@@ -80,24 +80,37 @@ public class Tile :IXmlSerializable
 	}
 
 	public bool PlaceFurniture(Furniture furniture)
+	{
+        if (furniture == null)
+        {
+            return RemoveFurniture();
+        }
+
+	    if (furniture.IsValidPosition(this) == false)
+	    {
+            Debug.LogError("Tile::PlaceFurniture: trying to assign a furniture to an invald tile!");
+	        return false;
+	    }
+
+        for (int x = X; x < X + furniture.Width; x++)
+        {
+            for (int y = Y; y < Y + furniture.Height; y++)
+            {
+                Tile tileAt = World.GetTileAt(x, y);
+                tileAt.Furniture = furniture;
+            }
+        }
+
+        return true;
+    }
+
+    public bool RemoveFurniture()
     {
-		if(furniture == null)
-        {
-			Furniture = null;
-			return true;
-		}
+        Furniture = null;
+        return true;
+    }
 
-		if(Furniture != null)
-        {
-			Debug.LogError("Tile::PlaceFurniture: trying to assign a furniture to a tile that already has one!");
-			return false;
-		}
-
-		Furniture = furniture;
-		return true;
-	}
-
-	public bool PlaceInventory(Inventory inventory)
+    public bool PlaceInventory(Inventory inventory)
     {
 		if(inventory == null)
         {

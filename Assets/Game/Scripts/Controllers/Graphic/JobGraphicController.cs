@@ -31,7 +31,7 @@ public class JobGraphicController : MonoBehaviour
 		GameObject jobGameObject = new GameObject();
 		jobGameObjectMap.Add(args.Job, jobGameObject);
 		jobGameObject.name = "JOB_" + args.Job.Type + "_" + args.Job.Tile.X + "_" + args.Job.Tile.Y;
-		jobGameObject.transform.position = new Vector3(args.Job.Tile.X, args.Job.Tile.Y, 0);
+		jobGameObject.transform.position = new Vector3(args.Job.Tile.X + (args.Job.Furniture.Width - 1) / 2f, args.Job.Tile.Y + (args.Job.Furniture.Height - 1) / 2f, 0);
 		jobGameObject.transform.SetParent(transform, true);
 
 		SpriteRenderer spriteRenderer = jobGameObject.AddComponent<SpriteRenderer>();
@@ -47,7 +47,7 @@ public class JobGraphicController : MonoBehaviour
 			if(northTile != null && southTile != null && northTile.Furniture != null && southTile.Furniture != null &&
 				northTile.Furniture.Type=="Wall" && southTile.Furniture.Type=="Wall")
             {
-				jobGameObject.transform.rotation = Quaternion.Euler( 0, 0, 90 );
+				jobGameObject.transform.rotation = Quaternion.Euler(0, 0, 90);
 			}
 		}
 

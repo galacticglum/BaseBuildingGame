@@ -50,6 +50,7 @@ public class ConstructionController : MonoBehaviour
             }
 
             tile.PendingFurnitureJob = job;
+            job.Furniture = WorldController.Instance.World.FurniturePrototypes[furnitureType];
             job.JobCancel += (sender, args) =>
             {
                 args.Job.Tile.PendingFurnitureJob = null;

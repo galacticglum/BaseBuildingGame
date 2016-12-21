@@ -51,7 +51,7 @@ public class FurnitureGraphicController : MonoBehaviour
         }
 
         furnitureGameObject.name = args.Furniture.Type + "_" + args.Furniture.Tile.X + "_" + args.Furniture.Tile.Y;
-		furnitureGameObject.transform.position = new Vector3(args.Furniture.Tile.X, args.Furniture.Tile.Y, 0);
+		furnitureGameObject.transform.position = new Vector3(args.Furniture.Tile.X + (args.Furniture.Width -1) / 2f, args.Furniture.Tile.Y + (args.Furniture.Height - 1) / 2f, 0);
 		furnitureGameObject.transform.SetParent(transform, true);
 
 		if(args.Furniture.Type == "Door")

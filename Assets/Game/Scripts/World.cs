@@ -14,14 +14,13 @@ public class World : IXmlSerializable
 	public List<Character> Characters { get; protected set; }
     public List<Furniture> Furnitures { get; protected set; }
     public List<Room> Rooms { get; protected set; }
-    public Dictionary<string, Job> FurnitureJobPrototypes;
+
+    public Dictionary<string, Furniture> FurniturePrototypes { get; protected set; }
+    public Dictionary<string, Job> FurnitureJobPrototypes { get; protected set; }
 
     public JobQueue JobQueue { get; protected set; }
     public InventoryManager InventoryManager { get; protected set; }
     public Room OutsideRoom { get { return Rooms[0]; } }
-
-    private Tile[,] tiles;
-    private Dictionary<string, Furniture> furniturePrototypes;
 
     public event TileChangedEventHandler TileChanged;
     public void OnTileChanged(TileChangedEventArgs args)
@@ -58,6 +57,8 @@ public class World : IXmlSerializable
             InventoryCreated(this, args);
         }
     }
+
+    private Tile[,] tiles;
 
     public World() { }
     public World(int width, int height)
@@ -153,10 +154,10 @@ public class World : IXmlSerializable
 
     private void CreateFurniturePrototypes()
     {
-		furniturePrototypes = new Dictionary<string, Furniture>();
+		FurniturePrototypes = new Dictionary<string, Furniture>();
 		FurnitureJobPrototypes = new Dictionary<string, Job>();
 
-		furniturePrototypes.Add("Wall", 
+		FurniturePrototypes.Add("Wall", 
 			new Furniture(
 				"Wall",
 				0,	// Impassable
@@ -175,7 +176,7 @@ public class World : IXmlSerializable
 			)
 		);
 
-		furniturePrototypes.Add("Door", 
+		FurniturePrototypes.Add("Door", 
 			new Furniture(
 				"Door",
 				1,	// Door pathfinding cost
@@ -186,13 +187,13 @@ public class World : IXmlSerializable
 			)
 		);
 
-		furniturePrototypes["Door"].SetParameter("openness", 0);
-		furniturePrototypes["Door"].SetParameter("is_opening", 0);
-		furniturePrototypes["Door"].UpdateBehaviours += FurnitureBehaviours.UpdateDoor;
-		furniturePrototypes["Door"].TryEnter = FurnitureBehaviours.DoorTryEnter;
+		FurniturePrototypes["Door"].SetParameter("openness", 0);
+		FurniturePrototypes["Door"].SetParameter("is_opening", 0);
+		FurniturePrototypes["Door"].UpdateBehaviours += FurnitureBehaviours.UpdateDoor;
+		FurniturePrototypes["Door"].TryEnter = FurnitureBehaviours.DoorTryEnter;
 
 
-		furniturePrototypes.Add("Stockpile", 
+		FurniturePrototypes.Add("Stockpile", 
 			new Furniture(
 				"Stockpile",
 				1,	// Impassable
@@ -203,9 +204,9 @@ public class World : IXmlSerializable
 			)
 		);
 
-		furniturePrototypes["Stockpile"].UpdateBehaviours += FurnitureBehaviours.UpdateStockpile;
+		FurniturePrototypes["Stockpile"].UpdateBehaviours += FurnitureBehaviours.UpdateStockpile;
 		//furniturePrototypes["Stockpile"].Tint = new Color32(186, 31, 31, 255);
-		furniturePrototypes["Stockpile"].Tint = new Color32(168, 130, 42, 255);
+		FurniturePrototypes["Stockpile"].Tint = new Color32(168, 130, 42, 255);
         FurnitureJobPrototypes.Add("Stockpile",
 			new Job( 
 				null, 
@@ -215,7 +216,18 @@ public class World : IXmlSerializable
 				null
 			)
 		);
-	}
+
+        FurniturePrototypes.Add("Oxygen Generator",
+            new Furniture(
+                "Oxygen Generator",
+                10,  // Door pathfinding cost
+                2,  // Width
+                2,  // Height
+                false, // Links to neighbours and "sort of" becomes part of a large object
+                false  // Enclose rooms
+            )
+        );
+    }
 
 	public void SetupPathfindingExample()
     {
@@ -252,13 +264,13 @@ public class World : IXmlSerializable
 
 	public Furniture PlaceFurniture(string type, Tile tile)
     {
-		if( furniturePrototypes.ContainsKey(type) == false )
+		if( FurniturePrototypes.ContainsKey(type) == false )
         {
 			Debug.LogError("World::PlaceFurniture: Dictionary<string, Furniture> 'furniturePrototypes' does not contain a prototype for key: " + type + ".");
 			return null;
 		}
 
-		Furniture furnitureInstance = Furniture.Place(furniturePrototypes[type], tile);
+		Furniture furnitureInstance = Furniture.Place(FurniturePrototypes[type], tile);
 
 		if(furnitureInstance == null)
         {
@@ -296,12 +308,12 @@ public class World : IXmlSerializable
 
 	public bool IsFurniturePlacementValid(string type, Tile tile)
     {
-		return furniturePrototypes[type].IsValidPosition(tile);
+		return FurniturePrototypes[type].IsValidPosition(tile);
 	}
 
 	public Furniture GetFurniture(string type)
     {
-        if (furniturePrototypes.ContainsKey(type)) return furniturePrototypes[type];
+        if (FurniturePrototypes.ContainsKey(type)) return FurniturePrototypes[type];
         Debug.LogError("World::GetFurniture: No furniture with type: " + type + ".");
         return null;
     }

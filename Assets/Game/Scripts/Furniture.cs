@@ -13,6 +13,9 @@ public class Furniture : IXmlSerializable
 
     public Tile Tile { get; protected set; }
     public string Type { get; protected set; }
+    
+    public int Width { get; protected set; }
+    public int Height { get; protected set; }
 
     public float MovementCost { get; protected set; }
     public bool LinksToNeighbour { get; protected set; }
@@ -28,9 +31,6 @@ public class Furniture : IXmlSerializable
             FurnitureChanged(this, args);
         }
     }
-
-    private readonly int width;
-    private readonly int height;
 
     private readonly List<Job> jobs;
 
@@ -51,8 +51,8 @@ public class Furniture : IXmlSerializable
 
         FurnitureParameters = new Dictionary<string, float>();
 
-        this.width = width;
-		this.height = height;
+        this.Width = width;
+		this.Height = height;
 	}
 
     protected Furniture(Furniture furniture)
@@ -61,8 +61,8 @@ public class Furniture : IXmlSerializable
         MovementCost = furniture.MovementCost;
         RoomEnclosure = furniture.RoomEnclosure;
         Tint = Color.white;
-        width = furniture.width;
-        height = furniture.height;
+        Width = furniture.Width;
+        Height = furniture.Height;
         Tint = furniture.Tint;
         LinksToNeighbour = furniture.LinksToNeighbour;
 
@@ -97,7 +97,6 @@ public class Furniture : IXmlSerializable
 		}
 
         Furniture furnitureInstance = new Furniture(furniture) { Tile = tile };
-
         if(tile.PlaceFurniture(furnitureInstance) == false)
         {
 			return null;
@@ -139,14 +138,25 @@ public class Furniture : IXmlSerializable
 
     public bool IsValidPosition(Tile tile)
     {
-        // Make sure tile is FLOOR
-        if (tile.Type != TileType.Floor)
+        for (int x = tile.X; x < tile.X + Width; x++)
         {
-            return false;
+            for (int y = tile.Y; y < tile.Y + Height; y++)
+            {
+                Tile tileAt = tile.World.GetTileAt(x, y);
+
+                if (tileAt.Type != TileType.Floor)
+                {
+                    return false;
+                }
+
+                if (tileAt.Furniture != null)
+                {
+                    return false;
+                }
+            }
         }
 
-        // Make sure tile doesn't already have furniture
-        return tile.Furniture == null;
+        return true;
     }
 
     public float GetParameter(string key, float value = 0)
