@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class InventoryGraphicController : MonoBehaviour
 {
@@ -10,84 +10,84 @@ public class InventoryGraphicController : MonoBehaviour
     }
 
     [SerializeField]
-    private GameObject inventoryUIPrefab;
+	private GameObject inventoryUIPrefab;
 
-    private Dictionary<Inventory, GameObject> inventoryGameObjectMap;
-    private Dictionary<string, Sprite> inventorySprites;
+	private Dictionary<Inventory, GameObject> inventoryGameObjectMap; 
+	private Dictionary<string, Sprite> inventorySprites;
 
-    // Use this for initialization
-    private void Start()
+	// Use this for initialization
+    private void Start ()
     {
-        LoadSprites();
-        inventoryGameObjectMap = new Dictionary<Inventory, GameObject>();
-        world.InventoryCreated += OnInventoryCreated;
+		LoadSprites();
+		inventoryGameObjectMap = new Dictionary<Inventory, GameObject>();
+		world.InventoryCreated += OnInventoryCreated;
 
-        foreach (string inventoryType in world.InventoryManager.Inventories.Keys)
+		foreach(string type in world.InventoryManager.Inventories.Keys)
         {
-            foreach (Inventory inventory in world.InventoryManager.Inventories[inventoryType])
+			foreach(Inventory inventory in world.InventoryManager.Inventories[type])
             {
-                OnInventoryCreated(this, new InventoryCreatedEventArgs(inventory));
-            }
-        }
-    }
+				world.OnInventoryCreated(new InventoryCreatedEventArgs(inventory));
+			}
+		}
+	}
 
     private void LoadSprites()
     {
-        inventorySprites = new Dictionary<string, Sprite>();
-        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Inventory/");
+		inventorySprites = new Dictionary<string, Sprite>();
+		Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Inventory/");
 
-        foreach (Sprite s in sprites)
+		foreach(Sprite sprite in sprites)
         {
-            inventorySprites[s.name] = s;
-        }
-    }
+			inventorySprites[sprite.name] = sprite;
+		}
+	}
 
-    public void OnInventoryCreated(object sender, InventoryCreatedEventArgs args)
+	public void OnInventoryCreated(object sender, InventoryCreatedEventArgs args)
     {
-        GameObject inventoryGameObject = new GameObject();
-        inventoryGameObjectMap.Add(args.Inventory, inventoryGameObject);
-        inventoryGameObject.name = args.Inventory.Type;
-        inventoryGameObject.transform.position = new Vector2(args.Inventory.Tile.X, args.Inventory.Tile.Y);
-        inventoryGameObject.transform.SetParent(transform, true);
+		GameObject inventoryGameObject = new GameObject();
+		inventoryGameObjectMap.Add(args.Inventory, inventoryGameObject);
+		inventoryGameObject.name = args.Inventory.Type;
+		inventoryGameObject.transform.position = new Vector3(args.Inventory.Tile.X, args.Inventory.Tile.Y, 0);
+		inventoryGameObject.transform.SetParent(transform, true);
 
-        SpriteRenderer spriteRenderer = inventoryGameObject.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = inventorySprites[args.Inventory.Type];
-        spriteRenderer.sortingLayerName = "Inventory";
+		SpriteRenderer spriteRenderer = inventoryGameObject.AddComponent<SpriteRenderer>();
+		spriteRenderer.sprite = inventorySprites[args.Inventory.Type ];
+		spriteRenderer.sortingLayerName = "Inventory";
 
-        if (args.Inventory.MaxStackSize > 1)
+		if(args.Inventory.MaxStackSize > 1)
         {
-            GameObject uiGameObject = Instantiate(inventoryUIPrefab);
-            uiGameObject.transform.SetParent(inventoryGameObject.transform);
-            uiGameObject.transform.localPosition = Vector3.zero;
-            uiGameObject.GetComponentInChildren<Text>().text = args.Inventory.StackSize.ToString();
-        }
+			GameObject uiGameObject = Instantiate(inventoryUIPrefab);
+			uiGameObject.transform.SetParent( inventoryGameObject.transform );
+			uiGameObject.transform.localPosition = Vector3.zero;
+			uiGameObject.GetComponentInChildren<Text>().text = args.Inventory.StackSize.ToString();
+		}
 
         args.Inventory.InventoryChanged += OnInventoryChanged;
-    }
+	}
 
     private void OnInventoryChanged(object sender, InventoryChangedEventArgs args)
     {
-        if (inventoryGameObjectMap.ContainsKey(args.Inventory) == false)
+		if(inventoryGameObjectMap.ContainsKey(args.Inventory) == false)
         {
-            Debug.LogError("InventoryGraphicController::OnInventoryChanged: Trying to change visuals for inventory not in our map.");
-            return;
-        }
+			Debug.LogError("InventoryGraphicController::OnInventoryChanged: Trying to change visuals for inventory not in our map.");
+			return;
+		}
 
-        GameObject inventoryGameObject = inventoryGameObjectMap[args.Inventory];
-        if (args.Inventory.StackSize > 0)
+		GameObject inventoryGameObject = inventoryGameObjectMap[args.Inventory];
+		if(args.Inventory.StackSize > 0)
         {
-
-            Text text = inventoryGameObject.GetComponentInChildren<Text>();
-            if (text != null)
+			Text textObject = inventoryGameObject.GetComponentInChildren<Text>();
+			if(textObject != null)
             {
-                text.text = args.Inventory.StackSize.ToString();
-            }
-        }
-        else
+				textObject.text = args.Inventory.StackSize.ToString();
+			}
+		}
+		else
         {
-            Destroy(inventoryGameObject);
-            inventoryGameObjectMap.Remove(args.Inventory);
+			Destroy(inventoryGameObject);
+			inventoryGameObjectMap.Remove(args.Inventory);
             args.Inventory.InventoryChanged -= OnInventoryChanged;
-        }
-    }
+		}
+
+	}
 }

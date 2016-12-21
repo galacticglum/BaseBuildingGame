@@ -1,32 +1,57 @@
-﻿using System.Collections.Generic;
+﻿using UnityEngine;
+using System.Collections.Generic;
+using System;
 
 public class JobQueue
 {
+    private Queue<Job> jobQueue;
+
     public event JobCreatedEventHandler JobCreated;
     public void OnJobCreated(JobCreatedEventArgs args)
     {
-        JobCreatedEventHandler jobCreated = JobCreated;
-        if (jobCreated != null)
+        if (JobCreated != null)
         {
-            jobCreated(this, args);
+            JobCreated(this, args);
         }
     }
 
-    private readonly Queue<Job> queue;
-
     public JobQueue()
     {
-        queue = new Queue<Job>();
-    }
-    
-    public void Enqueue(Job job)
+		jobQueue = new Queue<Job>();
+	}
+
+    public void PrintQueue()
     {
-        queue.Enqueue(job);
-        OnJobCreated(new JobCreatedEventArgs(job));
+        Debug.Log(jobQueue.Count);
     }
 
-    public Job Dequeue()
+	public void Enqueue(Job job)
     {
-        return queue.Count == 0 ? null : queue.Dequeue();
-    }
+		if(job.WorkTime < 0)
+        {
+			job.DoWork(0);
+			return;
+		}
+
+		jobQueue.Enqueue(job);
+        OnJobCreated(new JobCreatedEventArgs(job));
+	}
+
+	public Job Dequeue()
+	{
+	    return jobQueue.Count == 0 ? null : jobQueue.Dequeue();
+	}
+
+	public void Remove(Job job)
+    {
+		List<Job> jobs = new List<Job>(jobQueue);
+
+		if(jobs.Contains(job) == false)
+        {
+			return;
+		}
+
+		jobs.Remove(job);
+		jobQueue = new Queue<Job>(jobs);
+	}
 }

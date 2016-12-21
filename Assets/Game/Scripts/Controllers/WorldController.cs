@@ -1,93 +1,89 @@
-﻿
-using System.IO;
-using System.Xml.Serialization;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Xml.Serialization;
+using System.IO;
 
 public class WorldController : MonoBehaviour
 {
-    public static WorldController Instance { get; protected set; }
-    public World World { get; protected set; }
+	public static WorldController Instance { get; protected set; }
+	public World World { get; protected set; }
 
-    private static bool loadWorld = false;
+    private static bool loadWorld;
 
-    private void OnEnable()
-    {       
-        if (Instance != null)
+	// Use this for initialization
+    private void OnEnable ()
+    {
+		if(Instance != null)
         {
-            Debug.LogError("There should never be two World controllers.");
-        }
-        Instance = this;
+			Debug.LogError("WorldController::OnEnable: There should never be two world controllers.");
+		}
+		Instance = this;
 
-        if(loadWorld)
+		if(loadWorld)
         {
-            loadWorld = false;
-            GenerateFromSaveFile();
-        }    
-        else
+			loadWorld = false;
+			CreateWorldFromSaveFile();
+		}
+		else
         {
-            GenerateEmpty();
-        }
-    }
+			GenerateEmpty();
+		}
+	}
 
     private void Update()
     {
-        // TODO: Add pause/unpause, speed controls, etc; custom Time.deltaTime
-        World.Update(Time.deltaTime);
-    }
+		// TODO: Add pause/unpause, speed controls, etc...
+		World.Update(Time.deltaTime);
 
-    private void CentreCamera()
+	}
+		
+	public Tile GetTileAtWorldCoordinate(Vector3 coordinate)
     {
-        Camera.main.transform.position = new Vector3(World.Width / 2, World.Width / 2, Camera.main.transform.position.z);
-    }
+		int x = Mathf.FloorToInt(coordinate.x + 0.5f);
+		int y = Mathf.FloorToInt(coordinate.y + 0.5f);
+		
+		return World.GetTileAt(x, y);
+	}
 
-    /// <summary>
-    /// Gets the tile at the unity-space coordinates
-    /// </summary>
-    /// <returns>The tile at World coordinate.</returns>
-    /// <param name="coordinate">Unity World-Space coordinates.</param>
-    public Tile GetTileAtWorldCoordinate(Vector2 coordinate)
+	public void New()
     {
-        int x = Mathf.FloorToInt(coordinate.x + 0.5f);
-        int y = Mathf.FloorToInt(coordinate.y + 0.5f);
+		SceneManager.LoadScene( SceneManager.GetActiveScene().name );
+	}
 
-        return World.GetTileAt(x, y);
-    } 
-
-    public void New()
+	public void Save()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
+		XmlSerializer serializer = new XmlSerializer(typeof(World));
+		TextWriter writer = new StringWriter();
+		serializer.Serialize(writer, World);
+		writer.Close();
 
-    public void Save()
+		PlayerPrefs.SetString("SaveGame00", writer.ToString());
+	}
+
+	public void Load()
     {
-        XmlSerializer serializer = new XmlSerializer(typeof(World));
-        TextWriter writer = new StringWriter();
-        serializer.Serialize(writer, World);
-        writer.Close();
-
-        PlayerPrefs.SetString("SaveGame00", writer.ToString());
-    }
-
-    public void Load()
-    {
-        loadWorld = true;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
+		loadWorld = true;
+		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+	}
 
     private void GenerateEmpty()
     {
-        World = new World(100, 100);
-        CentreCamera();
-    }
+		World = new World(100, 100);
 
-    private void GenerateFromSaveFile()
+        // Center the Camera
+        Camera.main.transform.position = new Vector3(World.Width / 2.0f, World.Height / 2.0f, Camera.main.transform.position.z);
+	}
+
+    private void CreateWorldFromSaveFile()
     {
-        XmlSerializer serializer = new XmlSerializer(typeof(World));
-        TextReader reader = new StringReader(PlayerPrefs.GetString("SaveGame00"));
-        World = (World)serializer.Deserialize(reader);
-        reader.Close();
+		XmlSerializer serializer = new XmlSerializer(typeof(World));
+		TextReader reader = new StringReader(PlayerPrefs.GetString("SaveGame00"));
+		World = (World)serializer.Deserialize(reader);
+		reader.Close();
 
-        CentreCamera();
-    }
+		// Center the Camera
+		Camera.main.transform.position = new Vector3(World.Width / 2.0f, World.Height / 2.0f, Camera.main.transform.position.z );
+
+	}
+
 }

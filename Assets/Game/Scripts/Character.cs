@@ -1,64 +1,50 @@
-using UnityEngine;
+﻿using UnityEngine;
+using System;
 using System.Xml;
-using System.Xml.Serialization;
 using System.Xml.Schema;
+using System.Xml.Serialization;
 
 public class Character : IXmlSerializable
 {
-    public float X
-    {
-        get
-        {
-            return Mathf.Lerp(CurrentTile.X, nextTile.X, movementInterpolation);
-        }
-    }
+	public float X { get { return Mathf.Lerp( CurrentTile.X, nextTile.X, movementPercentage ); } }
+	public float Y { get { return Mathf.Lerp( CurrentTile.Y, nextTile.Y, movementPercentage ); } }
+		
+	public Tile CurrentTile { get; protected set; }
+    public Inventory Inventory { get; set; } 
 
-    public float Y
+    private Tile localDestinationTile;
+	private Tile destinationTile
     {
-        get
-        {
-            return Mathf.Lerp(CurrentTile.Y, nextTile.Y, movementInterpolation);
-        }
-    }
+		get { return localDestinationTile; }
+		set {
+		    if (localDestinationTile == value) return;
 
-    public Tile CurrentTile { get; protected set; }
+		    localDestinationTile = value;
+		    pathfinder = null;	
+		}
+	}
+
+	private Tile nextTile;
+    private Job job;
+    private Pathfinder pathfinder;
+
+    private float movementPercentage;
+	private const float Speed = 5f;
+
     public event CharacterChangedEventHandler CharacterChanged;
     public void OnCharacterChanged(CharacterChangedEventArgs args)
     {
-        CharacterChangedEventHandler characterChanged = CharacterChanged;
-        if (characterChanged != null)
+        if (CharacterChanged != null)
         {
-            characterChanged(this, args);
+            CharacterChanged(this, args);
         }
     }
-
-    private Tile _destinationTile;
-    private Tile destinationTile
-    {
-        get { return _destinationTile; }
-        set
-        {
-            if (_destinationTile == value) return;
-
-            _destinationTile = value;
-            pathfinder = null; // Invalidate pathfinding.
-        }
-    }
-
-    private Tile nextTile; // Next tile in the pathfinding sequence
-    private Pathfinder pathfinder;
-
-    private float movementInterpolation; // Goes from 0 to 1 as we move from current tile to destination tile
-    private const float Speed = 5f; // Tiles per second 
-
-    private Job job;
-    public Inventory inventory { get; set; } // Current item we are carrying
 
     public Character() { }
-    public Character(Tile tile)
+	public Character(Tile tile)
     {
-        CurrentTile = destinationTile = nextTile = tile;
-    }
+		CurrentTile = destinationTile = nextTile = tile;
+	}
 
     public void Update(float deltaTime)
     {
@@ -69,99 +55,95 @@ public class Character : IXmlSerializable
 
     private void DoJob(float deltaTime)
     {
-        if (job == null)
-        {
-            GetNewJob();
-            if (job == null)
-            {
-                // There was no job available for us, just return.
-                destinationTile = CurrentTile;
-                return;
-            }
-        }
+		if(job == null)
+		{
+			GetNewJob();
 
-        // We have a reachable job!
-        if (job.HasAllMaterials() == false)
-        {
-            if (inventory != null)
+			if(job == null)
             {
-                if (job.GetRequiredInventoryAmount(inventory) > 0)
+				destinationTile = CurrentTile;
+				return;
+			}
+		}
+
+		if(job.HasAllMaterials() == false)
+        {
+			if(Inventory != null)
+            {
+				if(job.GetDesiredInventoryAmount(Inventory) > 0)
                 {
-                    if (CurrentTile == job.Tile)
+					if(CurrentTile == job.Tile)
                     {
-                        // At the job tile.
-                        CurrentTile.World.InventoryManager.PlaceInventory(job, inventory);
-                        if (inventory.StackSize == 0)
+						CurrentTile.World.InventoryManager.PlaceInventory(job, Inventory);
+						job.DoWork(0); 
+
+						if(Inventory.StackSize == 0)
                         {
-                            inventory = null;
-                        }
-                        else
+							Inventory = null;
+						}
+						else
                         {
-                            Debug.LogError(
-                                "Character::DoJob: Character is still carrying inventory; the character shouldn't be carrying any inventory!");
-                            inventory = null;
-                        }
-                    }
-                    else
+							Debug.LogError("Character::DoJob: Character is still carrying inventory; the character shouldn't be carrying any inventory!");
+							Inventory = null;
+						}
+					}
+					else
                     {
-                        // We still need to walk to the job tile.
-                        destinationTile = job.Tile;
-                        return;
-                    }
-                }
-                else
+						destinationTile = job.Tile;
+						return;
+					}
+				}
+				else
                 {
-                    // We are carrying an item that the job doesn't want!
-                    // Dump the inventory onto the ground or wherever closest.
-                    // TODO: Pathfind nearest empty tile to dump item(s).
-                    if (CurrentTile.World.InventoryManager.PlaceInventory(CurrentTile, inventory) == false)
+					// TODO: Actually, walk to the nearest empty tile and dump it there.
+                    if (CurrentTile.World.InventoryManager.PlaceInventory(CurrentTile, Inventory))
                     {
-                        Debug.LogError("Character::DoJob: Tried to 'dump' inventory onto an invalid tile.");
-                        // FIXME: We are "leaking" inventory by setting the reference to null.
-                        inventory = null;
+                        return; // We can't continue until all materials are satisfied.
                     }
+
+                    Debug.LogError("Character::DoJob: Tried to 'dump' inventory onto an invalid tile.");
+                    Inventory = null;
                 }
-            }
-            else
+			}
+			else
             {
-                // FIXME: This is unoptimal implementation
-                // The job still requires inventory but we don't have it!
-                // Are we standing on a tile with inventory that is required by the job?
-                int amount = job.GetRequiredInventoryAmount(CurrentTile.Inventory);
-                if (CurrentTile.Inventory != null && amount > 0)
+				if(CurrentTile.Inventory != null && 
+                    (job.CanTakeFromStockpile || CurrentTile.Furniture == null || CurrentTile.Furniture.IsStockpile() == false) &&  
+					job.GetDesiredInventoryAmount(CurrentTile.Inventory) > 0)
                 {
-                    // Pick up the inventory on 'CurrentTile'.
-                    CurrentTile.World.InventoryManager.PlaceInventory(this, CurrentTile.Inventory, amount);
-                }
-                else
+					// Pick up the stuff!
+					CurrentTile.World.InventoryManager.PlaceInventory(this, CurrentTile.Inventory, job.GetDesiredInventoryAmount(CurrentTile.Inventory));
+
+				}
+				else
                 {
-                    // Find the first inventory in the job that hasn't been satisfied yet.
-                    Inventory requiredInventory = job.GetFirstRequiredInventory();
+					// Find the first thing in the Job that isn't satisfied.
+					Inventory desiredInventory = job.GetFirstDesiredInventory();
+					Inventory closestInventory = CurrentTile.World.InventoryManager.GetClosestInventoryOfType(desiredInventory.Type, 
+                        CurrentTile, desiredInventory.MaxStackSize - desiredInventory.StackSize, job.CanTakeFromStockpile);
 
-                    int requiredInventoryAmount = requiredInventory.MaxStackSize - requiredInventory.StackSize;
-                    Inventory closestInventory = CurrentTile.World.InventoryManager.GetClosestInventoryOfType(requiredInventory.Type, CurrentTile, requiredInventoryAmount);
-
-                    if (closestInventory == null)
+					if(closestInventory == null)
                     {
-                        Debug.Log("Character::DoJob: No tile contains inventory of type: '" + requiredInventory.Type + "' to satisfy job.");
-                        AbandonJob();
-                        return;
-                    }
+						Debug.LogWarning("Character::DoJob: No tile contains inventory of type: '" + desiredInventory.Type + "' to satisfy job.");
+						AbandonJob();
+						return;
+					}
 
-                    destinationTile = closestInventory.Tile;
-                    return;
-                }
-            }
+					destinationTile = closestInventory.Tile;
+					return;
+				}
 
-            return;
-        }
+			}
 
-        destinationTile = job.Tile;
-        if (CurrentTile == job.Tile)
+			return; 
+		}
+
+		destinationTile = job.Tile;
+		if(CurrentTile == job.Tile)
         {
-            job.DoWork(deltaTime);
-        }
-    }
+			job.DoWork(deltaTime);
+		}
+	}
 
     private void GetNewJob()
     {
@@ -169,11 +151,10 @@ public class Character : IXmlSerializable
         if (job == null) return;
 
         destinationTile = job.Tile;
-        job.JobComplete += JobEnded;
-        job.JobCancel += JobEnded;
+        job.JobComplete += OnJobEnded;
+        job.JobCancel += OnJobEnded;
 
-        // Check to see if job tile is reachable.
-        pathfinder = new Pathfinder(CurrentTile.World, CurrentTile, destinationTile);
+        pathfinder = new Pathfinder(CurrentTile.World, CurrentTile, destinationTile);	
         if (pathfinder.Length != 0) return;
 
         Debug.LogError("Character::DoJob: Pathfinder returned no path to destination");
@@ -181,91 +162,90 @@ public class Character : IXmlSerializable
         destinationTile = CurrentTile;
     }
 
-    private void DoMovement(float deltaTime)
-    {
-        if(CurrentTile == destinationTile)
-        {
-            pathfinder = null;
-            return;
-        }
-
-        if(nextTile == null || nextTile == CurrentTile)
-        {
-            if(pathfinder == null || pathfinder.Length == 0)
-            {
-                pathfinder = new Pathfinder(CurrentTile.World, CurrentTile, destinationTile);
-                if(pathfinder.Length == 0)
-                {
-                    Debug.LogError("Character::DoMovement: Pathfinder returned no path to destination");
-                    AbandonJob();
-                    return;
-                }
-
-                // Ignore first tile because that's the tile we're currently in
-                nextTile = pathfinder.Dequeue();
-            }
-
-            nextTile = pathfinder.Dequeue();
-            if (nextTile == CurrentTile)
-            {
-                Debug.LogError("Character::DoMovement: nextTile is currentTile?");
-            }
-        }
-
-        switch (nextTile.TryEnter())
-        {
-            case TileEnterability.Never:
-            {
-                Debug.LogError("Character::DoMovement: A character attempted to walk through an unwalkable tile.");
-                nextTile = null;
-                pathfinder = null;
-                return;
-            }
-            case TileEnterability.Soon:
-            {
-                return;
-            }
-        }
-
-        float distance = Mathf.Sqrt(Mathf.Pow(CurrentTile.X - nextTile.X, 2) + Mathf.Pow(CurrentTile.Y - nextTile.Y, 2));
-        float currentDistance = Speed / nextTile.MovementCost * deltaTime;
-        float interpolationThisFrame = currentDistance / distance;
-
-        movementInterpolation += interpolationThisFrame;
-        if (!(movementInterpolation >= 1)) return;
-        // TODO: Get the next tile from the pathfinding system
-
-        CurrentTile = nextTile;
-        movementInterpolation = 0;
-    }
-
     public void AbandonJob()
     {
-        nextTile = destinationTile = CurrentTile;
-        CurrentTile.World.JobQueue.Enqueue(job);
-        job = null;
-    }
+		nextTile = destinationTile = CurrentTile;
+		CurrentTile.World.JobQueue.Enqueue(job);
+		job = null;
+	}
 
-    public void SetDestination(Tile tile)
+    private void DoMovement(float deltaTime)
     {
-        if (CurrentTile.IsNeighbour(tile, true) == false)
+		if(CurrentTile == destinationTile)
         {
-            Debug.Log("Character::SetDestination -- Our destination tile isn't actually our neighbour.");
-        }
+			pathfinder = null;
+			return;	// We're already were we want to be.
+		}
 
-        destinationTile = tile;
+		if(nextTile == null || nextTile == CurrentTile)
+        {
+			// Get the next tile from the pathfinder.
+			if(pathfinder == null || pathfinder.Length == 0)
+            {
+				// Generate a path to our destination
+				pathfinder = new Pathfinder(CurrentTile.World, CurrentTile, destinationTile);	
+				if(pathfinder.Length == 0)
+                {
+					Debug.LogError("Character::DoMovement: Pathfinder returned no path to destination!");
+					AbandonJob();
+					return;
+				}
+
+				nextTile = pathfinder.Dequeue();
+			}
+
+			nextTile = pathfinder.Dequeue();
+			if( nextTile == CurrentTile )
+            {
+				Debug.LogError("Character::DoMovement: nextTile is currentTile?");
+			}
+		}
+
+		switch (nextTile.TryEnter())
+		{
+		    case TileEnterability.Never:
+		        Debug.LogError("Character::DoMovement: A character attempted to walk through an unwalkable tile.");
+
+		        nextTile = null;	
+		        pathfinder = null;	       
+		        return;
+		    case TileEnterability.Soon:
+		        return;
+		}
+
+        float distance = Mathf.Sqrt(Mathf.Pow(CurrentTile.X - nextTile.X, 2) + Mathf.Pow(CurrentTile.Y - nextTile.Y, 2));
+        float frameDistance = Speed / nextTile.MovementCost * deltaTime;
+		float frameInterpolation = frameDistance / distance;
+		movementPercentage += frameInterpolation;
+
+        if (!(movementPercentage >= 1)) return;
+        CurrentTile = nextTile;
+        movementPercentage = 0;
     }
 
-    private void JobEnded(object sender, JobEventArgs args)
+	public void SetDestination(Tile tile)
     {
-        // Job complete or was cancelled.
-        if (args.Job != job)
+		if(CurrentTile.IsNeighbour(tile, true) == false)
         {
-            Debug.LogError("Character being told about job that isn't his; might have forgot to unregister something.");
-            return;
-        }
-        job = null;
-    }
+			Debug.LogError("Character::SetDestination: Our destination tile isn't actually our neighbour.");
+		}
+
+		destinationTile = tile;
+	}
+
+    private void OnJobEnded(object sender, JobEventArgs args)
+    {
+		args.Job.JobComplete -= OnJobEnded;
+		args.Job.JobCancel -= OnJobEnded;
+
+		if(args.Job != job)
+        {
+			Debug.LogError("Character::OnJobEnded: Character being told about job that isn't his; might have forgot to unregister something.");
+			return;
+		}
+
+		job = null;
+	}
 
     public XmlSchema GetSchema()
     {
@@ -278,7 +258,5 @@ public class Character : IXmlSerializable
         writer.WriteAttributeString("Y", CurrentTile.Y.ToString());
     }
 
-    public void ReadXml(XmlReader reader)
-    {                   
-    }
+    public void ReadXml(XmlReader reader) { }
 }

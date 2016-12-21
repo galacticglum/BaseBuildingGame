@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 using Priority_Queue;
+using System.Linq;
 
 // Adapted from: https://en.wikipedia.org/wiki/A*_search_algorithm
 
@@ -17,7 +17,7 @@ public class Pathfinder
 
     private Queue<Tile> path;
 
-    public Pathfinder(World world, Tile tileStart, Tile tileGoal)
+	public Pathfinder(World world, Tile tileStart, Tile tileGoal)
     {
         if (world.TileGraph == null)
         {
@@ -57,7 +57,7 @@ public class Pathfinder
         gCost[start] = 0;
         fCost[start] = HeuristicCostEstimate(start, goal);
 
-        while(openSet.Count > 0)
+        while (openSet.Count > 0)
         {
             Node<Tile> current = openSet.Dequeue();
 
@@ -78,7 +78,7 @@ public class Pathfinder
                 }
 
                 float tentativeGCost = gCost[current] + (neighbour.Tile.MovementCost * DistanceBetween(current, neighbour));
-                if(openSet.Contains(neighbour) && tentativeGCost >= gCost[neighbour])
+                if (openSet.Contains(neighbour) && tentativeGCost >= gCost[neighbour])
                 {
                     continue;
                 }
@@ -98,7 +98,6 @@ public class Pathfinder
             }
         }
     }
-
     private static float HeuristicCostEstimate(Node<Tile> start, Node<Tile> goal)
     {
         return Mathf.Sqrt(Mathf.Pow(start.Tile.X - goal.Tile.X, 2) + Mathf.Pow(start.Tile.Y - goal.Tile.Y, 2));
@@ -106,13 +105,13 @@ public class Pathfinder
 
     private static float DistanceBetween(Node<Tile> start, Node<Tile> goal)
     {
-        if((Mathf.Abs(start.Tile.X - goal.Tile.X) + Mathf.Abs(start.Tile.Y - goal.Tile.Y)) == 1)
+        if ((Mathf.Abs(start.Tile.X - goal.Tile.X) + Mathf.Abs(start.Tile.Y - goal.Tile.Y)) == 1)
         {
             return 1;
         }
 
         // Diagonal neighbours have a distance of 1.41421356237
-        if(Mathf.Abs(start.Tile.X - goal.Tile.X) == 1 && Mathf.Abs(start.Tile.Y - goal.Tile.Y) == 1)
+        if (Mathf.Abs(start.Tile.X - goal.Tile.X) == 1 && Mathf.Abs(start.Tile.Y - goal.Tile.Y) == 1)
         {
             return 1.41421356237f;
         }

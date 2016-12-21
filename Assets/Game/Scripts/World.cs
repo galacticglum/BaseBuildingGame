@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 using System.Xml;
-using System.Xml.Serialization;
 using System.Xml.Schema;
+using System.Xml.Serialization;
 
 public class World : IXmlSerializable
 {
@@ -10,118 +11,119 @@ public class World : IXmlSerializable
     public int Width { get; protected set; }
     public int Height { get; protected set; }
 
+	public List<Character> Characters { get; protected set; }
+    public List<Furniture> Furnitures { get; protected set; }
+    public List<Room> Rooms { get; protected set; }
+    public Dictionary<string, Job> FurnitureJobPrototypes;
+
+    public JobQueue JobQueue { get; protected set; }
+    public InventoryManager InventoryManager { get; protected set; }
+    public Room OutsideRoom { get { return Rooms[0]; } }
+
+    private Tile[,] tiles;
+    private Dictionary<string, Furniture> furniturePrototypes;
+
     public event TileChangedEventHandler TileChanged;
     public void OnTileChanged(TileChangedEventArgs args)
     {
-        TileChangedEventHandler tileChanged = TileChanged;
-        if (tileChanged != null)
+        if (TileChanged != null)
         {
-            tileChanged(this, args);
+            TileChanged(this, args);
         }
     }
 
     public event FurnitureCreatedEventHandler FurnitureCreated;
     public void OnFurnitureCreated(FurnitureCreatedEventArgs args)
     {
-        FurnitureCreatedEventHandler furnitureCreated = FurnitureCreated;
-        if (furnitureCreated != null)
+        if (FurnitureCreated != null)
         {
-            furnitureCreated(this, args);
+            FurnitureCreated(this, args);
         }
     }
 
     public event CharacterCreatedEventHandler CharacterCreated;
     public void OnCharacterCreated(CharacterCreatedEventArgs args)
     {
-        CharacterCreatedEventHandler characterCreated = CharacterCreated;
-        if (characterCreated != null)
+        if (CharacterCreated != null)
         {
-            characterCreated(this, args);
+            CharacterCreated(this, args);
         }
     }
 
     public event InventoryCreatedEventHandler InventoryCreated;
     public void OnInventoryCreated(InventoryCreatedEventArgs args)
     {
-        InventoryCreatedEventHandler inventoryCreated = InventoryCreated;
-        if (inventoryCreated != null)
+        if (InventoryCreated != null)
         {
-            inventoryCreated(this, args);
+            InventoryCreated(this, args);
         }
     }
 
-    public List<Furniture> Furnitures { get; protected set; }
-    public List<Character> Characters { get; protected set; }
-    public List<Room> Rooms { get; protected set; }
-
-    public InventoryManager InventoryManager { get; protected set; }
-
-    public Room OutsideRoom
-    {
-        get { return Rooms[0]; }
-    }
-
-    public JobQueue JobQueue;
-
-    private Tile[,] tiles;
-
-    private Dictionary<string, Furniture> furniturePrototypes;
-    public Dictionary<string, Job> FurnitureJobPrototypes { get; set; }
-
     public World() { }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="World"/> class.
-    /// </summary>
-    /// <param name="width">Width in tiles.</param>
-    /// <param name="height">Height in tiles.</param>
     public World(int width, int height)
     {
-        Initialize(width, height);
-    }
+		Initialize(width, height);
+		CreateCharacter(GetTileAt(Width / 2, Height / 2));
+	}
 
     private void Initialize(int width, int height)
     {
-        Width = width;
-        Height = height;
+		Width = width;
+		Height = height;
 
-        tiles = new Tile[Width, Height];
+		tiles = new Tile[Width,Height];
         JobQueue = new JobQueue();
 
         Characters = new List<Character>();
         Furnitures = new List<Furniture>();
         InventoryManager = new InventoryManager();
-        Rooms = new List<Room>()
+        Rooms = new List<Room>
         {
-            new Room() // The "outside" room
+            new Room()
         };
 
         for (int x = 0; x < Width; x++)
         {
-            for (int y = 0; y < Height; y++)
+			for (int y = 0; y < Height; y++)
             {
-                tiles[x, y] = new Tile(this, x, y);
+				tiles[x,y] = new Tile(this, x, y);
                 tiles[x, y].TileChanged += OnTileChangedEvent;
-                tiles[x, y].Room = OutsideRoom; // value 'Rooms[0]' is always going to be the outside room!
-            }
-        }
+				tiles[x,y].Room = OutsideRoom;
+			}
+		}
 
-        CreateCharacter(GetTileAt(Width / 2 - 3, Height / 2 - 3));
-        CreateFurniturePrototypes();
+		CreateFurniturePrototypes();
+
+        // DEBUGGING ONLY!  REMOVE ME LATER!
+        // Create an Inventory Item
+        Inventory inventory = new Inventory("Steel Plate", 50, 27);
+        Tile tileAt = GetTileAt(Width / 2, Height / 2);
+        InventoryManager.PlaceInventory(tileAt, inventory);
+        OnInventoryCreated(new InventoryCreatedEventArgs(tileAt.Inventory));
+
+        inventory = new Inventory("Steel Plate", 50, 43);
+        tileAt = GetTileAt(Width / 2 + 2, Height / 2);
+        InventoryManager.PlaceInventory(tileAt, inventory);
+        OnInventoryCreated(new InventoryCreatedEventArgs(tileAt.Inventory));
+
+        inventory = new Inventory("Steel Plate", 50, 50);
+        tileAt = GetTileAt(Width / 2 + 1, Height / 2 + 2);
+        InventoryManager.PlaceInventory(tileAt, inventory);
+        OnInventoryCreated(new InventoryCreatedEventArgs(tileAt.Inventory));
     }
 
-    public void Update(float deltaTime)
+	public void Update(float deltaTime)
     {
-        foreach (Character character in Characters)
+		foreach(Character character in Characters)
         {
-            character.Update(deltaTime);
-        }
+			character.Update(deltaTime);
+		}
 
-        foreach (Furniture furniture in Furnitures)
+		foreach(Furniture furniture in Furnitures)
         {
-            furniture.Update(deltaTime);
-        }
-    }
+			furniture.Update(deltaTime);
+		}
+	}
 
     public void AddRoom(Room room)
     {
@@ -142,153 +144,176 @@ public class World : IXmlSerializable
 
     public Character CreateCharacter(Tile tile)
     {
-        Character character = new Character(tile);
-        OnCharacterCreated(new CharacterCreatedEventArgs(character));
-        Characters.Add(character);
-        return character;
-    }
+		Character characterInstance = new Character( tile ); 
+		Characters.Add(characterInstance);
+        OnCharacterCreated(new CharacterCreatedEventArgs(characterInstance));
+
+		return characterInstance;
+	}
 
     private void CreateFurniturePrototypes()
     {
-        // TODO: Furniture defintions in a file (XML??)
+		furniturePrototypes = new Dictionary<string, Furniture>();
+		FurnitureJobPrototypes = new Dictionary<string, Job>();
 
-        furniturePrototypes = new Dictionary<string, Furniture>
-        {
-            {
-                "Wall", new Furniture(
-                    "Wall",
-                    0, // Impassable
-                    1, // Width
-                    1, // Height
-                    true, // Links to neighbours and "sort of" becomes part of a large object
-                    true // Enclose rooms
-                )
-            },
-            {
-                "Door", new Furniture(
-                    "Door",
-                    1, // Door pathfinding cost
-                    1, // Width
-                    1, // Height
-                    false, // Links to neighbours and "sort of" becomes part of a large object
-                    true // Enclose rooms
-                )
-            }
-        };
+		furniturePrototypes.Add("Wall", 
+			new Furniture(
+				"Wall",
+				0,	// Impassable
+				1,  // Width
+				1,  // Height
+				true, // Links to neighbours and "sort of" becomes part of a large object
+				true  // Enclose rooms
+			)
+		);
 
-        FurnitureJobPrototypes = new Dictionary<string, Job>
-        {
-            {
-                "Wall",
-                new Job(null, "Wall", FurnitureBehaviours.BuildFurniture, 1f, new[] { new Inventory("Steel Plate", 5, 0) })
-            }
-        };
+		FurnitureJobPrototypes.Add("Wall",
+			new Job(null, 
+				"Wall",
+                FurnitureBehaviours.BuildFurniture, 1f, 
+				new[] { new Inventory("Steel Plate", 5, 0) } 
+			)
+		);
 
-        furniturePrototypes["Door"].SetParamater("openness", 0);
-        furniturePrototypes["Door"].SetParamater("isOpening", 0);
-        furniturePrototypes["Door"].UpdateBehaviours += FurnitureBehaviours.UpdateDoor;
-        furniturePrototypes["Door"].TryEnter += FurnitureBehaviours.DoorTryEnter;
-    }
+		furniturePrototypes.Add("Door", 
+			new Furniture(
+				"Door",
+				1,	// Door pathfinding cost
+				1,  // Width
+				1,  // Height
+				false, // Links to neighbours and "sort of" becomes part of a large object
+				true  // Enclose rooms
+			)
+		);
 
-    public void SetupPathfindingExample()
+		furniturePrototypes["Door"].SetParameter("openness", 0);
+		furniturePrototypes["Door"].SetParameter("is_opening", 0);
+		furniturePrototypes["Door"].UpdateBehaviours += FurnitureBehaviours.UpdateDoor;
+		furniturePrototypes["Door"].TryEnter = FurnitureBehaviours.DoorTryEnter;
+
+
+		furniturePrototypes.Add("Stockpile", 
+			new Furniture(
+				"Stockpile",
+				1,	// Impassable
+				1,  // Width
+				1,  // Height
+				true, // Links to neighbours and "sort of" becomes part of a large object
+				false  // Enclose rooms
+			)
+		);
+
+		furniturePrototypes["Stockpile"].UpdateBehaviours += FurnitureBehaviours.UpdateStockpile;
+		//furniturePrototypes["Stockpile"].Tint = new Color32(186, 31, 31, 255);
+		furniturePrototypes["Stockpile"].Tint = new Color32(168, 130, 42, 255);
+        FurnitureJobPrototypes.Add("Stockpile",
+			new Job( 
+				null, 
+				"Stockpile",
+                FurnitureBehaviours.BuildFurniture,
+				-1,
+				null
+			)
+		);
+	}
+
+	public void SetupPathfindingExample()
     {
-        int l = Width / 2 - 5;
-        int b = Height / 2 - 5;
+		int l = Width / 2 - 5;
+		int b = Height / 2 - 5;
 
-        for (int x = l - 5 ; x < l + 15; x++)
+		for (int x = l-5; x < l + 15; x++)
         {
-            for (int y = b - 5; y < b + 15; y++)
+			for (int y = b-5; y < b + 15; y++)
             {
-                tiles[x, y].Type = TileType.Floor;
+				tiles[x,y].Type = TileType.Floor;
 
-                if (x != l && x != (l + 9) && y != b && y != (b + 9)) continue;
-                if (x != (l + 9) && y != (b + 4))
+
+			    if (x != l && x != l + 9 && y != b && y != b + 9) continue;
+
+			    if(x != l + 9 && y != b + 4)
                 {
-                    PlaceFurniture("Wall", tiles[x, y]);
-                }
-            }
-        }
-    }
+			        PlaceFurniture("Wall", tiles[x,y]);
+			    }
+			}
+		}
 
-    /// <summary>
-    /// Gets the tile data at x and y.
-    /// </summary>
-    /// <returns>The <see cref="Tile"/>.</returns>
-    /// <param name="x">The x coordinate.</param>
-    /// <param name="y">The y coordinate.</param>
-    public Tile GetTileAt(int x, int y)
+	}
+
+	public Tile GetTileAt(int x, int y)
     {
-        if (x >= Width || x < 0 || y >= Height || y < 0)
+		if( x >= Width || x < 0 || y >= Height || y < 0)
         {
-            return null;
-        }
-        return tiles[x, y];
-    }
+			return null;
+		}
 
-    public Furniture PlaceFurniture(string type, Tile t)
+		return tiles[x, y];
+	}
+
+	public Furniture PlaceFurniture(string type, Tile tile)
     {
-        // TODO: This function assumes 1x1 tiles -- change this later!
-
-        if (furniturePrototypes.ContainsKey(type) == false)
+		if( furniturePrototypes.ContainsKey(type) == false )
         {
-            Debug.LogError("World::PlaceFurniture: Dictionary<string, Furniture> 'furniturePrototypes' does not contain a prototype for key: " + type);
-            return null;
+			Debug.LogError("World::PlaceFurniture: Dictionary<string, Furniture> 'furniturePrototypes' does not contain a prototype for key: " + type + ".");
+			return null;
+		}
+
+		Furniture furnitureInstance = Furniture.Place(furniturePrototypes[type], tile);
+
+		if(furnitureInstance == null)
+        {
+			return null;
+		}
+
+		Furnitures.Add(furnitureInstance);
+
+		if(furnitureInstance.RoomEnclosure)
+        {
+			Room.CreateRooms(furnitureInstance);
+		}
+
+        if (FurnitureCreated == null) return furnitureInstance;
+        OnFurnitureCreated(new FurnitureCreatedEventArgs(furnitureInstance));
+
+        if(furnitureInstance.MovementCost != 1)
+        {
+            InvalidateTileGraph();	
         }
 
-        Furniture furniture = Furniture.Place(furniturePrototypes[type], t);
-        if (furniture == null)
-        {
-            return null;
-        }
-
-        Furnitures.Add(furniture);
-        if (furniture.RoomEnclosure)
-        {
-            Room.CreateRooms(furniture);
-        }
-
-        if (FurnitureCreated == null) return furniture;
-
-        OnFurnitureCreated(new FurnitureCreatedEventArgs(furniture));
-        if (furniture.MovementCost != 1)
-        {
-            InvalidateTileGraph();
-        }
-
-        return furniture;
-    }
+        return furnitureInstance;
+	}
 
     private void OnTileChangedEvent(object sender, TileChangedEventArgs args)
     {
-        OnTileChanged(new TileChangedEventArgs(args.Tile));
-        InvalidateTileGraph();
-    }
+		OnTileChanged(new TileChangedEventArgs(args.Tile));
+		InvalidateTileGraph();
+	}
 
-    public void InvalidateTileGraph()
+	public void InvalidateTileGraph()
     {
-        TileGraph = null;
-    }
+		TileGraph = null;
+	}
 
-    public bool IsFurniturePlacementValid(string furnitureType, Tile tile)
+	public bool IsFurniturePlacementValid(string type, Tile tile)
     {
-        return furniturePrototypes[furnitureType].IsValidPosition(tile);
-    }
+		return furniturePrototypes[type].IsValidPosition(tile);
+	}
 
-    public Furniture GetFurniture(string objectType)
+	public Furniture GetFurniture(string type)
     {
-        if (furniturePrototypes.ContainsKey(objectType)) return furniturePrototypes[objectType];
-        Debug.LogError("World::GetFurniture: No furniture with type: " + objectType);
+        if (furniturePrototypes.ContainsKey(type)) return furniturePrototypes[type];
+        Debug.LogError("World::GetFurniture: No furniture with type: " + type + ".");
         return null;
     }
 
-    // Saving and Loading
     public XmlSchema GetSchema()
     {
-        return null; 
-    }
+		return null;
+	}
 
-    public void WriteXml(XmlWriter writer)
+	public void WriteXml(XmlWriter writer)
     {
+        // Save info here
         writer.WriteAttributeString("Width", Width.ToString());
         writer.WriteAttributeString("Height", Height.ToString());
 
@@ -298,7 +323,6 @@ public class World : IXmlSerializable
             for (int y = 0; y < Height; y++)
             {
                 if (tiles[x, y].Type == TileType.Empty) continue;
-
                 writer.WriteStartElement("Tile");
                 tiles[x, y].WriteXml(writer);
                 writer.WriteEndElement();
@@ -312,18 +336,20 @@ public class World : IXmlSerializable
             writer.WriteStartElement("Furniture");
             furniture.WriteXml(writer);
             writer.WriteEndElement();
+
         }
         writer.WriteEndElement();
 
         writer.WriteStartElement("Characters");
-        foreach (Character character in Characters)
+        foreach (Character c in Characters)
         {
-            writer.WriteStartElement("Characters");
-            character.WriteXml(writer);
+            writer.WriteStartElement("Character");
+            c.WriteXml(writer);
             writer.WriteEndElement();
+
         }
         writer.WriteEndElement();
-    }
+	}
 
     public void ReadXml(XmlReader reader)
     {
@@ -337,50 +363,22 @@ public class World : IXmlSerializable
             switch (reader.Name)
             {
                 case "Tiles":
-                {
-                    ReadXmlTiles(reader);
-                    break;
-                }
+                    {
+                        ReadXmlTiles(reader);
+                        break;
+                    }
                 case "Furnitures":
-                {
-                    ReadXmlFurnitures(reader);
-                    break;
-                }
+                    {
+                        ReadXmlFurnitures(reader);
+                        break;
+                    }
                 case "Characters":
-                {
-                    ReadXmlCharacters(reader);
-                    break;
-                }
+                    {
+                        ReadXmlCharacters(reader);
+                        break;
+                    }
             }
         }
-
-        // DEBUGGING ONLY! REMOVE ME!!!!
-        Inventory inventory = new Inventory
-        {
-            StackSize = 2
-        };
-
-        Tile tile = GetTileAt(width / 2, height / 2);
-        InventoryManager.PlaceInventory(tile, inventory);
-        OnInventoryCreated(new InventoryCreatedEventArgs(tile.Inventory));
-
-        inventory = new Inventory
-        {
-            StackSize = 3
-        };
-
-        tile = GetTileAt(width / 2 + 1, height / 2 + 2);
-        InventoryManager.PlaceInventory(tile, inventory);
-        OnInventoryCreated(new InventoryCreatedEventArgs(tile.Inventory));
-
-        inventory = new Inventory
-        {
-            StackSize = 4
-        };
-
-        tile = GetTileAt(width / 2 +2, height / 2);
-        InventoryManager.PlaceInventory(tile, inventory);
-        OnInventoryCreated(new InventoryCreatedEventArgs(tile.Inventory));
     }
 
     private void ReadXmlTiles(XmlReader reader)

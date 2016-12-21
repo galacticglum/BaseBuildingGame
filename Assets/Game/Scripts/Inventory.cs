@@ -1,57 +1,33 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System;
 
 public class Inventory
 {
-    public string Type { get; set; }
+	public string Type { get; set; }
     public int MaxStackSize { get; set; }
 
-    private int stackSize = 1;
-    public int StackSize
+    protected int localStackSize = 1;
+	public int StackSize
     {
-        get { return stackSize; }
-        set
+		get { return localStackSize; }
+		set
         {
-            if (stackSize == value) return;
+            if (localStackSize == value) return;
+            localStackSize = value;
 
-            stackSize = value;
-            if (Tile != null)
-            {
-                OnInventoryChanged(new InventoryChangedEventArgs(this));
-            }
+            OnInventoryChanged(new InventoryChangedEventArgs(this));
         }
-    }
-
-    public event InventoryChangedEventHandler InventoryChanged;
-    public void OnInventoryChanged(InventoryChangedEventArgs args)
-    {
-        InventoryChangedEventHandler inventoryChanged = InventoryChanged;
-        if (inventoryChanged != null)
-        {
-            inventoryChanged(this, args);
-        }
-    }
+	}
 
     public Tile Tile { get; set; }
     public Character Character { get; set; }
 
-    public Inventory(string type, int maxStackSize, int stackSize)
+    public event InventoryChangedEventHandler InventoryChanged;
+    public void OnInventoryChanged(InventoryChangedEventArgs args)
     {
-        Type = type;
-        MaxStackSize = maxStackSize;
-        StackSize = stackSize;
-    }
-
-    protected Inventory(Inventory inventory)
-    {
-        Type = inventory.Type;
-        MaxStackSize = inventory.MaxStackSize;
-        StackSize = inventory.StackSize;
-    }
-
-    public virtual Inventory Clone()
-    {
-        return new Inventory(this);
+        if (InventoryChanged != null)
+        {
+            InventoryChanged(this, args);
+        }
     }
 
     public Inventory()
@@ -60,4 +36,23 @@ public class Inventory
         MaxStackSize = 50;
         StackSize = 1;
     }
+
+    public Inventory(string type, int maxStackSize, int stackSize)
+    {
+		Type = type;
+		MaxStackSize = maxStackSize;
+		StackSize = stackSize;
+	}
+
+	protected Inventory(Inventory inventory)
+    {
+		Type = inventory.Type;
+		MaxStackSize = inventory.MaxStackSize;
+		StackSize = inventory.StackSize;
+	}
+
+	public virtual Inventory Clone()
+    {
+		return new Inventory(this);
+	}
 }

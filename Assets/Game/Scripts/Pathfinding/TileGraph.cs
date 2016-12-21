@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class TileGraph 
+public class TileGraph
 {
     public Dictionary<Tile, Node<Tile>> Nodes { get; protected set; }
 
@@ -14,12 +14,12 @@ public class TileGraph
             for (int y = 0; y < world.Height; y++)
             {
                 Tile tile = world.GetTileAt(x, y);
-                Node<Tile> node = new Node<Tile> {Tile = tile};
-                Nodes.Add(tile, node);             
+                Node<Tile> node = new Node<Tile> { Tile = tile };
+                Nodes.Add(tile, node);
             }
         }
 
-        foreach(Tile tile in Nodes.Keys)
+        foreach (Tile tile in Nodes.Keys)
         {
             Node<Tile> node = Nodes[tile];
             List<Edge<Tile>> edges = new List<Edge<Tile>>();
@@ -32,7 +32,7 @@ public class TileGraph
                 if (neighbour == null || !(neighbour.MovementCost > 0)) continue;
                 // This neighbour exists and is walkable, so create an edge
                 // But first, make sure we aren't clipping a diagonal or trying to squeeze inappropriately
-                if(ClippingCorner(tile, neighbour))
+                if (ClippingCorner(tile, neighbour))
                 {
                     // Skip to the next neighbour with building an edge
                     continue;

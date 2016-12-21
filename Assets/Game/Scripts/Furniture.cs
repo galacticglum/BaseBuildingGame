@@ -1,15 +1,14 @@
-﻿using System;
+﻿using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine;
+using System;
 using System.Xml;
-using System.Xml.Serialization;
 using System.Xml.Schema;
+using System.Xml.Serialization;
 
 public class Furniture : IXmlSerializable
 {
-    // Pseudo "scripting" system
-    protected Dictionary<string, float> FurnitureParameters { get; set; }
-    public Action<Furniture, float> UpdateBehaviours { get; set; }
+	protected Dictionary<string, float> FurnitureParameters { get; set; }
+	public Action<Furniture, float> UpdateBehaviours { get; set; }
     public Func<Furniture, TileEnterability> TryEnter { get; set; }
 
     public Tile Tile { get; protected set; }
@@ -19,60 +18,66 @@ public class Furniture : IXmlSerializable
     public bool LinksToNeighbour { get; protected set; }
     public bool RoomEnclosure { get; protected set; }
 
+    public Color Tint { get; set; }
+
     public event FurnitureChangedEventHandler FurnitureChanged;
     public void OnFurnitureChanged(FurnitureChangedEventArgs args)
     {
-        FurnitureChangedEventHandler furnitureChanged = FurnitureChanged;
-        if (furnitureChanged != null)
+        if (FurnitureChanged != null)
         {
-            furnitureChanged(this, args);
+            FurnitureChanged(this, args);
         }
     }
 
     private readonly int width;
     private readonly int height;
 
-    // TODO: Implement larger objects
-    // TODO: Implement object rotation
+    private readonly List<Job> jobs;
 
-    public Furniture()
+	public Furniture()
     {
-        FurnitureParameters = new Dictionary<string, float>();   
-    }
+		FurnitureParameters = new Dictionary<string, float>();
+		jobs = new List<Job>();
+	}
+
+    public Furniture(string type) : this(type, 1, 1, 1, false, false) { }
+	public Furniture (string type, float movementCost, int width, int height, bool linksToNeighbour, bool roomEnclosure)
+    {
+		Type = type;
+		MovementCost = movementCost;
+		RoomEnclosure = roomEnclosure;
+        LinksToNeighbour = linksToNeighbour;
+        Tint = Color.white;
+
+        FurnitureParameters = new Dictionary<string, float>();
+
+        this.width = width;
+		this.height = height;
+	}
 
     protected Furniture(Furniture furniture)
     {
-        FurnitureParameters = new Dictionary<string, float>(furniture.FurnitureParameters);
-        if (furniture.UpdateBehaviours != null)
-        {
-            UpdateBehaviours = (Action<Furniture, float>) furniture.UpdateBehaviours.Clone();
-        }
-
-        TryEnter = furniture.TryEnter;
         Type = furniture.Type;
         MovementCost = furniture.MovementCost;
+        RoomEnclosure = furniture.RoomEnclosure;
+        Tint = Color.white;
         width = furniture.width;
         height = furniture.height;
+        Tint = furniture.Tint;
         LinksToNeighbour = furniture.LinksToNeighbour;
-        RoomEnclosure = furniture.RoomEnclosure;
+
+        FurnitureParameters = new Dictionary<string, float>(furniture.FurnitureParameters);
+        jobs = new List<Job>();
+
+        if (furniture.UpdateBehaviours != null)
+            UpdateBehaviours = (Action<Furniture, float>)furniture.UpdateBehaviours.Clone();
+
+        TryEnter = furniture.TryEnter;
     }
 
     public virtual Furniture Clone()
     {
         return new Furniture(this);
-    }
-
-    public Furniture(string type) : this(type, 1, 1, 1, false, false) { }
-    public Furniture(string type, float movementCost, int width, int height, bool linksToNeighbour, bool roomEnclosure)
-    {
-        FurnitureParameters = new Dictionary<string, float>();
-
-        this.width = width;
-        this.height = height;
-        Type = type;
-        MovementCost = movementCost;
-        LinksToNeighbour = linksToNeighbour;
-        RoomEnclosure = roomEnclosure;
     }
 
     public void Update(float deltaTime)
@@ -85,61 +90,57 @@ public class Furniture : IXmlSerializable
 
     public static Furniture Place(Furniture furniture, Tile tile)
     {
-        if (furniture.IsValidPosition(tile) == false)
+        if(furniture.IsValidPosition(tile) == false)
         {
-            Debug.LogError("Furniture::Place: Position Validity Function returned 'false'.");
-            return null;
-        }
+			Debug.LogError("Furniture::Place: Position Validity Function returned 'false'.");
+			return null;
+		}
 
-        Furniture instance = new Furniture(furniture) { Tile = tile };
+        Furniture furnitureInstance = new Furniture(furniture) { Tile = tile };
 
-        // FIXME: This assumes we are 1x1!
-        if (tile.PlaceFurniture(instance) == false)
+        if(tile.PlaceFurniture(furnitureInstance) == false)
         {
-            return null;
-        }
+			return null;
+		}
 
-        if (!instance.LinksToNeighbour) return instance;
+        if (!furnitureInstance.LinksToNeighbour) return furnitureInstance;
 
         int x = tile.X;
         int y = tile.Y;
 
-        Tile neighbourTile = tile.World.GetTileAt(x, y + 1);
-        if (HasFurnitureOfSameType(instance, neighbourTile))
+        Tile tileAt = tile.World.GetTileAt(x, y+1);
+        if(HasFurnitureOfSameType(furnitureInstance, tileAt))
         {
-            neighbourTile.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(neighbourTile.Furniture));
+            tileAt.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(tileAt.Furniture));
+        }
+        tileAt = tile.World.GetTileAt(x+1, y);
+        if(HasFurnitureOfSameType(furnitureInstance, tileAt))
+        {
+            tileAt.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(tileAt.Furniture));
+        }
+        tileAt = tile.World.GetTileAt(x, y-1);
+        if(HasFurnitureOfSameType(furnitureInstance, tileAt))
+        {
+            tileAt.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(tileAt.Furniture));
+        }
+        tileAt = tile.World.GetTileAt(x-1, y);
+        if(HasFurnitureOfSameType(furnitureInstance, tileAt))
+        {
+            tileAt.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(tileAt.Furniture));
         }
 
-        neighbourTile = tile.World.GetTileAt(x + 1, y);
-        if (HasFurnitureOfSameType(instance, neighbourTile))
-        {
-            neighbourTile.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(neighbourTile.Furniture));
-        }
-
-        neighbourTile = tile.World.GetTileAt(x, y - 1);
-        if (HasFurnitureOfSameType(instance, neighbourTile))
-        {
-            neighbourTile.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(neighbourTile.Furniture));
-        }
-
-        neighbourTile = tile.World.GetTileAt(x - 1, y);
-        if (HasFurnitureOfSameType(instance, neighbourTile))
-        {
-            neighbourTile.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(neighbourTile.Furniture));
-        }
-
-        return instance;
-    }
+        return furnitureInstance;
+	}
 
     private static bool HasFurnitureOfSameType(Furniture furniture, Tile tile)
     {
-        return (tile != null && tile.Furniture != null && tile.Furniture.Type == furniture.Type && tile.Furniture.FurnitureChanged != null);
+        return tile != null && tile.Furniture != null && tile.Furniture.Type == furniture.Type;
     }
 
     public bool IsValidPosition(Tile tile)
     {
         // Make sure tile is FLOOR
-        if(tile.Type != TileType.Floor)
+        if (tile.Type != TileType.Floor)
         {
             return false;
         }
@@ -148,25 +149,56 @@ public class Furniture : IXmlSerializable
         return tile.Furniture == null;
     }
 
-    public float GetParameter(string name, float defaultValue = 0)
-    {
-        return FurnitureParameters.ContainsKey(name) == false ? defaultValue : FurnitureParameters[name];
-    }
+    public float GetParameter(string key, float value = 0)
+	{
+	    return FurnitureParameters.ContainsKey(key) == false ? value : FurnitureParameters[key];
+	}
 
-    public void SetParamater(string name, float value)
+	public void SetParameter(string key, float value)
     {
-        FurnitureParameters[name] = value;
-    }
+		FurnitureParameters[key] = value;
+	}
 
-    public void ModifyParameter(string name, float value)
+	public void ModifyParameter(string key, float value)
     {
-        if (FurnitureParameters.ContainsKey(name) == false)
+		if(FurnitureParameters.ContainsKey(key) == false)
         {
-            FurnitureParameters[name] = value;
-            return;
-        }
-        FurnitureParameters[name] += value;
-    }
+			FurnitureParameters[key] = value;
+		}
+
+		FurnitureParameters[key] += value;
+	}
+
+	public int JobCount
+    {
+	    get { return jobs.Count; }
+	}
+
+	public void AddJob(Job job)
+    {
+		jobs.Add(job);
+		Tile.World.JobQueue.Enqueue(job);
+	}
+
+	public void RemoveJob(Job job)
+    {
+		jobs.Remove(job);
+		job.CancelJob();
+		Tile.World.JobQueue.Remove(job);
+	}
+
+	public void ClearJobs()
+    {
+		foreach(Job j in jobs)
+        {
+			RemoveJob(j);
+		}
+	}
+
+	public bool IsStockpile()
+    {
+		return Type == "Stockpile";
+	}
 
     public XmlSchema GetSchema()
     {

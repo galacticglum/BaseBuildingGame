@@ -42,23 +42,23 @@ TagManager:
     uniqueID: 0
     locked: 0
   - name: Tiles
-    uniqueID: 2698705267
+    uniqueID: 2329541923
     locked: 0
   - name: Furniture
-    uniqueID: 1607910033
+    uniqueID: 1892590203
     locked: 0
   - name: Jobs
-    uniqueID: 507902361
+    uniqueID: 3858056555
     locked: 0
   - name: Inventory
-    uniqueID: 3455618041
+    uniqueID: 2702625675
     locked: 0
   - name: InventoryUI
-    uniqueID: 656026085
+    uniqueID: 2785086419
     locked: 0
   - name: Characters
-    uniqueID: 7703501
+    uniqueID: 431918351
     locked: 0
   - name: TileUI
-    uniqueID: 1127631999
+    uniqueID: 656026085
     locked: 0

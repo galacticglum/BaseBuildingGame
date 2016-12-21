@@ -1,6 +1,6 @@
 ﻿public enum TileEnterability
 {
     Immediate,
-    Soon,
-    Never
-}
+    Never,
+    Soon
+};

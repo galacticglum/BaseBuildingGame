@@ -1,119 +1,138 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.Collections.Generic;
+using System;
+using System.Linq;
 
-public class Job 
+public class Job
 {
-    public Tile Tile { get; set; }
+	public Tile Tile { get; set; }
     public string Type { get; protected set; }
-    public Dictionary<string, Inventory> InventoryRequirements { get; protected set; }
+    public Dictionary<string, Inventory> InventoryRequirements;
+
+    public float WorkTime { get; protected set; }
+	public bool AcceptsAnyInventoryItem { get; set; }
+	public bool CanTakeFromStockpile { get; set; }
 
     public event JobCompleteEventHandler JobComplete;
     public void OnJobComplete(JobCompleteEventArgs args)
     {
-        JobCompleteEventHandler jobComplete = JobComplete;
-        if (jobComplete != null)
+        if (JobComplete != null)
         {
-            jobComplete(this, args);
+            JobComplete(this, args);
         }
     }
 
     public event JobCancelEventHandler JobCancel;
     public void OnJobCancel(JobCancelEventArgs args)
     {
-        JobCancelEventHandler jobCancel = JobCancel;
-        if (jobCancel != null)
+        if (JobCancel != null)
         {
-            jobCancel(this, args);
+            JobCancel(this, args);
         }
     }
 
-    private float jobTime;
-
-    public Job(Tile tile, string type, Action<object, JobCompleteEventArgs> jobComplete, float jobTime, IEnumerable<Inventory> inventoryRequirements = null)
+    public event JobWorkedEventHandler JobWorked;
+    public void OnJobWorked(JobWorkedEventArgs args)
     {
-        Tile = tile;
-        Type = type;
-        JobComplete += (sender, args) => jobComplete(sender, args);
+        if (JobWorked != null)
+        {
+            JobWorked(this, args);
+        }
+    }
+
+    public Job (Tile tile, string type, Action<object, JobCompleteEventArgs> jobComplete, float workTime, Inventory[] inventoryRequirements )
+    {
+		Tile = tile;
+		Type = type;
+		WorkTime = workTime;
+        AcceptsAnyInventoryItem = false;
+        CanTakeFromStockpile = true;
+
+        if (jobComplete != null)
+        {
+            JobComplete += (sender, args) => { jobComplete(sender, args); };
+        }
+
         InventoryRequirements = new Dictionary<string, Inventory>();
-
-        this.jobTime = jobTime;
-
         if (inventoryRequirements == null) return;
-        foreach (Inventory inventoryRequirement in inventoryRequirements)
+        foreach(Inventory inventory in inventoryRequirements)
         {
-            InventoryRequirements[inventoryRequirement.Type] = inventoryRequirement.Clone();
+            InventoryRequirements[inventory.Type] = inventory.Clone();
         }
     }
 
-    protected Job(Job job)
+	protected Job(Job job)
     {
-        Tile = job.Tile;
-        Type = job.Type;
-        JobComplete += (sender, args) => job.JobComplete(sender, args);
+		Tile = job.Tile;
+		Type = job.Type;
+		WorkTime = job.WorkTime;
+        AcceptsAnyInventoryItem = job.AcceptsAnyInventoryItem;
+        CanTakeFromStockpile = job.CanTakeFromStockpile;
+        JobComplete = job.JobComplete;
 
-        jobTime = job.jobTime;
         InventoryRequirements = new Dictionary<string, Inventory>();
-
         if (InventoryRequirements == null) return;
-        foreach (Inventory inventoryRequirement in job.InventoryRequirements.Values)
+        foreach(Inventory inventory in job.InventoryRequirements.Values)
         {
-            InventoryRequirements[inventoryRequirement.Type] = inventoryRequirement.Clone();
+            InventoryRequirements[inventory.Type] = inventory.Clone();
         }
     }
 
-    public virtual Job Clone()
+	public virtual Job Clone()
     {
-        return new Job(this);
-    }
+		return new Job(this);
+	}
 
-    public void DoWork(float workTime)
+	public void DoWork(float workTime)
     {
-        jobTime -= workTime;
+		if(HasAllMaterials() == false)
+        {
+            OnJobWorked(new JobWorkedEventArgs(this));
 
-        if (!(jobTime <= 0)) return;
+            return;
+		}
+
+		WorkTime -= workTime;
+
+        OnJobWorked(new JobWorkedEventArgs(this));
+
+        if (!(WorkTime <= 0)) return;
         OnJobComplete(new JobCompleteEventArgs(this));
     }
 
-    public bool HasAllMaterials()
+	public void CancelJob()
     {
-        foreach (Inventory inventoryRequirement in InventoryRequirements.Values)
-        {
-            if (inventoryRequirement.MaxStackSize > inventoryRequirement.StackSize)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
+        OnJobCancel(new JobCancelEventArgs(this));
+		Tile.World.JobQueue.Remove(this);
+	}
 
-    public int GetRequiredInventoryAmount(Inventory inventory)
+	public bool HasAllMaterials()
+	{
+	    return InventoryRequirements.Values.All(inventory => inventory.MaxStackSize <= inventory.StackSize);
+	}
+
+	public int GetDesiredInventoryAmount(Inventory inventory)
     {
-        if (inventory == null) return 0;
-
-        if (InventoryRequirements.ContainsKey(inventory.Type) == false)
+		if(AcceptsAnyInventoryItem)
         {
-            return 0;
-        }
+			return inventory.MaxStackSize;
+		}
 
-        if (InventoryRequirements[inventory.Type].StackSize >= InventoryRequirements[inventory.Type].MaxStackSize)
+		if(InventoryRequirements.ContainsKey(inventory.Type) == false)
         {
-            return 0;
-        }
+			return 0;
+		}
 
-        return InventoryRequirements[inventory.Type].MaxStackSize - InventoryRequirements[inventory.Type].StackSize;
-    }
-
-    public Inventory GetFirstRequiredInventory()
-    {
-        foreach (Inventory inventoryRequirement in InventoryRequirements.Values)
+		if(InventoryRequirements[inventory.Type].StackSize >= InventoryRequirements[inventory.Type].MaxStackSize)
         {
-            if (inventoryRequirement.MaxStackSize > inventoryRequirement.StackSize)
-            {
-                return inventoryRequirement;
-            }
-        }
+			return 0;
+		}
 
-        return null;
-    }
+		return InventoryRequirements[inventory.Type].MaxStackSize - InventoryRequirements[inventory.Type].StackSize;
+	}
+
+	public Inventory GetFirstDesiredInventory()
+	{
+	    return InventoryRequirements.Values.FirstOrDefault(inv => inv.MaxStackSize > inv.StackSize);
+	}
+		
 }

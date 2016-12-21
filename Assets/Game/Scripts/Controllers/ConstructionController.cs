@@ -1,53 +1,52 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ConstructionController : MonoBehaviour
 {
-    private bool furnitureConstruction;
-    private TileType constructionTileType = TileType.Floor;
-    private string buildModeObjectType;
-    
-    public void BuildFloor()
-    {
-        furnitureConstruction = false;
-        constructionTileType = TileType.Floor;
-    }
+	private bool furnitureConstruction;
+	private TileType constructionTileType = TileType.Floor;
+	private string buildModeObjectType;      
 
-    public void Bulldoze()
+	public void BuildFloor( )
     {
-        furnitureConstruction = false;
-        constructionTileType = TileType.Empty;
-    }
+		furnitureConstruction = false;
+		constructionTileType = TileType.Floor;
+	}
+	
+	public void Bulldoze( )
+    {
+		furnitureConstruction = false;
+		constructionTileType = TileType.Empty;
+	}
 
-    public void BuildFurniture(string objectType)
+	public void BuildFurniture(string type)
     {
-        furnitureConstruction = true;
-        buildModeObjectType = objectType;
-    }
+		furnitureConstruction = true;
+		buildModeObjectType = type;
+	}
 
-    public void PathfindingTest()
+	public void PathfindingTest()
     {
-        WorldController.Instance.World.SetupPathfindingExample();
-    }
+		WorldController.Instance.World.SetupPathfindingExample();
+	}
 
-    public void DoBuild(Tile tile)
+	public void DoBuild(Tile tile)
     {
-        if (furnitureConstruction)
+		if(furnitureConstruction)
         {
-            // Can we build the furniture in the selected tile?
-            string furnitureType = buildModeObjectType;
+			string furnitureType = buildModeObjectType;
 
             if (!WorldController.Instance.World.IsFurniturePlacementValid(furnitureType, tile) || tile.PendingFurnitureJob != null) return;
 
             Job job;
-            if (WorldController.Instance.World.FurnitureJobPrototypes.ContainsKey(furnitureType))
+            if(WorldController.Instance.World.FurnitureJobPrototypes.ContainsKey(furnitureType))
             {
                 job = WorldController.Instance.World.FurnitureJobPrototypes[furnitureType].Clone();
                 job.Tile = tile;
             }
             else
             {
-                Debug.LogWarning("ConstructionController::DoBuild: There is no furniture job prototype for '" + furnitureType + "'.");
-                job = new Job(tile, furnitureType, FurnitureBehaviours.BuildFurniture, 0.1f);
+                Debug.LogError("There is no furniture job prototype for '" + furnitureType + "'");
+                job = new Job(tile, furnitureType, FurnitureBehaviours.BuildFurniture, 0.1f, null);
             }
 
             tile.PendingFurnitureJob = job;
@@ -58,9 +57,9 @@ public class ConstructionController : MonoBehaviour
 
             WorldController.Instance.World.JobQueue.Enqueue(job);
         }
-        else
+		else
         {
-            tile.Type = constructionTileType;
-        }
-    }
+			tile.Type = constructionTileType;
+		}
+	}
 }
