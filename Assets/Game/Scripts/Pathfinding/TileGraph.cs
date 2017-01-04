@@ -58,11 +58,11 @@ public class TileGraph
 
         if ((Mathf.Abs(differenceX) + Mathf.Abs(differentY)) != 2) return false;
 
-        if (current.World.GetTileAt(current.X - differenceX, current.Y).MovementCost == 0)
+        if (World.Current.GetTileAt(current.X - differenceX, current.Y).MovementCost == 0)
         {
             return true;
         }
 
-        return current.World.GetTileAt(current.X, current.Y - differentY).MovementCost == 0;
+        return World.Current.GetTileAt(current.X, current.Y - differentY).MovementCost == 0;
     }
 }

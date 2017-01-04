@@ -6,10 +6,10 @@ using System.Xml.Serialization;
 
 public class Character : IXmlSerializable
 {
-	public float X { get { return Mathf.Lerp( CurrentTile.X, nextTile.X, movementPercentage ); } }
-	public float Y { get { return Mathf.Lerp( CurrentTile.Y, nextTile.Y, movementPercentage ); } }
-		
-	public Tile CurrentTile { get; protected set; }
+    public float X { get { return nextTile == null ? CurrentTile.X : Mathf.Lerp(CurrentTile.X, nextTile.X, movementPercentage); }}
+    public float Y { get { return nextTile == null ? CurrentTile.Y : Mathf.Lerp(CurrentTile.Y, nextTile.Y, movementPercentage); }}
+
+    public Tile CurrentTile { get; protected set; }
     public Inventory Inventory { get; set; } 
 
     private Tile localDestinationTile;
@@ -32,11 +32,12 @@ public class Character : IXmlSerializable
 	private const float Speed = 5f;
 
     public event CharacterChangedEventHandler CharacterChanged;
-    public void OnCharacterChanged(CharacterChangedEventArgs args)
+    public void OnCharacterChanged(CharacterEventArgs args)
     {
-        if (CharacterChanged != null)
+        CharacterChangedEventHandler characterChanged = CharacterChanged;
+        if (characterChanged != null)
         {
-            CharacterChanged(this, args);
+            characterChanged(this, args);
         }
     }
 
@@ -50,7 +51,7 @@ public class Character : IXmlSerializable
     {
         DoJob(deltaTime);
         DoMovement(deltaTime);
-        OnCharacterChanged(new CharacterChangedEventArgs(this));
+        OnCharacterChanged(new CharacterEventArgs(this));
     }
 
     private void DoJob(float deltaTime)
@@ -74,7 +75,7 @@ public class Character : IXmlSerializable
                 {
 					if(CurrentTile == job.Tile)
                     {
-						CurrentTile.World.InventoryManager.PlaceInventory(job, Inventory);
+						World.Current.InventoryManager.PlaceInventory(job, Inventory);
 						job.DoWork(0); 
 
 						if(Inventory.StackSize == 0)
@@ -96,7 +97,7 @@ public class Character : IXmlSerializable
 				else
                 {
 					// TODO: Actually, walk to the nearest empty tile and dump it there.
-                    if (CurrentTile.World.InventoryManager.PlaceInventory(CurrentTile, Inventory))
+                    if (World.Current.InventoryManager.PlaceInventory(CurrentTile, Inventory))
                     {
                         return; // We can't continue until all materials are satisfied.
                     }
@@ -112,14 +113,14 @@ public class Character : IXmlSerializable
 					job.GetDesiredInventoryAmount(CurrentTile.Inventory) > 0)
                 {
 					// Pick up the stuff!
-					CurrentTile.World.InventoryManager.PlaceInventory(this, CurrentTile.Inventory, job.GetDesiredInventoryAmount(CurrentTile.Inventory));
+					World.Current.InventoryManager.PlaceInventory(this, CurrentTile.Inventory, job.GetDesiredInventoryAmount(CurrentTile.Inventory));
 
 				}
 				else
                 {
 					// Find the first thing in the Job that isn't satisfied.
 					Inventory desiredInventory = job.GetFirstDesiredInventory();
-					Inventory closestInventory = CurrentTile.World.InventoryManager.GetClosestInventoryOfType(desiredInventory.Type, 
+					Inventory closestInventory = World.Current.InventoryManager.GetClosestInventoryOfType(desiredInventory.Type, 
                         CurrentTile, desiredInventory.MaxStackSize - desiredInventory.StackSize, job.CanTakeFromStockpile);
 
 					if(closestInventory == null)
@@ -147,14 +148,13 @@ public class Character : IXmlSerializable
 
     private void GetNewJob()
     {
-        job = CurrentTile.World.JobQueue.Dequeue();
+        job = World.Current.JobQueue.Dequeue();
         if (job == null) return;
 
         destinationTile = job.Tile;
-        job.JobComplete += OnJobEnded;
-        job.JobCancel += OnJobEnded;
+        job.JobStopped += OnJobStopped;
 
-        pathfinder = new Pathfinder(CurrentTile.World, CurrentTile, destinationTile);	
+        pathfinder = new Pathfinder(World.Current, CurrentTile, destinationTile);	
         if (pathfinder.Length != 0) return;
 
         Debug.LogError("Character::DoJob: Pathfinder returned no path to destination");
@@ -165,7 +165,7 @@ public class Character : IXmlSerializable
     public void AbandonJob()
     {
 		nextTile = destinationTile = CurrentTile;
-		CurrentTile.World.JobQueue.Enqueue(job);
+        World.Current.JobQueue.Enqueue(job);
 		job = null;
 	}
 
@@ -183,7 +183,7 @@ public class Character : IXmlSerializable
 			if(pathfinder == null || pathfinder.Length == 0)
             {
 				// Generate a path to our destination
-				pathfinder = new Pathfinder(CurrentTile.World, CurrentTile, destinationTile);	
+				pathfinder = new Pathfinder(World.Current, CurrentTile, destinationTile);	
 				if(pathfinder.Length == 0)
                 {
 					Debug.LogError("Character::DoMovement: Pathfinder returned no path to destination!");
@@ -209,7 +209,7 @@ public class Character : IXmlSerializable
 		        nextTile = null;	
 		        pathfinder = null;	       
 		        return;
-		    case TileEnterability.Soon:
+		    case TileEnterability.Wait:
 		        return;
 		}
 
@@ -233,10 +233,9 @@ public class Character : IXmlSerializable
 		destinationTile = tile;
 	}
 
-    private void OnJobEnded(object sender, JobEventArgs args)
+    private void OnJobStopped(object sender, JobEventArgs args)
     {
-		args.Job.JobComplete -= OnJobEnded;
-		args.Job.JobCancel -= OnJobEnded;
+		args.Job.JobStopped -= OnJobStopped;
 
 		if(args.Job != job)
         {

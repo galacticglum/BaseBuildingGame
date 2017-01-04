@@ -17,7 +17,7 @@ public class AudioController : MonoBehaviour
 		audioCooldown -= Time.deltaTime;
 	}
 
-	private void OnTileChanged(object sender, TileChangedEventArgs args)
+	private void OnTileChanged(object sender, TileEventArgs args)
     {
         if (audioCooldown > 0)
         {
@@ -29,7 +29,7 @@ public class AudioController : MonoBehaviour
 		audioCooldown = 0.1f;
 	}
 
-	public void OnFurnitureCreated(object sender, FurnitureCreatedEventArgs args)
+	public void OnFurnitureCreated(object sender, FurnitureEventArgs args)
     {
         if (audioCooldown > 0)
         {

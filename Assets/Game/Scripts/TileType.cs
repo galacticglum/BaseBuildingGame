@@ -2,4 +2,4 @@
 {
     Empty,
     Floor
-};
+}

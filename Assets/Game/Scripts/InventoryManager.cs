@@ -48,7 +48,7 @@ public class InventoryManager
         }
 
         Inventories[tile.Inventory.Type].Add(tile.Inventory);
-        tile.World.OnInventoryCreated(new InventoryCreatedEventArgs(tile.Inventory));
+        World.Current.OnInventoryCreated(new InventoryEventArgs(tile.Inventory));
 
         return true;
 	}

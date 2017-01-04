@@ -20,7 +20,7 @@ public class FurnitureGraphicController : MonoBehaviour
         
 		foreach(Furniture furniture in world.Furnitures)
         {
-            OnFurnitureCreated(this, new FurnitureCreatedEventArgs(furniture));
+            OnFurnitureCreated(this, new FurnitureEventArgs(furniture));
         }
     }
 
@@ -35,7 +35,7 @@ public class FurnitureGraphicController : MonoBehaviour
 		}
 	}
 
-	public void OnFurnitureCreated(object sender, FurnitureCreatedEventArgs args)
+	public void OnFurnitureCreated(object sender, FurnitureEventArgs args)
     {
 		GameObject furnitureGameObject = new GameObject();
 
@@ -69,10 +69,12 @@ public class FurnitureGraphicController : MonoBehaviour
 		spriteRenderer.sprite = GetSpriteForFurniture(args.Furniture);
 		spriteRenderer.sortingLayerName = "Furniture";
 		spriteRenderer.color = args.Furniture.Tint;
-        args.Furniture.FurnitureChanged += OnFurnitureChanged;
-	}
 
-    private void OnFurnitureChanged(object sender, FurnitureChangedEventArgs args)
+        args.Furniture.FurnitureChanged += OnFurnitureChanged;
+        args.Furniture.FurnitureRemoved += OnFurnitureRemoved;
+    }
+
+    private void OnFurnitureChanged(object sender, FurnitureEventArgs args)
     {
 		if(furnitureGameObjectMap.ContainsKey(args.Furniture) == false)
         {
@@ -85,7 +87,20 @@ public class FurnitureGraphicController : MonoBehaviour
 		furnitureGameObject.GetComponent<SpriteRenderer>().color = args.Furniture.Tint;
 	}
 
-	public Sprite GetSpriteForFurniture(Furniture furniture)
+    private void OnFurnitureRemoved(object sender, FurnitureEventArgs args)
+    {
+        if (furnitureGameObjectMap.ContainsKey(args.Furniture) == false)
+        {
+            Debug.LogError("FurnitureGraphicController::OnFurnitureRemoved: Trying to change visuals for furniture not in our map.");
+            return;
+        }
+
+        GameObject furnitureGameObject = furnitureGameObjectMap[args.Furniture];
+        Destroy(furnitureGameObject);
+        furnitureGameObjectMap.Remove(args.Furniture);
+    }
+
+    public Sprite GetSpriteForFurniture(Furniture furniture)
     {
 		string spriteName = furniture.Type;
 
@@ -161,7 +176,7 @@ public class FurnitureGraphicController : MonoBehaviour
 			return furnitureSprites[type+"_"];
 		}
 
-		Debug.LogError("FurnitureGraphicController::GetSprite: No sprites with name: " + type + ".");
+		Debug.LogError("FurnitureGraphicController::GetSprite: No sprites with name: '" + type + "'.");
 		return null;
 	}
 }

@@ -1,32 +1,41 @@
 fileFormatVersion: 2
 guid: 2ea5616137df8e94cb8121c3c00e509a
-timeCreated: 1480168004
+timeCreated: 1459780093
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
     21300000: Wall
-    21300002: Wall_ES
-    21300004: Wall_NESW
-    21300006: Wall_NE
-    21300008: Wall_SW
-    21300010: Wall_NW
-    21300012: Wall_EW
-    21300014: Wall_NS
-    21300016: Wall_
-    21300018: Wall_E
-    21300020: Wall_S
-    21300022: Wall_N
-    21300024: Wall_NES
-    21300026: Wall_W
-    21300028: Wall_NEW
-    21300030: Wall_NSW
-    21300032: Wall_ESW
-  serializedVersion: 2
+    21300002: Furniture_SteelWall_ES
+    21300004: Furniture_SteelWall_NESW
+    21300006: Furniture_SteelWall_NE
+    21300008: Furniture_SteelWall_SW
+    21300010: Furniture_SteelWall_NW
+    21300012: Furniture_SteelWall_EW
+    21300014: Furniture_SteelWall_NS
+    21300016: Furniture_SteelWall_
+    21300018: Furniture_SteelWall_E
+    21300020: Furniture_SteelWall_S
+    21300022: Furniture_SteelWall_N
+    21300024: Furniture_SteelWall_NES
+    21300026: Furniture_SteelWall_W
+    21300028: Furniture_SteelWall_NEW
+    21300030: Furniture_SteelWall_NSW
+    21300032: Furniture_SteelWall_ESW
+    21300034: Furniture_SteelWall_SW
+    21300036: Furniture_SteelWall_NS
+    21300038: Furniture_SteelWall_NW
+    21300040: Furniture_SteelWall_SW
+    21300042: Furniture_SteelWall_NS
+    21300044: Furniture_SteelWall_NW
+    21300046: Furniture_SteelWall_SW
+    21300048: Furniture_SteelWall_NS
+    21300050: Furniture_SteelWall_NW
+  serializedVersion: 4
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
+    sRGBTexture: 1
     linearTexture: 0
-    correctGamma: 0
     fadeOut: 0
     borderMipMap: 0
     mipMapFadeDistanceStart: 1
@@ -38,10 +47,8 @@ TextureImporter:
     normalMapFilter: 0
   isReadable: 0
   grayScaleToAlpha: 0
-  generateCubemap: 0
+  generateCubemap: 6
   cubemapConvolution: 0
-  cubemapConvolutionSteps: 8
-  cubemapConvolutionExponent: 1.5
   seamlessCubemap: 0
   textureFormat: -3
   maxTextureSize: 2048
@@ -52,9 +59,7 @@ TextureImporter:
     wrapMode: 1
   nPOTScale: 0
   lightmap: 0
-  rGBM: 0
   compressionQuality: 50
-  allowsAlphaSplitting: 0
   spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
@@ -62,15 +67,28 @@ TextureImporter:
   spritePivot: {x: 0.5, y: 0.5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 32
+  alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationDetail: -1
   textureType: 8
-  buildTargetSettings: []
+  textureShape: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  platformSettings:
+  - buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Wall_
+      name: Furniture_SteelWall_
       rect:
         serializedVersion: 2
         x: 0
@@ -83,7 +101,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_ES
+      name: Furniture_SteelWall_ES
       rect:
         serializedVersion: 2
         x: 0
@@ -96,7 +114,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_E
+      name: Furniture_SteelWall_E
       rect:
         serializedVersion: 2
         x: 320
@@ -109,7 +127,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_S
+      name: Furniture_SteelWall_S
       rect:
         serializedVersion: 2
         x: 352
@@ -122,7 +140,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_N
+      name: Furniture_SteelWall_N
       rect:
         serializedVersion: 2
         x: 352
@@ -135,7 +153,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_NES
+      name: Furniture_SteelWall_NES
       rect:
         serializedVersion: 2
         x: 128
@@ -148,7 +166,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_EW
+      name: Furniture_SteelWall_EW
       rect:
         serializedVersion: 2
         x: 32
@@ -161,7 +179,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_SW
+      name: Furniture_SteelWall_SW
       rect:
         serializedVersion: 2
         x: 64
@@ -174,7 +192,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_NS
+      name: Furniture_SteelWall_NS
       rect:
         serializedVersion: 2
         x: 64
@@ -187,7 +205,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_NW
+      name: Furniture_SteelWall_NW
       rect:
         serializedVersion: 2
         x: 64
@@ -200,7 +218,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_NE
+      name: Furniture_SteelWall_NE
       rect:
         serializedVersion: 2
         x: 0
@@ -213,7 +231,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_W
+      name: Furniture_SteelWall_W
       rect:
         serializedVersion: 2
         x: 384
@@ -226,7 +244,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_NEW
+      name: Furniture_SteelWall_NEW
       rect:
         serializedVersion: 2
         x: 192
@@ -239,7 +257,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_NSW
+      name: Furniture_SteelWall_NSW
       rect:
         serializedVersion: 2
         x: 256
@@ -252,7 +270,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_NESW
+      name: Furniture_SteelWall_NESW
       rect:
         serializedVersion: 2
         x: 352
@@ -265,7 +283,7 @@ TextureImporter:
       outline: []
       tessellationDetail: -1
     - serializedVersion: 2
-      name: Wall_ESW
+      name: Furniture_SteelWall_ESW
       rect:
         serializedVersion: 2
         x: 192

@@ -16,15 +16,20 @@ public class MouseController : MonoBehaviour
 	private Vector3 dragStartPosition;
 	private List<GameObject> dragPreviewGameObjects;
 
+    private bool isDragging;
+    private MouseMode currentMouseMode;
+
+    private ConstructionController constructionController;
+    private FurnitureGraphicController furnitureGraphicController;
+
 	// Use this for initialization
 	private void Start ()
     {
-		dragPreviewGameObjects = new List<GameObject>();
-	}
+        currentMouseMode = MouseMode.Selection;
 
-	public Tile GetMouseOverTile()
-    {
-		return WorldController.Instance.GetTileAtWorldCoordinate(currentFramePosition);
+        constructionController = FindObjectOfType<ConstructionController>();
+        furnitureGraphicController = FindObjectOfType<FurnitureGraphicController>();
+        dragPreviewGameObjects = new List<GameObject>();
 	}
 
 	// Update is called once per frame
@@ -33,8 +38,22 @@ public class MouseController : MonoBehaviour
 		currentFramePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 		currentFramePosition.z = 0;
 
-		UpdateDragging();
-		UpdateCameraMovement();
+        if (Input.GetKeyUp(KeyCode.Escape))
+        {
+            switch (currentMouseMode)
+            {
+                case MouseMode.Construction:
+                    currentMouseMode = MouseMode.Selection;
+                    break;
+                case MouseMode.Selection:
+                    // TODO: Show game menu?
+                    break;
+            }
+        }
+
+
+        UpdateDragging();
+        UpdateCameraMovement();
 
 		lastFramePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 		lastFramePosition.z = 0;
@@ -42,74 +61,92 @@ public class MouseController : MonoBehaviour
 
     private void UpdateDragging()
     {
-		if( EventSystem.current.IsPointerOverGameObject())
-        {
-			return;
-		}
+		if(EventSystem.current.IsPointerOverGameObject()) return;
 
-		if( Input.GetMouseButtonDown(0) )
+        // Clean up old drag previews
+        while (dragPreviewGameObjects.Count > 0)
         {
-			dragStartPosition = currentFramePosition;
-		}
+            GameObject dragPreviewGameObject = dragPreviewGameObjects[0];
+            dragPreviewGameObjects.RemoveAt(0);
+            ObjectPool.Destroy(dragPreviewGameObject);
+        }
 
-		int startX = Mathf.FloorToInt(dragStartPosition.x + 0.5f);
-		int endX =   Mathf.FloorToInt(currentFramePosition.x + 0.5f);
-		int startY = Mathf.FloorToInt(dragStartPosition.y + 0.5f);
-		int endY =   Mathf.FloorToInt(currentFramePosition.y + 0.5f);
-		
-		if(endX < startX)
-        {
-			int tmp = endX;
-			endX = startX;
-			startX = tmp;
-		}
-		if(endY < startY)
-        {
-			int tmp = endY;
-			endY = startY;
-			startY = tmp;
-		}
+        if (currentMouseMode != MouseMode.Construction) return;
 
-		// Clean up old drag previews
-		while(dragPreviewGameObjects.Count > 0)
+        if (Input.GetMouseButtonDown(0))
         {
-			GameObject dragPreviewGameObject = dragPreviewGameObjects[0];
-			dragPreviewGameObjects.RemoveAt(0);
-			ObjectPool.Destroy(dragPreviewGameObject);
-		}
+            isDragging = true;
+        }
+        else if (isDragging == false)
+        {
+            dragStartPosition = currentFramePosition;
+        }
 
-		if(Input.GetMouseButton(0))
+        if (Input.GetMouseButtonUp(1) || Input.GetKeyUp(KeyCode.Escape))
         {
-			// Display a preview of the drag area
-			for (int x = startX; x <= endX; x++)
+            dragStartPosition = currentFramePosition;
+            isDragging = false;
+        }
+
+        if (constructionController.IsFurnitureDraggable() == false)
+        {
+            dragStartPosition = currentFramePosition;
+        }
+
+        int startX = Mathf.FloorToInt(dragStartPosition.x + 0.5f);
+        int endX = Mathf.FloorToInt(currentFramePosition.x + 0.5f);
+        int startY = Mathf.FloorToInt(dragStartPosition.y + 0.5f);
+        int endY = Mathf.FloorToInt(currentFramePosition.y + 0.5f);
+
+        if (endX < startX)
+        {
+            int tmp = endX;
+            endX = startX;
+            startX = tmp;
+        }
+        if (endY < startY)
+        {
+            int tmp = endY;
+            endY = startY;
+            startY = tmp;
+        }
+
+        // Display a preview of the drag area
+        for (int x = startX; x <= endX; x++)
+        {
+            for (int y = startY; y <= endY; y++)
             {
-				for (int y = startY; y <= endY; y++)
-                {
-					Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
-                    if (tileAt == null) continue;
+                Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
+                if (tileAt == null) continue;
 
-                    GameObject spawnInstance = ObjectPool.Spawn(circleCursorPrefab, new Vector3(x, y, 0), Quaternion.identity);
+                if (constructionController.ConstructionMode == ConstructionMode.Furniture)
+                {
+                    DrawFurnitureSprite(constructionController.ConstructionObjectType, tileAt);
+                }
+                else
+                {
+                    GameObject spawnInstance = ObjectPool.Spawn(circleCursorPrefab, new Vector3(x, y, 0),
+                        Quaternion.identity);
                     spawnInstance.transform.SetParent(transform, true);
                     dragPreviewGameObjects.Add(spawnInstance);
                 }
-			}
-		}
+            }
+        }
 
-		// End Drag
-        if (!Input.GetMouseButtonUp(0)) return;
+
+        if (!Input.GetMouseButtonUp(0) || !isDragging) return;
+
+        // End Drag
+        isDragging = false;
+        for (int x = startX; x <= endX; x++)
         {
-            ConstructionController constructionController = FindObjectOfType<ConstructionController>();
-
-            for (int x = startX; x <= endX; x++)
+            for (int y = startY; y <= endY; y++)
             {
-                for (int y = startY; y <= endY; y++)
-                {
-                    Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
+                Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
 
-                    if(tileAt != null)
-                    {
-                        constructionController.DoBuild(tileAt);
-                    }
+                if (tileAt != null)
+                {
+                    constructionController.DoBuild(tileAt);
                 }
             }
         }
@@ -128,5 +165,32 @@ public class MouseController : MonoBehaviour
 		Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize, 3f, 25f);
 	}
 
+    public Tile GetMouseOverTile()
+    {
+        return WorldController.Instance.GetTileAtWorldCoordinate(currentFramePosition);
+    }
 
+    private void DrawFurnitureSprite(string type, Tile tile)
+    {
+        GameObject spawnInstance = new GameObject();
+        spawnInstance.transform.SetParent(transform, true);   
+        dragPreviewGameObjects.Add(spawnInstance);
+
+        SpriteRenderer spriteRenderer = spawnInstance.AddComponent<SpriteRenderer>();
+        spriteRenderer.sortingLayerName = "Jobs";
+        spriteRenderer.sprite = furnitureGraphicController.GetSpriteForFurniture(type);
+        spriteRenderer.color = World.Current.IsFurniturePlacementValid(type, tile) ?
+            new Color(0.5f, 1f, 0.5f, 0.25f) : // Green: placement is valid
+            new Color(1f, 0.5f, 0.5f, 0.25f);  // Red: placement is invalid
+
+        Furniture furniturePrototype = World.Current.FurniturePrototypes[type];
+        spawnInstance.transform.position = new Vector3(tile.X + (furniturePrototype.Width - 1) / 2f, tile.Y + (furniturePrototype.Height - 1) / 2f, 0);
+    }
+
+    public void InConstructionMode()
+    {
+        dragStartPosition = currentFramePosition;
+        isDragging = false;
+        currentMouseMode = MouseMode.Construction;
+    }
 }

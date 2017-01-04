@@ -2,5 +2,5 @@
 {
     Immediate,
     Never,
-    Soon
-};
+    Wait
+}

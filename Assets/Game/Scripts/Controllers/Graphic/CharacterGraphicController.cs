@@ -20,7 +20,7 @@ public class CharacterGraphicController : MonoBehaviour
 
 		foreach(Character character in world.Characters)
         {
-			world.OnCharacterCreated(new CharacterCreatedEventArgs(character));
+			world.OnCharacterCreated(new CharacterEventArgs(character));
 		}
 	}
 
@@ -35,7 +35,7 @@ public class CharacterGraphicController : MonoBehaviour
 		}
 	}
 
-	public void OnCharacterCreated(object sender, CharacterCreatedEventArgs args)
+	public void OnCharacterCreated(object sender, CharacterEventArgs args)
     {
 		GameObject characterGameObject = new GameObject();
 		characterGameObjectMap.Add(args.Character, characterGameObject);
@@ -50,7 +50,7 @@ public class CharacterGraphicController : MonoBehaviour
 		args.Character.CharacterChanged += OnCharacterChanged;
 	}
 
-    private void OnCharacterChanged(object sender, CharacterChangedEventArgs args)
+    private void OnCharacterChanged(object sender, CharacterEventArgs args)
     {
 		if(characterGameObjectMap.ContainsKey(args.Character) == false)
         {

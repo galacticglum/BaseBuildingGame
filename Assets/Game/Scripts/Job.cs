@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Linq;
+using MoonSharp.Interpreter;
 
+[MoonSharpUserData]
 public class Job
 { 
 	public Tile Tile { get; set; }
+    public Furniture FurniturePrototype { get; set; }
     public Furniture Furniture { get; set; }
     public string Type { get; protected set; }
 
@@ -14,44 +17,52 @@ public class Job
 	public bool AcceptsAnyInventoryItem { get; set; }
 	public bool CanTakeFromStockpile { get; set; }
 
-    public event JobCompleteEventHandler JobComplete;
-    public void OnJobComplete(JobCompleteEventArgs args)
+    private readonly float requiredWorkTime;
+    private readonly bool repeatingJob;
+
+    public event JobCompletedEventHandler JobCompleted;
+    public void OnJobCompleted(JobEventArgs args)
     {
-        if (JobComplete != null)
+        JobCompletedEventHandler jobCompleted = JobCompleted;
+        if (jobCompleted != null)
         {
-            JobComplete(this, args);
+            jobCompleted(this, args);
         }
     }
 
-    public event JobCancelEventHandler JobCancel;
-    public void OnJobCancel(JobCancelEventArgs args)
+    public event JobStoppedEventHandler JobStopped;
+    public void OnJobStopped(JobEventArgs args)
     {
-        if (JobCancel != null)
+        JobStoppedEventHandler jobStopped = JobStopped;
+        if (jobStopped != null)
         {
-            JobCancel(this, args);
+            jobStopped(this, args);
         }
     }
 
     public event JobWorkedEventHandler JobWorked;
-    public void OnJobWorked(JobWorkedEventArgs args)
+    public void OnJobWorked(JobEventArgs args)
     {
-        if (JobWorked != null)
+        JobWorkedEventHandler jobWorked = JobWorked;
+        if (jobWorked != null)
         {
-            JobWorked(this, args);
+            jobWorked(this, args);
         }
     }
 
-    public Job (Tile tile, string type, Action<object, JobCompleteEventArgs> jobComplete, float workTime, Inventory[] inventoryRequirements )
+    public Job (Tile tile, string type, Action<object, JobEventArgs> jobCompleted, float workTime, Inventory[] inventoryRequirements, bool repeatingJob = false)
     {
 		Tile = tile;
-		Type = type;
-		WorkTime = workTime;
+		Type = type;    
+		requiredWorkTime = WorkTime = workTime;
         AcceptsAnyInventoryItem = false;
         CanTakeFromStockpile = true;
 
-        if (jobComplete != null)
+        this.repeatingJob = repeatingJob;
+
+        if (jobCompleted != null)
         {
-            JobComplete += (sender, args) => { jobComplete(sender, args); };
+            JobCompleted += (sender, args) => { jobCompleted(sender, args); };
         }
 
         InventoryRequirements = new Dictionary<string, Inventory>();
@@ -69,7 +80,9 @@ public class Job
 		WorkTime = job.WorkTime;
         AcceptsAnyInventoryItem = job.AcceptsAnyInventoryItem;
         CanTakeFromStockpile = job.CanTakeFromStockpile;
-        JobComplete = job.JobComplete;
+        JobCompleted = job.JobCompleted;
+
+        requiredWorkTime = job.requiredWorkTime;
 
         InventoryRequirements = new Dictionary<string, Inventory>();
         if (InventoryRequirements == null) return;
@@ -88,23 +101,32 @@ public class Job
     {
 		if(HasAllMaterials() == false)
         {
-            OnJobWorked(new JobWorkedEventArgs(this));
+            OnJobWorked(new JobEventArgs(this));
 
             return;
 		}
 
 		WorkTime -= workTime;
 
-        OnJobWorked(new JobWorkedEventArgs(this));
+        OnJobWorked(new JobEventArgs(this));
 
         if (!(WorkTime <= 0)) return;
-        OnJobComplete(new JobCompleteEventArgs(this));
+
+        OnJobCompleted(new JobEventArgs(this));
+        if (repeatingJob == false)
+        {
+            OnJobStopped(new JobEventArgs(this));
+        }
+        else
+        {
+            WorkTime += requiredWorkTime;
+        }
     }
 
 	public void CancelJob()
     {
-        OnJobCancel(new JobCancelEventArgs(this));
-		Tile.World.JobQueue.Remove(this);
+        OnJobStopped(new JobEventArgs(this));
+        World.Current.JobQueue.Remove(this);
 	}
 
 	public bool HasAllMaterials()

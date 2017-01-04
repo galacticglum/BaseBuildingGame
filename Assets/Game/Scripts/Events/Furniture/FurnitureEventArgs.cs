@@ -1,5 +1,7 @@
 ﻿using System;
+using MoonSharp.Interpreter;
 
+[MoonSharpUserData]
 public class FurnitureEventArgs : EventArgs
 {
     public readonly Furniture Furniture;

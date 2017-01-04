@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Furnitures>
+    <Furniture Type="Furniture_SteelWall">
+        <Name>Steel Wall</Name>
+        <MovementCost>0</MovementCost>
+        <Width>1</Width>
+        <Height>1</Height>
+        <LinksToNeighbours>true</LinksToNeighbours>
+        <RoomEnclosure>true</RoomEnclosure>
+
+        <BuildJob WorkTime="1">
+            <Inventory Type="Steel Plate" Amount="0"/>
+        </BuildJob>
+
+        <DeconstructJob>
+            <Inventory Type="Steel Plate" Amount="3"/>
+        </DeconstructJob>
+    </Furniture>
+
+    <Furniture Type="Door">
+        <Name>Door</Name>
+        <MovementCost>1</MovementCost>
+        <Width>1</Width>
+        <Height>1</Height>
+        <LinksToNeighbours>false</LinksToNeighbours>
+        <RoomEnclosure>true</RoomEnclosure>
+
+        <BuildJob WorkTime="1">
+            <Inventory Type="Steel Plate" Amount="0"/>
+        </BuildJob>
+
+        <DeconstructJob>
+            <Inventory Type="Steel Plate" Amount="1"/>
+        </DeconstructJob>
+
+        <Parameters>
+            <Parameter Name="openness" Value="0"/>  
+            <Parameter Name="is_opening" Value="0"/>  
+        </Parameters>
+
+        <OnUpdate FunctionName="UpdateDoor"/>
+        <TryEnter FunctionName="DoorTryEnter"/>                
+    </Furniture>
+
+    <Furniture Type="Stockpile">
+        <Name>Stockpile</Name>
+        <MovementCost>1</MovementCost>
+        <Width>1</Width>
+        <Height>1</Height>
+
+        <OnUpdate FunctionName="UpdateStockpile"/>        
+    </Furniture>
+
+    <Furniture Type="Oxygen Generator">
+        <Name>Oxygen Generator</Name>
+        <MovementCost>10</MovementCost>
+        <Width>2</Width>
+        <Height>2</Height>
+        
+        <OnUpdate FunctionName="UpdateOxygenGenerator"/>
+    </Furniture>
+
+    <Furniture Type="Mining Drone">
+        <Name>Mining Drone</Name>
+        <MovementCost>1</MovementCost>
+        <Width>3</Width>
+        <Height>3</Height>
+
+        <OnUpdate FunctionName="UpdateMiningDrone"/>
+
+        <WorkPositionOffset X="1" Y="0"/>
+        <InventorySpawnPositionOffset X="0" Y="0"/>
+    </Furniture>
+</Furnitures>

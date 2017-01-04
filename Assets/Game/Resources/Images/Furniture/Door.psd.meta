@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 08f3be664581d2c47bf95c35d69a1e91
-timeCreated: 1480168959
+timeCreated: 1459779955
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -51,14 +51,11 @@ TextureImporter:
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 32
   alphaIsTransparency: 1
-  spriteTessellationDetail: -1
   textureType: 8
   buildTargetSettings: []
   spriteSheet:
-    serializedVersion: 2
     sprites:
-    - serializedVersion: 2
-      name: Door
+    - name: Door
       rect:
         serializedVersion: 2
         x: 32
@@ -68,10 +65,12 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      tessellationDetail: -1
-    - serializedVersion: 2
-      name: Door_NS
+      outline:
+      - - {x: -16, y: -4}
+        - {x: 16, y: -4}
+        - {x: 16, y: 4}
+        - {x: -16, y: 4}
+    - name: Door_NS
       rect:
         serializedVersion: 2
         x: 128
@@ -81,10 +80,12 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      tessellationDetail: -1
-    - serializedVersion: 2
-      name: Door_openness_1
+      outline:
+      - - {x: 4, y: -16}
+        - {x: 4, y: 16}
+        - {x: -4, y: 16}
+        - {x: -4, y: -16}
+    - name: Door_openness_1
       rect:
         serializedVersion: 2
         x: 32
@@ -94,10 +95,14 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      tessellationDetail: -1
-    - serializedVersion: 2
-      name: Door_openness_2
+      outline:
+      - - {x: -16, y: 4}
+        - {x: -16, y: -4}
+        - {x: 7, y: -4}
+        - {x: 9, y: -2}
+        - {x: 9, y: 2}
+        - {x: 7, y: 4}
+    - name: Door_openness_2
       rect:
         serializedVersion: 2
         x: 32
@@ -107,10 +112,14 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      tessellationDetail: -1
-    - serializedVersion: 2
-      name: Door_openness_3
+      outline:
+      - - {x: -16, y: 4}
+        - {x: -16, y: -4}
+        - {x: -3, y: -4}
+        - {x: -1, y: -2}
+        - {x: -1, y: 2}
+        - {x: -3, y: 4}
+    - name: Door_openness_3
       rect:
         serializedVersion: 2
         x: 32
@@ -120,8 +129,13 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      tessellationDetail: -1
+      outline:
+      - - {x: -16, y: 4}
+        - {x: -16, y: -4}
+        - {x: -14, y: -4}
+        - {x: -12, y: -2}
+        - {x: -12, y: 2}
+        - {x: -14, y: 4}
     outline: []
   spritePackingTag: 
   userData: 

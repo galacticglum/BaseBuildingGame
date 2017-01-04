@@ -1,5 +1,7 @@
 ﻿using System;
+using MoonSharp.Interpreter;
 
+[MoonSharpUserData]
 public class Inventory
 {
 	public string Type { get; set; }
@@ -14,7 +16,7 @@ public class Inventory
             if (localStackSize == value) return;
             localStackSize = value;
 
-            OnInventoryChanged(new InventoryChangedEventArgs(this));
+            OnInventoryChanged(new InventoryEventArgs(this));
         }
 	}
 
@@ -22,11 +24,12 @@ public class Inventory
     public Character Character { get; set; }
 
     public event InventoryChangedEventHandler InventoryChanged;
-    public void OnInventoryChanged(InventoryChangedEventArgs args)
+    public void OnInventoryChanged(InventoryEventArgs args)
     {
-        if (InventoryChanged != null)
+        InventoryChangedEventHandler inventoryChanged = InventoryChanged;
+        if (inventoryChanged != null)
         {
-            InventoryChanged(this, args);
+            inventoryChanged(this, args);
         }
     }
 

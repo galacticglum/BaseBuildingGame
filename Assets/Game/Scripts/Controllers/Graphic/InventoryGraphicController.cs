@@ -26,7 +26,7 @@ public class InventoryGraphicController : MonoBehaviour
         {
 			foreach(Inventory inventory in world.InventoryManager.Inventories[type])
             {
-				world.OnInventoryCreated(new InventoryCreatedEventArgs(inventory));
+				world.OnInventoryCreated(new InventoryEventArgs(inventory));
 			}
 		}
 	}
@@ -42,7 +42,7 @@ public class InventoryGraphicController : MonoBehaviour
 		}
 	}
 
-	public void OnInventoryCreated(object sender, InventoryCreatedEventArgs args)
+	public void OnInventoryCreated(object sender, InventoryEventArgs args)
     {
 		GameObject inventoryGameObject = new GameObject();
 		inventoryGameObjectMap.Add(args.Inventory, inventoryGameObject);
@@ -65,7 +65,7 @@ public class InventoryGraphicController : MonoBehaviour
         args.Inventory.InventoryChanged += OnInventoryChanged;
 	}
 
-    private void OnInventoryChanged(object sender, InventoryChangedEventArgs args)
+    private void OnInventoryChanged(object sender, InventoryEventArgs args)
     {
 		if(inventoryGameObjectMap.ContainsKey(args.Inventory) == false)
         {

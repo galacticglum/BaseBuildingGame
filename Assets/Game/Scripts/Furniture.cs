@@ -4,16 +4,40 @@ using System;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using MoonSharp.Interpreter;
 
+[MoonSharpUserData]
 public class Furniture : IXmlSerializable
 {
-	protected Dictionary<string, float> FurnitureParameters { get; set; }
-	public Action<Furniture, float> UpdateBehaviours { get; set; }
-    public Func<Furniture, TileEnterability> TryEnter { get; set; }
+    protected Dictionary<string, float> FurnitureParameters { get; set; }
+    //public event FurnitureUpdateEventHandler UpdateBehaviours;
+    //public void OnFurnitureUpdate(FurnitureUpdateEventArgs args)
+    //{
+    //    FurnitureUpdateEventHandler updateBehaviours = UpdateBehaviours;
+    //    if (updateBehaviours != null)
+    //    {
+    //        updateBehaviours(this, args);
+    //    }
+    //}
 
-    public Tile Tile { get; protected set; }
+    //public Func<Furniture, TileEnterability> TryEnter { get; set; }
+
+    private string name = string.Empty;
+    public string Name
+    {
+        get { return string.IsNullOrEmpty(name) ? Type : name; }
+        set { name = value; }
+    }
+
     public string Type { get; protected set; }
-    
+    public Tile Tile { get; protected set; }
+
+    public Vector2 WorkPositionOffset { get; set; }
+    public Tile WorkTile { get { return World.Current.GetTileAt(Tile.X + (int)WorkPositionOffset.x, Tile.Y + (int)WorkPositionOffset.y); } }
+
+    public Vector2 InventorySpawnPositionOffset { get; set; }
+    public Tile InventorySpawnTile { get { return World.Current.GetTileAt(Tile.X + (int)InventorySpawnPositionOffset.x, Tile.Y + (int)InventorySpawnPositionOffset.y); } }
+
     public int Width { get; protected set; }
     public int Height { get; protected set; }
 
@@ -24,55 +48,61 @@ public class Furniture : IXmlSerializable
     public Color Tint { get; set; }
 
     public event FurnitureChangedEventHandler FurnitureChanged;
-    public void OnFurnitureChanged(FurnitureChangedEventArgs args)
-    {
-        if (FurnitureChanged != null)
+    public void OnFurnitureChanged(FurnitureEventArgs args)
+    {   
+        FurnitureChangedEventHandler furnitureChanged = FurnitureChanged;
+        if (furnitureChanged != null)
         {
-            FurnitureChanged(this, args);
+            furnitureChanged(this, args);
+        }
+    }
+    
+    public event FurnitureRemovedEventHandler FurnitureRemoved;
+    public void OnFurnitureRemoved(FurnitureEventArgs args)
+    {
+        FurnitureRemovedEventHandler furnitureRemoved = FurnitureRemoved;
+        if (furnitureRemoved != null)
+        {
+            furnitureRemoved(this, args);
         }
     }
 
     private readonly List<Job> jobs;
 
-	public Furniture()
-    {
-		FurnitureParameters = new Dictionary<string, float>();
-		jobs = new List<Job>();
-	}
+    private readonly List<string> updateBehaviours;
+    private string tryEnterFunction = string.Empty;
 
-    public Furniture(string type) : this(type, 1, 1, 1, false, false) { }
-	public Furniture (string type, float movementCost, int width, int height, bool linksToNeighbour, bool roomEnclosure)
+    public Furniture()
     {
-		Type = type;
-		MovementCost = movementCost;
-		RoomEnclosure = roomEnclosure;
-        LinksToNeighbour = linksToNeighbour;
-        Tint = Color.white;
-
         FurnitureParameters = new Dictionary<string, float>();
+        updateBehaviours = new List<string>();
 
-        this.Width = width;
-		this.Height = height;
-	}
+        jobs = new List<Job>();
+        Tint = Color.white;
+    }
 
     protected Furniture(Furniture furniture)
     {
+        Name = furniture.Name;
         Type = furniture.Type;
         MovementCost = furniture.MovementCost;
         RoomEnclosure = furniture.RoomEnclosure;
-        Tint = Color.white;
+        Tint = furniture.Tint;
         Width = furniture.Width;
         Height = furniture.Height;
         Tint = furniture.Tint;
         LinksToNeighbour = furniture.LinksToNeighbour;
+        WorkPositionOffset = furniture.WorkPositionOffset;
 
         FurnitureParameters = new Dictionary<string, float>(furniture.FurnitureParameters);
         jobs = new List<Job>();
 
-        if (furniture.UpdateBehaviours != null)
-            UpdateBehaviours = (Action<Furniture, float>)furniture.UpdateBehaviours.Clone();
+        if (furniture.updateBehaviours != null)
+        {
+            updateBehaviours = furniture.updateBehaviours;
+        }
 
-        TryEnter = furniture.TryEnter;
+        tryEnterFunction = furniture.tryEnterFunction;
     }
 
     public virtual Furniture Clone()
@@ -82,10 +112,8 @@ public class Furniture : IXmlSerializable
 
     public void Update(float deltaTime)
     {
-        if (UpdateBehaviours != null)
-        {
-            UpdateBehaviours(this, deltaTime);
-        }
+        FurnitureBehaviours.Execute(updateBehaviours.ToArray(), this, deltaTime);
+        //OnFurnitureUpdate(new FurnitureUpdateEventArgs(this, deltaTime));
     }
 
     public static Furniture Place(Furniture furniture, Tile tile)
@@ -107,25 +135,25 @@ public class Furniture : IXmlSerializable
         int x = tile.X;
         int y = tile.Y;
 
-        Tile tileAt = tile.World.GetTileAt(x, y+1);
+        Tile tileAt = World.Current.GetTileAt(x, y+1);
         if(HasFurnitureOfSameType(furnitureInstance, tileAt))
         {
-            tileAt.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(tileAt.Furniture));
+            tileAt.Furniture.OnFurnitureChanged(new FurnitureEventArgs(tileAt.Furniture));
         }
-        tileAt = tile.World.GetTileAt(x+1, y);
+        tileAt = World.Current.GetTileAt(x+1, y);
         if(HasFurnitureOfSameType(furnitureInstance, tileAt))
         {
-            tileAt.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(tileAt.Furniture));
+            tileAt.Furniture.OnFurnitureChanged(new FurnitureEventArgs(tileAt.Furniture));
         }
-        tileAt = tile.World.GetTileAt(x, y-1);
+        tileAt = World.Current.GetTileAt(x, y-1);
         if(HasFurnitureOfSameType(furnitureInstance, tileAt))
         {
-            tileAt.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(tileAt.Furniture));
+            tileAt.Furniture.OnFurnitureChanged(new FurnitureEventArgs(tileAt.Furniture));
         }
-        tileAt = tile.World.GetTileAt(x-1, y);
+        tileAt = World.Current.GetTileAt(x-1, y);
         if(HasFurnitureOfSameType(furnitureInstance, tileAt))
         {
-            tileAt.Furniture.OnFurnitureChanged(new FurnitureChangedEventArgs(tileAt.Furniture));
+            tileAt.Furniture.OnFurnitureChanged(new FurnitureEventArgs(tileAt.Furniture));
         }
 
         return furnitureInstance;
@@ -142,7 +170,7 @@ public class Furniture : IXmlSerializable
         {
             for (int y = tile.Y; y < tile.Y + Height; y++)
             {
-                Tile tileAt = tile.World.GetTileAt(x, y);
+                Tile tileAt = World.Current.GetTileAt(x, y);
 
                 if (tileAt.Type != TileType.Floor)
                 {
@@ -185,30 +213,70 @@ public class Furniture : IXmlSerializable
 	}
 
 	public void AddJob(Job job)
-    {
+	{
+	    job.Furniture = this;
 		jobs.Add(job);
-		Tile.World.JobQueue.Enqueue(job);
+	    job.JobStopped += OnJobStopped;
+        World.Current.JobQueue.Enqueue(job);
 	}
 
-	public void RemoveJob(Job job)
-    {
+	private void RemoveJob(Job job)
+	{
+	    job.JobStopped -= OnJobStopped;
 		jobs.Remove(job);
-		job.CancelJob();
-		Tile.World.JobQueue.Remove(job);
+        job.Furniture = null;
 	}
 
-	public void ClearJobs()
-    {
-		foreach(Job j in jobs)
+	private void ClearJobs()
+	{
+	    Job[] jobsToClear = jobs.ToArray();
+		foreach(Job job in jobsToClear)
         {
-			RemoveJob(j);
+			RemoveJob(job);
 		}
 	}
+
+    public void CancelJobs()
+    {
+        Job[] jobsToClear = jobs.ToArray();
+        foreach (Job job in jobsToClear)
+        {
+            job.CancelJob();
+        }
+    }
 
 	public bool IsStockpile()
     {
 		return Type == "Stockpile";
 	}
+
+    public void Deconstruct()
+    {
+        Tile.RemoveFurniture();
+        OnFurnitureRemoved(new FurnitureEventArgs(this));
+
+        if (RoomEnclosure)
+        {
+            Room.CalculateRooms(Tile);
+        }
+        
+        World.Current.InvalidateTileGraph();
+    }
+
+    private void OnJobStopped(object sender, JobEventArgs args)
+    {
+        RemoveJob(args.Job);
+    }
+
+    public TileEnterability TryEnter()
+    {
+        if (string.IsNullOrEmpty(tryEnterFunction))
+        {
+            return TileEnterability.Immediate;
+        }
+
+        return (TileEnterability)FurnitureBehaviours.Execute(tryEnterFunction, this).UserData.Object;
+    }
 
     public XmlSchema GetSchema()
     {
@@ -232,13 +300,97 @@ public class Furniture : IXmlSerializable
 
     public void ReadXml(XmlReader reader)
     {
-        if (!reader.ReadToDescendant("Paramater")) return;
+        ReadXmlParamaters(reader);
+    }
 
+    public void ReadXmlPrototype(XmlReader reader)
+    {
+        Type = reader.GetAttribute("Type");
+        XmlReader readerSubtree = reader.ReadSubtree();
+
+        while (readerSubtree.Read())
+        {
+            switch (readerSubtree.Name)
+            {
+                case "Name":
+                    readerSubtree.Read();
+                    Name = readerSubtree.ReadContentAsString();
+                    break;
+
+                case "MovementCost":
+                    readerSubtree.Read();
+                    MovementCost = readerSubtree.ReadContentAsFloat();
+                    break;
+
+                case "Width":
+                    readerSubtree.Read();
+                    Width = readerSubtree.ReadContentAsInt();
+                    break;
+
+                case "Height":
+                    readerSubtree.Read();
+                    Height = readerSubtree.ReadContentAsInt();
+                    break;
+
+                case "LinksToNeighbours":
+                    readerSubtree.Read();
+                    LinksToNeighbour = readerSubtree.ReadContentAsBoolean();
+                    break;
+
+                case "RoomEnclosure":
+                    readerSubtree.Read();
+                    RoomEnclosure = readerSubtree.ReadContentAsBoolean();
+                    break;
+
+                case "BuildJob":
+                    float workTime = float.Parse(reader.GetAttribute("WorkTime"));
+                    List<Inventory> inventories = new List<Inventory>();
+                    XmlReader inventoryReader = readerSubtree.ReadSubtree();
+
+                    while (inventoryReader.Read())
+                    {
+                        if (inventoryReader.Name == "Inventory")
+                        {
+                            inventories.Add(new Inventory(inventoryReader.GetAttribute("Type"), int.Parse(inventoryReader.GetAttribute("Amount")), 0));
+                        }
+                    }
+
+                    World.Current.FurnitureJobPrototypes[Type] = new Job(null, Type, FurnitureBehaviours.BuildFurniture, workTime, inventories.ToArray()); 
+                    break;
+
+                case "OnUpdate":
+                    updateBehaviours.Add(readerSubtree.GetAttribute("FunctionName"));
+                    break;
+
+                case "TryEnter":
+                    tryEnterFunction = readerSubtree.GetAttribute("FunctionName");
+                    break;
+
+                case "WorkPositionOffset":
+                    WorkPositionOffset = new Vector2(float.Parse(readerSubtree.GetAttribute("X")), 
+                                                     float.Parse(readerSubtree.GetAttribute("Y")));
+                    break;
+
+                case "InventorySpawnPositionOffset":
+                    InventorySpawnPositionOffset = new Vector2(float.Parse(readerSubtree.GetAttribute("X")),
+                                                               float.Parse(readerSubtree.GetAttribute("Y")));
+                    break;
+
+                case "Paramaters":
+                    ReadXmlParamaters(readerSubtree);
+                    break;
+            }
+        }
+    }
+
+    public void ReadXmlParamaters(XmlReader reader)
+    {
+        if (!reader.ReadToDescendant("Paramater")) return;
         do
         {
-            string name = reader.GetAttribute("Name");
+            string paramaterName = reader.GetAttribute("Name");
             float value = float.Parse(reader.GetAttribute("Value"));
-            FurnitureParameters[name] = value;
+            FurnitureParameters[paramaterName] = value;
         }
         while (reader.ReadToNextSibling("Paramater"));
     }

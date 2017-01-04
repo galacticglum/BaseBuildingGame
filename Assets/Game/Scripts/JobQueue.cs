@@ -7,11 +7,12 @@ public class JobQueue
     private Queue<Job> jobQueue;
 
     public event JobCreatedEventHandler JobCreated;
-    public void OnJobCreated(JobCreatedEventArgs args)
+    public void OnJobCreated(JobEventArgs args)
     {
-        if (JobCreated != null)
+        JobCreatedEventHandler jobCreated = JobCreated;
+        if (jobCreated != null)
         {
-            JobCreated(this, args);
+            jobCreated(this, args);
         }
     }
 
@@ -34,7 +35,7 @@ public class JobQueue
 		}
 
 		jobQueue.Enqueue(job);
-        OnJobCreated(new JobCreatedEventArgs(job));
+        OnJobCreated(new JobEventArgs(job));
 	}
 
 	public Job Dequeue()

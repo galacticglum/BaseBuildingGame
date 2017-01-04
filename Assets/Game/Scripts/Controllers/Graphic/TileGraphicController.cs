@@ -37,13 +37,13 @@ public class TileGraphicController : MonoBehaviour
 				spriteRenderer.sprite = emptySprite;
 				spriteRenderer.sortingLayerName = "Tiles";
 
-                OnTileChanged(this, new TileChangedEventArgs(tileAt));
+                OnTileChanged(this, new TileEventArgs(tileAt));
             }
 		}
 	}
 
 	// This function should be called automatically whenever a tile's data gets changed.
-    private void OnTileChanged(object sender, TileChangedEventArgs args)
+    private void OnTileChanged(object sender, TileEventArgs args)
     {
 		if(tileGameObjectMap.ContainsKey(args.Tile) == false)
         {
