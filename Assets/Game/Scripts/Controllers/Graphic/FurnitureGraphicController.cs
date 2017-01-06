@@ -9,12 +9,10 @@ public class FurnitureGraphicController : MonoBehaviour
     }
 
     private Dictionary<Furniture, GameObject> furnitureGameObjectMap;
-	private Dictionary<string, Sprite> furnitureSprites;
 
 	// Use this for initialization
     private void Start ()
     {
-		LoadSprites();
 		furnitureGameObjectMap = new Dictionary<Furniture, GameObject>();
 		world.FurnitureCreated += OnFurnitureCreated;
         
@@ -23,17 +21,6 @@ public class FurnitureGraphicController : MonoBehaviour
             OnFurnitureCreated(this, new FurnitureEventArgs(furniture));
         }
     }
-
-    private void LoadSprites()
-    {
-		furnitureSprites = new Dictionary<string, Sprite>();
-		Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Furniture/");
-
-		foreach(Sprite sprite in sprites)
-        {
-			furnitureSprites[sprite.name] = sprite;
-		}
-	}
 
 	public void OnFurnitureCreated(object sender, FurnitureEventArgs args)
     {
@@ -54,6 +41,7 @@ public class FurnitureGraphicController : MonoBehaviour
 		furnitureGameObject.transform.position = new Vector3(args.Furniture.Tile.X + (args.Furniture.Width -1) / 2f, args.Furniture.Tile.Y + (args.Furniture.Height - 1) / 2f, 0);
 		furnitureGameObject.transform.SetParent(transform, true);
 
+        // FIXME: Don't hardcode orientation: make it paramater of furniture instead.
 		if(args.Furniture.Type == "Door")
         {
 			Tile northTile = world.GetTileAt(args.Furniture.Tile.X, args.Furniture.Tile.Y + 1 );
@@ -98,6 +86,9 @@ public class FurnitureGraphicController : MonoBehaviour
         GameObject furnitureGameObject = furnitureGameObjectMap[args.Furniture];
         Destroy(furnitureGameObject);
         furnitureGameObjectMap.Remove(args.Furniture);
+
+        args.Furniture.FurnitureChanged -= OnFurnitureChanged;
+        args.Furniture.FurnitureRemoved -= OnFurnitureRemoved;
     }
 
     public Sprite GetSpriteForFurniture(Furniture furniture)
@@ -106,7 +97,8 @@ public class FurnitureGraphicController : MonoBehaviour
 
 		if(furniture.LinksToNeighbour == false)
         {
-            if (furniture.Type != "Door") return furnitureSprites[spriteName];
+            // FIXME: Don't hardcode furniture values: move to Lua scripts.
+            if (furniture.Type != "Door") return SpriteManager.Current.GetSprite("Furniture", spriteName);
             if(furniture.GetParameter("openness") < 0.1f)
             {
                 // Door is closed
@@ -128,7 +120,7 @@ public class FurnitureGraphicController : MonoBehaviour
                 spriteName = "Door_openness_3";
             }
 
-            return furnitureSprites[spriteName];
+            return SpriteManager.Current.GetSprite("Furniture", spriteName);
 		}
 
 		spriteName = furniture.Type + "_";
@@ -157,26 +149,16 @@ public class FurnitureGraphicController : MonoBehaviour
 			spriteName += "W";
 		}
 
-        if (furnitureSprites.ContainsKey(spriteName)) return furnitureSprites[spriteName];
-
-        Debug.LogError("FurnitureGraphicController::GetSprite: No sprites with name: " + spriteName + ".");
-        return null;
+        return SpriteManager.Current.GetSprite("Furniture", spriteName);
+        //Debug.LogError("FurnitureGraphicController::GetSprite: No sprites with name: " + spriteName + ".");
+        //return null;
     }
 
 
 	public Sprite GetSpriteForFurniture(string type)
-    {
-		if(furnitureSprites.ContainsKey(type))
-        {
-			return furnitureSprites[type];
-		}
-
-		if(furnitureSprites.ContainsKey(type+"_"))
-        {
-			return furnitureSprites[type+"_"];
-		}
-
-		Debug.LogError("FurnitureGraphicController::GetSprite: No sprites with name: '" + type + "'.");
-		return null;
+	{
+        return SpriteManager.Current.GetSprite("Furniture", type) ?? SpriteManager.Current.GetSprite("Furniture", type + "_");
+	    //Debug.LogError("FurnitureGraphicController::GetSprite: No sprites with name: '" + type + "'.");
+		//return null;
 	}
 }

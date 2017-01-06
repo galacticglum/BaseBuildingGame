@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Sprites>
+	<Sprite Name="Oxygen Generator" X="0" Y="128" Width="128" Height="128" PixelsPerUnit="64"/>
+</Sprites>

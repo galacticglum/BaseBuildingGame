@@ -16,38 +16,32 @@ public class Inventory
             if (localStackSize == value) return;
             localStackSize = value;
 
-            OnInventoryChanged(new InventoryEventArgs(this));
+            InventoryChanged.Invoke(new InventoryEventArgs(this));
         }
 	}
 
     public Tile Tile { get; set; }
     public Character Character { get; set; }
 
-    public event InventoryChangedEventHandler InventoryChanged;
-    public void OnInventoryChanged(InventoryEventArgs args)
-    {
-        InventoryChangedEventHandler inventoryChanged = InventoryChanged;
-        if (inventoryChanged != null)
-        {
-            inventoryChanged(this, args);
-        }
-    }
+    public Callback<InventoryEventArgs> InventoryChanged;
 
     public Inventory()
     {
+        InventoryChanged = new Callback<InventoryEventArgs>();
+
         Type = "Steel Plate";
         MaxStackSize = 50;
         StackSize = 1;
     }
 
-    public Inventory(string type, int maxStackSize, int stackSize)
+    public Inventory(string type, int maxStackSize, int stackSize) : this()
     {
 		Type = type;
 		MaxStackSize = maxStackSize;
 		StackSize = stackSize;
 	}
 
-	protected Inventory(Inventory inventory)
+	protected Inventory(Inventory inventory) : this()
     {
 		Type = inventory.Type;
 		MaxStackSize = inventory.MaxStackSize;

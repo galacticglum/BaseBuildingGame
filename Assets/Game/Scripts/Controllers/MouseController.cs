@@ -6,6 +6,7 @@ using UnityUtilities.ObjectPool;
 public class MouseController : MonoBehaviour
 {
     public Vector2 MousePosition { get { return currentFramePosition; } }
+    public SelectionInfo CurrentSelectionInfo { get; set; }
 
     [SerializeField]
 	private GameObject circleCursorPrefab;
@@ -22,10 +23,12 @@ public class MouseController : MonoBehaviour
     private ConstructionController constructionController;
     private FurnitureGraphicController furnitureGraphicController;
 
+
 	// Use this for initialization
 	private void Start ()
     {
         currentMouseMode = MouseMode.Selection;
+        circleCursorPrefab.GetComponent<SpriteRenderer>().sprite = SpriteManager.Current.GetSprite("UI", "CursorCircle");
 
         constructionController = FindObjectOfType<ConstructionController>();
         furnitureGraphicController = FindObjectOfType<FurnitureGraphicController>();
@@ -54,6 +57,7 @@ public class MouseController : MonoBehaviour
 
         UpdateDragging();
         UpdateCameraMovement();
+        UpdateSelection();
 
 		lastFramePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 		lastFramePosition.z = 0;
@@ -138,12 +142,12 @@ public class MouseController : MonoBehaviour
 
         // End Drag
         isDragging = false;
+
         for (int x = startX; x <= endX; x++)
         {
             for (int y = startY; y <= endY; y++)
             {
                 Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
-
                 if (tileAt != null)
                 {
                     constructionController.DoBuild(tileAt);
@@ -152,7 +156,65 @@ public class MouseController : MonoBehaviour
         }
     }
 
-	private void UpdateCameraMovement()
+    private void UpdateSelection()
+    {
+        if (Input.GetKeyUp(KeyCode.Escape))
+        {
+            CurrentSelectionInfo = null;
+        }
+
+        if (currentMouseMode != MouseMode.Selection) return;
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+        if (!Input.GetMouseButtonUp(0)) return;
+
+        Tile mouseOverTile = GetMouseOverTile();
+        if (mouseOverTile == null) return;
+
+
+        if (CurrentSelectionInfo == null || CurrentSelectionInfo.Tile != mouseOverTile)
+        {
+            CurrentSelectionInfo = new SelectionInfo
+            {
+                Tile = mouseOverTile
+            };
+
+            RebuildSelectionInfo();
+
+            for (int i = 0; i < CurrentSelectionInfo.SelectionObjects.Length; i++)
+            {
+                if (CurrentSelectionInfo.SelectionObjects[i] == null) continue;
+
+                CurrentSelectionInfo.SelectionIndex = i;
+                break;
+            }
+        }
+        else
+        {
+            RebuildSelectionInfo();
+
+            do
+            {
+                CurrentSelectionInfo.SelectionIndex = (CurrentSelectionInfo.SelectionIndex + 1) % CurrentSelectionInfo.SelectionObjects.Length;
+            }
+            while (CurrentSelectionInfo.SelectionObjects[CurrentSelectionInfo.SelectionIndex] == null);
+        }
+    }
+
+    private void RebuildSelectionInfo()
+    {
+        CurrentSelectionInfo.SelectionObjects = new object[CurrentSelectionInfo.Tile.Characters.Count + 3];
+
+        for (int i = 0; i < CurrentSelectionInfo.Tile.Characters.Count; i++)
+        {
+            CurrentSelectionInfo.SelectionObjects[i] = CurrentSelectionInfo.Tile.Characters[i];
+        }
+
+        CurrentSelectionInfo.SelectionObjects[CurrentSelectionInfo.SelectionObjects.Length - 3] = CurrentSelectionInfo.Tile.Furniture;
+        CurrentSelectionInfo.SelectionObjects[CurrentSelectionInfo.SelectionObjects.Length - 2] = CurrentSelectionInfo.Tile.Inventory;
+        CurrentSelectionInfo.SelectionObjects[CurrentSelectionInfo.SelectionObjects.Length - 1] = CurrentSelectionInfo.Tile;
+    }
+
+    private void UpdateCameraMovement()
     {
 		// Handle screen panning
 		if(Input.GetMouseButton(1) || Input.GetMouseButton(2))
@@ -167,7 +229,7 @@ public class MouseController : MonoBehaviour
 
     public Tile GetMouseOverTile()
     {
-        return WorldController.Instance.GetTileAtWorldCoordinate(currentFramePosition);
+        return WorldController.Instance.GetTileAtWorldCoordinates(currentFramePosition);
     }
 
     private void DrawFurnitureSprite(string type, Tile tile)
@@ -189,7 +251,6 @@ public class MouseController : MonoBehaviour
 
     public void InConstructionMode()
     {
-        dragStartPosition = currentFramePosition;
         isDragging = false;
         currentMouseMode = MouseMode.Construction;
     }

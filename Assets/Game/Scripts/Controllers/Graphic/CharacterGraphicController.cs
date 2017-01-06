@@ -9,29 +9,16 @@ public class CharacterGraphicController : MonoBehaviour
     }
 
     private Dictionary<Character, GameObject> characterGameObjectMap;
-	private Dictionary<string, Sprite> characterSprites;
 
 	// Use this for initialization
     private void Start ()
     {
-		LoadSprites();
 		characterGameObjectMap = new Dictionary<Character, GameObject>();
 		world.CharacterCreated += OnCharacterCreated;
 
 		foreach(Character character in world.Characters)
         {
-			world.OnCharacterCreated(new CharacterEventArgs(character));
-		}
-	}
-
-    private void LoadSprites()
-    {
-		characterSprites = new Dictionary<string, Sprite>();
-		Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Characters/");
-
-		foreach(Sprite sprite in sprites)
-        {
-			characterSprites[sprite.name] = sprite;
+			world.CharacterCreated.Invoke(new CharacterEventArgs(character));
 		}
 	}
 
@@ -44,7 +31,7 @@ public class CharacterGraphicController : MonoBehaviour
 		characterGameObject.transform.SetParent(transform, true);
 
 		SpriteRenderer spriteRenderer = characterGameObject.AddComponent<SpriteRenderer>();
-		spriteRenderer.sprite = characterSprites["p1_front"];
+		spriteRenderer.sprite = SpriteManager.Current.GetSprite("Characters", "p1_front");
 		spriteRenderer.sortingLayerName = "Characters";
 
 		args.Character.CharacterChanged += OnCharacterChanged;

@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(Text))]
 public class RoomDetailInspector : MonoBehaviour
 {
     private Text textComponent;

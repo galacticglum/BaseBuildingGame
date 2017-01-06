@@ -7,38 +7,37 @@ function BuildFurniture(sender, args)
     args.Job.Tile.PendingFurnitureJob = nil
 end
 
-function UpdateStockpile(furniture, deltaTime)
-    if furniture.Tile.Inventory ~= nil and furniture.Tile.Inventory.StackSize >= furniture.Tile.Inventory.MaxStackSize then
-        furniture.CancelJobs()
+function UpdateStockpile(sender, args)
+    if args.Furniture.Tile.Inventory ~= nil and args.Furniture.Tile.Inventory.StackSize >= args.Furniture.Tile.Inventory.MaxStackSize then
+        args.Furniture.CancelJobs()
         return
     end
 
-    if furniture.JobCount > 0 then
+    if args.Furniture.JobCount > 0 then
         return
     end
 
-    if furniture.Tile.Inventory ~= nil and furniture.Tile.Inventory.StackSize == 0 then
+    if args.Furniture.Tile.Inventory ~= nil and args.Furniture.Tile.Inventory.StackSize == 0 then
         print("FurnitureBehaviours::UpdateStockpile: Stockpile has a zero-size stack.")
-        furniture.CancelJobs()
+        args.Furniture.CancelJobs()
     end
 
     itemFilter = {}
-    if furniture.Tile.Inventory == nil then
+    if args.Furniture.Tile.Inventory == nil then
         itemFilter = GetStockpileItemFilter()
     else
-        desiredInventory = furniture.Tile.Inventory.Clone()
+        desiredInventory = args.Furniture.Tile.Inventory.Clone()
         desiredInventory.MaxStackSize = desiredInventory.MaxStackSize - desiredInventory.StackSize
         desiredInventory.StackSize = 0
 
         itemFilter = { desiredInventory }
     end
 
-    job = Job.new(furniture.Tile, nil, nil, 0, itemFilter)
+    job = Job.new(args.Furniture.Tile, nil, 0, nil, itemFilter)
     job.CanTakeFromStockpile = false
 
-    --job.JobWorked = job.JobWorked + StockpileJobWorked
-    Callback.Add(furniture.JobWorked, StockpileJobWorked)
-    furniture.AddJob(job)
+    job.JobWorked.AddHandler(StockpileJobWorked)
+    args.Furniture.AddJob(job)
 end
 
 function StockpileJobWorked(sender, args)
@@ -52,18 +51,18 @@ function StockpileJobWorked(sender, args)
     end
 end
 
-function UpdateDoor(furniture, deltaTime)
-    if furniture.GetParameter("is_opening") >= 1.0 then
-        furniture.ModifyParameter("openness", deltaTime * 4.0)
-        if furniture.GetParameter("openness") >= 1.0 then
-            furniture.SetParameter("is_opening", 0)
+function UpdateDoor(sender, args)
+    if args.Furniture.GetParameter("is_opening") >= 1.0 then
+        args.Furniture.ModifyParameter("openness", args.DeltaTime * 4.0)
+        if args.Furniture.GetParameter("openness") >= 1.0 then
+            args.Furniture.SetParameter("is_opening", 0)
         end
     else
-        furniture.ModifyParameter("openness", deltaTime * -4.0)
+        args.Furniture.ModifyParameter("openness", args.DeltaTime * -4.0)
     end
 
-    furniture.SetParameter("openness", Mathf.Clamp01(furniture.GetParameter("openness")))
-    furniture.OnFurnitureChanged(FurnitureEventArgs.new(furniture))
+    args.Furniture.SetParameter("openness", Mathf.Clamp01(args.Furniture.GetParameter("openness")))
+    args.Furniture.FurnitureChanged.Invoke(FurnitureEventArgs.new(args.Furniture))
 end
 
 function DoorTryEnter(furniture)
@@ -76,40 +75,41 @@ function DoorTryEnter(furniture)
     return TileEnterability.Wait
 end
 
-function UpdateOxygenGenerator(furniture, deltaTime)
-    if furniture.Tile.Room == nil then
+function UpdateOxygenGenerator(sender, args)
+    if args.Furniture.Tile.Room == nil then
         return
     end
 
-    if furniture.Tile.Room.GetGasValue("O2") < 0.20 then
-        furniture.Tile.Room.ModifyGasValue("O2", 0.01 * deltaTime)
+    if args.Furniture.Tile.Room.GetGasValue("O2") < 0.20 then
+        args.Furniture.Tile.Room.ModifyGasValue("O2", 0.01 * args.DeltaTime)
     else
         -- Standby??
     end
 end
 
-function UpdateMiningDrone(furniture, deltaTime)
-    inventorySpawnTile = furniture.InventorySpawnTile
-    if furniture.JobCount > 0 then
+function UpdateMiningDrone(sender, args)
+    inventorySpawnTile = args.Furniture.InventorySpawnTile
+    if args.Furniture.JobCount > 0 then
         if inventorySpawnTile.Inventory ~= nil and inventorySpawnTile.Inventory.StackSize >= inventorySpawnTile.Inventory.MaxStackSize then
-            furniture.CancelJobs()
+            args.Furniture.CancelJobs()
         end
 
         return
     end
 
     if inventorySpawnTile.Inventory ~= nil and inventorySpawnTile.Inventory.StackSize >= inventorySpawnTile.Inventory.MaxStackSize then
-        furniture.CancelJobs()
+        args.Furniture.CancelJobs()
         return
     end
 
-    workTile = furniture.WorkTile
+    workTile = args.Furniture.WorkTile
     if workTile.Inventory ~= nil and workTile.Inventory.StackSize >= workTile.Inventory.MaxStackSize then
         return
     end
 
-    job = Job.new(furniture.WorkTile, nil, MiningDroneJobCompleted, 1, nil, true)
-    furniture.AddJob(job)
+
+    job = Job.new(workTile, nil, 1, MiningDroneJobCompleted, nil, true)
+    args.Furniture.AddJob(job)
 end
 
 function MiningDroneJobCompleted(sender, args)

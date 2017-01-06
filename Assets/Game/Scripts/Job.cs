@@ -20,67 +20,38 @@ public class Job
     private readonly float requiredWorkTime;
     private readonly bool repeatingJob;
 
-    public event JobCompletedEventHandler JobCompleted;
-    public void OnJobCompleted(JobEventArgs args)
-    {
-        JobCompletedEventHandler jobCompleted = JobCompleted;
-        if (jobCompleted != null)
-        {
-            jobCompleted(this, args);
-        }
-    }
+    public Callback<JobEventArgs> JobCompleted;
+    public Callback<JobEventArgs> JobStopped;
+    public Callback<JobEventArgs> JobWorked;
 
-    public event JobStoppedEventHandler JobStopped;
-    public void OnJobStopped(JobEventArgs args)
+    public Job(Tile tile, string type, float workTime, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false)
     {
-        JobStoppedEventHandler jobStopped = JobStopped;
-        if (jobStopped != null)
-        {
-            jobStopped(this, args);
-        }
-    }
-
-    public event JobWorkedEventHandler JobWorked;
-    public void OnJobWorked(JobEventArgs args)
-    {
-        JobWorkedEventHandler jobWorked = JobWorked;
-        if (jobWorked != null)
-        {
-            jobWorked(this, args);
-        }
-    }
-
-    public Job (Tile tile, string type, Action<object, JobEventArgs> jobCompleted, float workTime, Inventory[] inventoryRequirements, bool repeatingJob = false)
-    {
-		Tile = tile;
-		Type = type;    
-		requiredWorkTime = WorkTime = workTime;
-        AcceptsAnyInventoryItem = false;
-        CanTakeFromStockpile = true;
-
         this.repeatingJob = repeatingJob;
+        requiredWorkTime = WorkTime = workTime;
 
-        if (jobCompleted != null)
-        {
-            JobCompleted += (sender, args) => { jobCompleted(sender, args); };
-        }
-
-        InventoryRequirements = new Dictionary<string, Inventory>();
-        if (inventoryRequirements == null) return;
-        foreach(Inventory inventory in inventoryRequirements)
-        {
-            InventoryRequirements[inventory.Type] = inventory.Clone();
-        }
+        Initialize(tile, type, new Callback<JobEventArgs>(jobCompleted), inventoryRequirements);
     }
 
-	protected Job(Job job)
+    public Job (Tile tile, string type, float workTime, CallbackHandler<JobEventArgs> jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false)
+    {
+        this.repeatingJob = repeatingJob;
+        requiredWorkTime = WorkTime = workTime;
+
+        Initialize(tile, type, new Callback<JobEventArgs>(jobCompleted), inventoryRequirements);
+    }
+
+    protected Job(Job job)
     {
 		Tile = job.Tile;
 		Type = job.Type;
+
 		WorkTime = job.WorkTime;
         AcceptsAnyInventoryItem = job.AcceptsAnyInventoryItem;
         CanTakeFromStockpile = job.CanTakeFromStockpile;
+
         JobCompleted = job.JobCompleted;
+        JobStopped = new Callback<JobEventArgs>();     
+        JobWorked = new Callback<JobEventArgs>();
 
         requiredWorkTime = job.requiredWorkTime;
 
@@ -97,25 +68,44 @@ public class Job
 		return new Job(this);
 	}
 
+    private void Initialize(Tile tile, string type, Callback<JobEventArgs> jobCompleted, Inventory[] inventoryRequirements)
+    {
+        Tile = tile;
+        Type = type;
+        AcceptsAnyInventoryItem = false;
+        CanTakeFromStockpile = true;
+
+        JobCompleted = jobCompleted;
+        JobStopped = new Callback<JobEventArgs>();
+        JobWorked = new Callback<JobEventArgs>();
+
+        InventoryRequirements = new Dictionary<string, Inventory>();
+        if (inventoryRequirements == null) return;
+        foreach (Inventory inventory in inventoryRequirements)
+        {
+            InventoryRequirements[inventory.Type] = inventory.Clone();
+        }
+    }
+
 	public void DoWork(float workTime)
     {
 		if(HasAllMaterials() == false)
         {
-            OnJobWorked(new JobEventArgs(this));
+            JobWorked.Invoke(new JobEventArgs(this));
 
             return;
 		}
 
 		WorkTime -= workTime;
 
-        OnJobWorked(new JobEventArgs(this));
+        JobWorked.Invoke(new JobEventArgs(this));
 
         if (!(WorkTime <= 0)) return;
 
-        OnJobCompleted(new JobEventArgs(this));
+        JobCompleted.Invoke(new JobEventArgs(this));
         if (repeatingJob == false)
         {
-            OnJobStopped(new JobEventArgs(this));
+            JobStopped.Invoke(new JobEventArgs(this));
         }
         else
         {
@@ -125,7 +115,7 @@ public class Job
 
 	public void CancelJob()
     {
-        OnJobStopped(new JobEventArgs(this));
+        JobStopped.Invoke(new JobEventArgs(this));
         World.Current.JobQueue.Remove(this);
 	}
 

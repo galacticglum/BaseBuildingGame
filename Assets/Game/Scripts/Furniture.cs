@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -9,18 +8,21 @@ using MoonSharp.Interpreter;
 [MoonSharpUserData]
 public class Furniture : IXmlSerializable
 {
-    protected Dictionary<string, float> FurnitureParameters { get; set; }
-    //public event FurnitureUpdateEventHandler UpdateBehaviours;
-    //public void OnFurnitureUpdate(FurnitureUpdateEventArgs args)
-    //{
-    //    FurnitureUpdateEventHandler updateBehaviours = UpdateBehaviours;
-    //    if (updateBehaviours != null)
-    //    {
-    //        updateBehaviours(this, args);
-    //    }
-    //}
+    public static CallbackHandler<JobEventArgs> BuildCallback
+    {
+        get
+        {
+            return (sender, args) =>
+            {
+                Lua.Call("BuildFurniture", sender, args);
+            };
+        }
+    }
 
-    //public Func<Furniture, TileEnterability> TryEnter { get; set; }
+    protected Dictionary<string, float> FurnitureParameters { get; set; }
+    public Callback<FurnitureUpdateEventArgs> UpdateBehaviours;
+
+   // public Func<Furniture, TileEnterability> TryEnter { get; set; }
 
     private string name = string.Empty;
     public string Name
@@ -47,35 +49,20 @@ public class Furniture : IXmlSerializable
 
     public Color Tint { get; set; }
 
-    public event FurnitureChangedEventHandler FurnitureChanged;
-    public void OnFurnitureChanged(FurnitureEventArgs args)
-    {   
-        FurnitureChangedEventHandler furnitureChanged = FurnitureChanged;
-        if (furnitureChanged != null)
-        {
-            furnitureChanged(this, args);
-        }
-    }
-    
-    public event FurnitureRemovedEventHandler FurnitureRemoved;
-    public void OnFurnitureRemoved(FurnitureEventArgs args)
-    {
-        FurnitureRemovedEventHandler furnitureRemoved = FurnitureRemoved;
-        if (furnitureRemoved != null)
-        {
-            furnitureRemoved(this, args);
-        }
-    }
+    public Callback<FurnitureEventArgs> FurnitureChanged { get; set;}   
+    public Callback<FurnitureEventArgs> FurnitureRemoved { get; set; }
 
     private readonly List<Job> jobs;
 
-    private readonly List<string> updateBehaviours;
     private string tryEnterFunction = string.Empty;
 
     public Furniture()
     {
+        FurnitureChanged = new Callback<FurnitureEventArgs>();
+        FurnitureRemoved = new Callback<FurnitureEventArgs>();
+
         FurnitureParameters = new Dictionary<string, float>();
-        updateBehaviours = new List<string>();
+        UpdateBehaviours = new Callback<FurnitureUpdateEventArgs>();
 
         jobs = new List<Job>();
         Tint = Color.white;
@@ -90,17 +77,16 @@ public class Furniture : IXmlSerializable
         Tint = furniture.Tint;
         Width = furniture.Width;
         Height = furniture.Height;
-        Tint = furniture.Tint;
         LinksToNeighbour = furniture.LinksToNeighbour;
         WorkPositionOffset = furniture.WorkPositionOffset;
+
+        FurnitureChanged = new Callback<FurnitureEventArgs>();
+        FurnitureRemoved =  new Callback<FurnitureEventArgs>();
 
         FurnitureParameters = new Dictionary<string, float>(furniture.FurnitureParameters);
         jobs = new List<Job>();
 
-        if (furniture.updateBehaviours != null)
-        {
-            updateBehaviours = furniture.updateBehaviours;
-        }
+        UpdateBehaviours = furniture.UpdateBehaviours;
 
         tryEnterFunction = furniture.tryEnterFunction;
     }
@@ -112,8 +98,7 @@ public class Furniture : IXmlSerializable
 
     public void Update(float deltaTime)
     {
-        FurnitureBehaviours.Execute(updateBehaviours.ToArray(), this, deltaTime);
-        //OnFurnitureUpdate(new FurnitureUpdateEventArgs(this, deltaTime));
+        UpdateBehaviours.Invoke(new FurnitureUpdateEventArgs(this, deltaTime));
     }
 
     public static Furniture Place(Furniture furniture, Tile tile)
@@ -132,32 +117,21 @@ public class Furniture : IXmlSerializable
 
         if (!furnitureInstance.LinksToNeighbour) return furnitureInstance;
 
-        int x = tile.X;
-        int y = tile.Y;
-
-        Tile tileAt = World.Current.GetTileAt(x, y+1);
-        if(HasFurnitureOfSameType(furnitureInstance, tileAt))
-        {
-            tileAt.Furniture.OnFurnitureChanged(new FurnitureEventArgs(tileAt.Furniture));
-        }
-        tileAt = World.Current.GetTileAt(x+1, y);
-        if(HasFurnitureOfSameType(furnitureInstance, tileAt))
-        {
-            tileAt.Furniture.OnFurnitureChanged(new FurnitureEventArgs(tileAt.Furniture));
-        }
-        tileAt = World.Current.GetTileAt(x, y-1);
-        if(HasFurnitureOfSameType(furnitureInstance, tileAt))
-        {
-            tileAt.Furniture.OnFurnitureChanged(new FurnitureEventArgs(tileAt.Furniture));
-        }
-        tileAt = World.Current.GetTileAt(x-1, y);
-        if(HasFurnitureOfSameType(furnitureInstance, tileAt))
-        {
-            tileAt.Furniture.OnFurnitureChanged(new FurnitureEventArgs(tileAt.Furniture));
-        }
+        UpdateNeighbouringFurnitures(furnitureInstance);
 
         return furnitureInstance;
 	}
+
+    private static void UpdateNeighbouringFurnitures(Furniture furniture)
+    {
+        foreach (Tile neighbourTile in furniture.Tile.GetNeighbours())
+        {
+            if (HasFurnitureOfSameType(furniture, neighbourTile))
+            {
+                neighbourTile.Furniture.FurnitureChanged.Invoke(new FurnitureEventArgs(neighbourTile.Furniture));
+            }
+        }
+    }
 
     private static bool HasFurnitureOfSameType(Furniture furniture, Tile tile)
     {
@@ -177,10 +151,12 @@ public class Furniture : IXmlSerializable
                     return false;
                 }
 
-                if (tileAt.Furniture != null)
+                if (tileAt.Furniture != null || tileAt.Inventory != null)
                 {
                     return false;
                 }
+
+                // TODO: Character move order when building
             }
         }
 
@@ -253,7 +229,9 @@ public class Furniture : IXmlSerializable
     public void Deconstruct()
     {
         Tile.RemoveFurniture();
-        OnFurnitureRemoved(new FurnitureEventArgs(this));
+        UpdateNeighbouringFurnitures(this);
+        FurnitureRemoved.Invoke(new FurnitureEventArgs(this));
+        ClearJobs();
 
         if (RoomEnclosure)
         {
@@ -275,7 +253,7 @@ public class Furniture : IXmlSerializable
             return TileEnterability.Immediate;
         }
 
-        return (TileEnterability)FurnitureBehaviours.Execute(tryEnterFunction, this).UserData.Object;
+        return (TileEnterability)Lua.Call(tryEnterFunction, this).UserData.Object;
     }
 
     public XmlSchema GetSchema()
@@ -355,15 +333,37 @@ public class Furniture : IXmlSerializable
                         }
                     }
 
-                    World.Current.FurnitureJobPrototypes[Type] = new Job(null, Type, FurnitureBehaviours.BuildFurniture, workTime, inventories.ToArray()); 
-                    break;
+                    Job job = new Job(null, Type, workTime, BuildCallback, inventories.ToArray());
+                
+                    World.Current.FurnitureJobPrototypes[Type] = job;
+                    break;;
 
                 case "OnUpdate":
-                    updateBehaviours.Add(readerSubtree.GetAttribute("FunctionName"));
+                    Lua.Parse(readerSubtree.GetAttribute("FilePath"));
+
+                    string functionName = readerSubtree.GetAttribute("FunctionName");
+                    UpdateBehaviours += (sender, args) =>
+                    {
+                        Lua.Call(functionName, sender, args);
+                    };
+
                     break;
 
                 case "TryEnter":
                     tryEnterFunction = readerSubtree.GetAttribute("FunctionName");
+                    break;
+
+                case "Tint":
+                    string alpha = readerSubtree.GetAttribute("A");
+                    if (string.IsNullOrEmpty(alpha))
+                    {
+                        alpha = "255";
+                    }
+
+                    Tint = new Color32(byte.Parse(readerSubtree.GetAttribute("R")),
+                                       byte.Parse(readerSubtree.GetAttribute("G")),
+                                       byte.Parse(readerSubtree.GetAttribute("B")),
+                                       byte.Parse(alpha));
                     break;
 
                 case "WorkPositionOffset":

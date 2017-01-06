@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using MoonSharp.Interpreter;
 
+[MoonSharpUserData]
 public class InventoryManager
 {
 	public Dictionary< string, List<Inventory>> Inventories { get; protected set; }
@@ -48,7 +50,7 @@ public class InventoryManager
         }
 
         Inventories[tile.Inventory.Type].Add(tile.Inventory);
-        World.Current.OnInventoryCreated(new InventoryEventArgs(tile.Inventory));
+        World.Current.InventoryCreated.Invoke(new InventoryEventArgs(tile.Inventory));
 
         return true;
 	}
@@ -112,12 +114,12 @@ public class InventoryManager
 	}
 
 	public Inventory GetClosestInventoryOfType(string type, Tile tile, int desiredAmount, bool canTakeFromStockpile)
-    {
-        if (Inventories.ContainsKey(type))
-            return Inventories[type].FirstOrDefault(inventory => 
-            inventory.Tile != null && (canTakeFromStockpile || inventory.Tile.Furniture == null || inventory.Tile.Furniture.IsStockpile() == false));
+	{
+        return GetPathToClosestInventoryOfType(type, tile, desiredAmount, canTakeFromStockpile).DestinationTile.Inventory;
+    }
 
-        Debug.LogError("InventoryManager::GetClosestInventoryOfType: No inventory exists for type: '" + type + "'!");
-        return null;
+    public Pathfinder GetPathToClosestInventoryOfType(string type, Tile tile, int desiredAmount, bool canTakeFromStockpile)
+    {
+        return Inventories.ContainsKey(type) ? new Pathfinder(tile, type, canTakeFromStockpile) : null;
     }
 }

@@ -9,9 +9,10 @@
         <RoomEnclosure>true</RoomEnclosure>
 
         <BuildJob WorkTime="1">
-            <Inventory Type="Steel Plate" Amount="0"/>
+            <Inventory Type="Steel Plate" Amount="5"/>
         </BuildJob>
 
+        <!-- Implement me !-->
         <DeconstructJob>
             <Inventory Type="Steel Plate" Amount="3"/>
         </DeconstructJob>
@@ -25,10 +26,11 @@
         <LinksToNeighbours>false</LinksToNeighbours>
         <RoomEnclosure>true</RoomEnclosure>
 
-        <BuildJob WorkTime="1">
-            <Inventory Type="Steel Plate" Amount="0"/>
+        <BuildJob WorkTime="1">  
+            <Inventory Type="Steel Plate" Amount="2"/>
         </BuildJob>
 
+        <!-- Implement me !-->
         <DeconstructJob>
             <Inventory Type="Steel Plate" Amount="1"/>
         </DeconstructJob>
@@ -38,8 +40,8 @@
             <Parameter Name="is_opening" Value="0"/>  
         </Parameters>
 
-        <OnUpdate FunctionName="UpdateDoor"/>
-        <TryEnter FunctionName="DoorTryEnter"/>                
+        <OnUpdate FilePath="Lua/Furnitures.lua" FunctionName="UpdateDoor"/>
+        <TryEnter FilePath="Lua/Furnitures.lua" FunctionName="DoorTryEnter"/>                
     </Furniture>
 
     <Furniture Type="Stockpile">
@@ -47,8 +49,11 @@
         <MovementCost>1</MovementCost>
         <Width>1</Width>
         <Height>1</Height>
+        <LinksToNeighbours>true</LinksToNeighbours>
 
-        <OnUpdate FunctionName="UpdateStockpile"/>        
+        <Tint R="230" G="178" B="23"/>
+
+        <OnUpdate FilePath="Lua/Furnitures.lua" FunctionName="UpdateStockpile"/>        
     </Furniture>
 
     <Furniture Type="Oxygen Generator">
@@ -57,7 +62,7 @@
         <Width>2</Width>
         <Height>2</Height>
         
-        <OnUpdate FunctionName="UpdateOxygenGenerator"/>
+        <OnUpdate FilePath="Lua/Furnitures.lua" FunctionName="UpdateOxygenGenerator"/>
     </Furniture>
 
     <Furniture Type="Mining Drone">
@@ -66,7 +71,7 @@
         <Width>3</Width>
         <Height>3</Height>
 
-        <OnUpdate FunctionName="UpdateMiningDrone"/>
+        <OnUpdate FilePath="Lua/Furnitures.lua" FunctionName="UpdateMiningDrone"/>
 
         <WorkPositionOffset X="1" Y="0"/>
         <InventorySpawnPositionOffset X="0" Y="0"/>

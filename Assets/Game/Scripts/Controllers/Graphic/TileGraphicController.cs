@@ -8,11 +8,6 @@ public class TileGraphicController : MonoBehaviour
         get { return WorldController.Instance.World; }
     }
 
-    [SerializeField]
-	private Sprite floorSprite;
-    [SerializeField]
-	private Sprite emptySprite;
-
     private Dictionary<Tile, GameObject> tileGameObjectMap;
 
 	// Use this for initialization
@@ -34,7 +29,7 @@ public class TileGraphicController : MonoBehaviour
 				tileGameObject.transform.SetParent(transform, true);
 
 				SpriteRenderer spriteRenderer = tileGameObject.AddComponent<SpriteRenderer>();
-				spriteRenderer.sprite = emptySprite;
+				spriteRenderer.sprite = SpriteManager.Current.GetSprite("Tiles", "Empty");
 				spriteRenderer.sortingLayerName = "Tiles";
 
                 OnTileChanged(this, new TileEventArgs(tileAt));
@@ -62,10 +57,10 @@ public class TileGraphicController : MonoBehaviour
 		switch (args.Tile.Type)
 		{
 		    case TileType.Floor:
-		        tileGameObject.GetComponent<SpriteRenderer>().sprite = floorSprite;
+		        tileGameObject.GetComponent<SpriteRenderer>().sprite = SpriteManager.Current.GetSprite("Tiles", "Floor");
 		        break;
 		    case TileType.Empty:
-		        tileGameObject.GetComponent<SpriteRenderer>().sprite = emptySprite;
+		        tileGameObject.GetComponent<SpriteRenderer>().sprite = SpriteManager.Current.GetSprite("Tiles", "Empty");
 		        break;
 		    default:
 		        Debug.LogError("TileGraphicController::OnTileChanged: Unrecognized tile type.");

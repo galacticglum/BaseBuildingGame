@@ -1,1 +1,0 @@
-﻿public delegate void JobStoppedEventHandler(object sender, JobEventArgs args);

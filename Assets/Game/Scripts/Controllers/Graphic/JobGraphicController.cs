@@ -36,7 +36,7 @@ public class JobGraphicController : MonoBehaviour
 
 		SpriteRenderer spriteRenderer = jobGameObject.AddComponent<SpriteRenderer>();
 		spriteRenderer.sprite = furnitureGraphicController.GetSpriteForFurniture(args.Job.Type);
-		spriteRenderer.color = new Color( 0.5f, 1f, 0.5f, 0.25f);
+		spriteRenderer.color = new Color(0.5f, 1f, 0.5f, 0.25f);
 		spriteRenderer.sortingLayerName = "Jobs";
 
 		if(args.Job.Type == "Door")
@@ -45,7 +45,7 @@ public class JobGraphicController : MonoBehaviour
 			Tile southTile = World.Current.GetTileAt(args.Job.Tile.X, args.Job.Tile.Y - 1 );
 
 			if(northTile != null && southTile != null && northTile.Furniture != null && southTile.Furniture != null &&
-				northTile.Furniture.Type=="Wall" && southTile.Furniture.Type=="Wall")
+				northTile.Furniture.Type == "Wall" && southTile.Furniture.Type == "Wall")
             {
 				jobGameObject.transform.rotation = Quaternion.Euler(0, 0, 90);
 			}
@@ -59,7 +59,7 @@ public class JobGraphicController : MonoBehaviour
     {
 		GameObject jobGameObject = jobGameObjectMap[args.Job];
 
-		args.Job.JobCompleted -= OnJobEnded;
+        args.Job.JobCompleted -= OnJobEnded;
         args.Job.JobStopped -= OnJobEnded;
 
 		Destroy(jobGameObject);

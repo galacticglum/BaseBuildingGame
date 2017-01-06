@@ -1,1 +1,0 @@
-﻿public delegate void InventoryCreatedEventHandler(object sender, InventoryEventArgs args);

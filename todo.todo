@@ -1,0 +1,36 @@
+Bug Fixes/Polish:
+    ☐ Collect whole amount of inventory before dropping off items; this happens if a character 
+       picks up a stack with not enough items (it goes to job site and drops off items before
+       collecting more).
+
+    ☐ Build adjacent from work tile (not on tile).
+    ✔ Factor inventory (and other objects) when computing IsValidPlacement. @done (1/6/2017, 12:14:20 PM)
+        ☐ Make character (or any other friendly npc) move before starting a work order.
+
+    Furniture Deconstruction:
+        ✔ Delete jobs when deconstructing furniture. @done (1/6/2017, 12:02:42 PM)
+        ✔ Update neighbouring graphics to reflect changes (ex: walls). @done (1/6/2017, 12:06:17 PM)
+    
+Features:
+    ☐ Check validity of work site for job.
+    ☐ Box selection.
+    ☐ Logging system.
+
+    Character AI:
+        ☐ State Machine
+        Needs:
+            - Basic: Hunger, Thrist, Sleep
+            - Cleanliness
+        Stats:
+            Physical:
+                Health
+                Strength
+                Attack
+                Defense
+                Agility/Dexterity
+
+        Profession:
+            Engineer
+            Labour (collection: mining)
+            Medic
+

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -7,28 +8,14 @@ using MoonSharp.Interpreter;
 [MoonSharpUserData]
 public class Tile : IXmlSerializable
 {
-    public Tile North
-    {
-        get { return World.Current.GetTileAt(X, Y + 1); }
-    }
-
-    public Tile South
-    {
-        get { return World.Current.GetTileAt(X, Y - 1); }
-    }
-
-    public Tile East
-    {
-        get { return World.Current.GetTileAt(X + 1, Y); }
-    }
-
-    public Tile West
-    {
-        get { return World.Current.GetTileAt(X - 1, Y); }
-    }
+    public Tile North { get { return World.Current.GetTileAt(X, Y + 1); }}
+    public Tile South { get { return World.Current.GetTileAt(X, Y - 1); }}
+    public Tile East { get { return World.Current.GetTileAt(X + 1, Y); }}
+    public Tile West { get { return World.Current.GetTileAt(X - 1, Y); }}
 
     public Furniture Furniture { get; protected set; }
     public Inventory Inventory { get; set; }
+    public List<Character> Characters { get; set; }
 
 	public Room Room { get; set; }
 	public Job PendingFurnitureJob { get; set; }
@@ -46,7 +33,7 @@ public class Tile : IXmlSerializable
             type = value;
 
             if (oldType == type) return;
-            OnTileChanged(new TileEventArgs(this));
+            TileChanged.Invoke(new TileEventArgs(this));
         }
     }
 
@@ -63,20 +50,15 @@ public class Tile : IXmlSerializable
         }
     }
 
-    public event TileChangedEventHandler TileChanged;
-    public void OnTileChanged(TileEventArgs args)
-    {
-        TileChangedEventHandler tileChanged = TileChanged;
-        if (tileChanged != null)
-        {
-            tileChanged(this, args);
-        }
-    }
+    public Callback<TileEventArgs> TileChanged;
 
     public Tile(int x, int y)
     {
 		X = x;
 		Y = y;
+
+        Characters = new List<Character>();
+        TileChanged = new Callback<TileEventArgs>();
 	}
 
 	public bool PlaceFurniture(Furniture furniture)
@@ -111,6 +93,7 @@ public class Tile : IXmlSerializable
         int width = Furniture.Width;
         int height = Furniture.Height;
 
+        // Loops through all the furniture tiles (this is because a furniture may be bigger than 1x1)
         for (int x = X; x < X + width; x++)
         {
             for (int y = Y; y < Y + height; y++)

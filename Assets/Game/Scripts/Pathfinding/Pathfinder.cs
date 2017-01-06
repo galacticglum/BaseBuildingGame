@@ -1,45 +1,48 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 using Priority_Queue;
 using System.Linq;
 
-// Adapted from: https://en.wikipedia.org/wiki/A*_search_algorithm
-
+// Mixed algorithm of dijkstra and A*
 public class Pathfinder
 {
-    public int Length
-    {
-        get
-        {
-            return path == null ? 0 : path.Count;
-        }
-    }
+    public int Length { get { return path == null ? 0 : path.Count; }}
+    public Tile DestinationTile { get { return path.LastOrDefault(); }}
 
     private Queue<Tile> path;
 
-	public Pathfinder(World world, Tile tileStart, Tile tileGoal)
+    public Pathfinder(Tile tileStart, string inventoryType, bool canTakeFromStockpile = false) { Pathfind(tileStart, null, inventoryType, canTakeFromStockpile); }
+	public Pathfinder(Tile tileStart, Tile tileGoal) { Pathfind(tileStart, tileGoal, null, false); }
+
+    private void Pathfind(Tile tileStart, Tile tileGoal, string inventoryType, bool canTakeFromStockpile)
     {
-        if (world.TileGraph == null)
+        if (World.Current.TileGraph == null)
         {
-            world.TileGraph = new TileGraph(world);
+            World.Current.TileGraph = new TileGraph(World.Current);
         }
 
-        Dictionary<Tile, Node<Tile>> nodes = world.TileGraph.Nodes;
+        Dictionary<Tile, Node<Tile>> nodes = World.Current.TileGraph.Nodes;
 
         if (nodes.ContainsKey(tileStart) == false)
         {
             Debug.LogError("Pathfinder::Pathfinder: The starting tile (param: Tile tileStart) isn't in the list of nodes!");
             return;
         }
-        if (nodes.ContainsKey(tileGoal) == false)
-        {
-            Debug.LogError("Pathfinder::Pathfinder: The goal tile (param: Tile tileGoal) isn't in the list of nodes!");
-            return;
-        }
 
         // Grab a copy of our start and goal node(s) from out dictionary
         Node<Tile> start = nodes[tileStart];
-        Node<Tile> goal = nodes[tileGoal];
+        Node<Tile> goal = null;
+        if (tileGoal != null)
+        {
+            if (nodes.ContainsKey(tileGoal) == false)
+            {
+                Debug.LogError("Pathfinder::Pathfinder: The goal tile (param: Tile tileGoal) isn't in the list of nodes!");
+                return;
+            }
+
+            goal = nodes[tileGoal];
+        }
 
         List<Node<Tile>> closedSet = new List<Node<Tile>>();
         SimplePriorityQueue<Node<Tile>> openSet = new SimplePriorityQueue<Node<Tile>>();
@@ -54,6 +57,7 @@ public class Pathfinder
             gCost[node] = Mathf.Infinity;
             fCost[node] = Mathf.Infinity;
         }
+
         gCost[start] = 0;
         fCost[start] = HeuristicCostEstimate(start, goal);
 
@@ -61,10 +65,24 @@ public class Pathfinder
         {
             Node<Tile> current = openSet.Dequeue();
 
-            if (current == goal)
+            if (goal != null)
             {
-                ConstructPath(cameFrom, current);
-                return;
+                if (current == goal)
+                {
+                    ConstructPath(cameFrom, current);
+                    return;
+                }
+            }
+            else 
+            {
+                if (current.Tile.Inventory != null && current.Tile.Inventory.Type == inventoryType)
+                {
+                    if (canTakeFromStockpile || current.Tile.Furniture == null || current.Tile.Furniture.IsStockpile() == false)
+                    {
+                        ConstructPath(cameFrom, current);
+                        return;
+                    }
+                }
             }
 
             closedSet.Add(current);
@@ -98,9 +116,10 @@ public class Pathfinder
             }
         }
     }
+
     private static float HeuristicCostEstimate(Node<Tile> start, Node<Tile> goal)
     {
-        return Mathf.Sqrt(Mathf.Pow(start.Tile.X - goal.Tile.X, 2) + Mathf.Pow(start.Tile.Y - goal.Tile.Y, 2));
+        return goal == null ? 0f : Mathf.Sqrt(Mathf.Pow(start.Tile.X - goal.Tile.X, 2) + Mathf.Pow(start.Tile.Y - goal.Tile.Y, 2));
     }
 
     private static float DistanceBetween(Node<Tile> start, Node<Tile> goal)

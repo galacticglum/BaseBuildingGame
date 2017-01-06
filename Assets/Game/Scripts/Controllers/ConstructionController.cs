@@ -48,42 +48,45 @@ public class ConstructionController : MonoBehaviour
 	}
 
 	public void DoBuild(Tile tile)
-    {
-		if(ConstructionMode == ConstructionMode.Furniture)
-        {
-			string furnitureType = ConstructionObjectType;
+	{
+	    switch (ConstructionMode)
+	    {
+	        case ConstructionMode.Furniture:
+	            string furnitureType = ConstructionObjectType;
 
-            if (!WorldController.Instance.World.IsFurniturePlacementValid(furnitureType, tile) || tile.PendingFurnitureJob != null) return;
+	            if (!WorldController.Instance.World.IsFurniturePlacementValid(furnitureType, tile) || tile.PendingFurnitureJob != null) return;
 
-            Job job;
-            if(WorldController.Instance.World.FurnitureJobPrototypes.ContainsKey(furnitureType))
-            {
-                job = WorldController.Instance.World.FurnitureJobPrototypes[furnitureType].Clone();
-                job.Tile = tile;
-            }
-            else
-            {
-                Debug.LogError("There is no furniture job prototype for '" + furnitureType + "'");
-                job = new Job(tile, furnitureType, FurnitureBehaviours.BuildFurniture, 0.1f, null);
-            }
+	            Job job;
+	            if(WorldController.Instance.World.FurnitureJobPrototypes.ContainsKey(furnitureType))
+	            {
+	                job = WorldController.Instance.World.FurnitureJobPrototypes[furnitureType].Clone();
+	                job.Tile = tile;
+	            }
+	            else
+	            {
+	                job = new Job(tile, furnitureType, 0.1f, Furniture.BuildCallback, null);
+	            }
 
-            tile.PendingFurnitureJob = job;
-            job.FurniturePrototype = WorldController.Instance.World.FurniturePrototypes[furnitureType];
-            job.JobStopped += (sender, args) =>
-            {
-                args.Job.Tile.PendingFurnitureJob = null;
-            };
+	            tile.PendingFurnitureJob = job;
+	            job.FurniturePrototype = WorldController.Instance.World.FurniturePrototypes[furnitureType];
+	            job.JobStopped += (sender, args) =>
+	            {
+	                args.Job.Tile.PendingFurnitureJob = null;
+	            };
 
-            WorldController.Instance.World.JobQueue.Enqueue(job);
-        }
-		else if (ConstructionMode == ConstructionMode.Floor)
-		{
-		    tile.Type = constructionTileType;
-		}
-		else if(ConstructionMode == ConstructionMode.Deconstruct && tile.Furniture != null)
-		{
-            tile.Furniture.Deconstruct();
-		}
+	            WorldController.Instance.World.JobQueue.Enqueue(job);
+	            break;
+
+	        case ConstructionMode.Floor:
+	            tile.Type = constructionTileType;
+	            break;
+	        default:
+	            if(ConstructionMode == ConstructionMode.Deconstruct && tile.Furniture != null)
+	            {
+	                tile.Furniture.Deconstruct();
+	            }
+	            break;
+	    }
 	}
 
     public bool IsFurnitureDraggable()

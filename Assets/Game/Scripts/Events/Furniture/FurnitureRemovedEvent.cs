@@ -1,1 +1,0 @@
-﻿public delegate void FurnitureRemovedEventHandler(object sender, FurnitureEventArgs args);

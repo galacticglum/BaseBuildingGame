@@ -9,17 +9,32 @@ public class Character : IXmlSerializable
     public float X { get { return nextTile == null ? CurrentTile.X : Mathf.Lerp(CurrentTile.X, nextTile.X, movementPercentage); }}
     public float Y { get { return nextTile == null ? CurrentTile.Y : Mathf.Lerp(CurrentTile.Y, nextTile.Y, movementPercentage); }}
 
-    public Tile CurrentTile { get; protected set; }
+    private Tile currentTile;
+    public Tile CurrentTile
+    {
+        get { return currentTile; }
+        set
+        {
+            if (currentTile != null)
+            {
+                currentTile.Characters.Remove(this);
+            }
+
+            currentTile = value;
+            currentTile.Characters.Add(this);
+        }
+    }
+
     public Inventory Inventory { get; set; } 
 
-    private Tile localDestinationTile;
-	private Tile destinationTile
+    private Tile destinationTile;
+	private Tile DestinationTile
     {
-		get { return localDestinationTile; }
+		get { return destinationTile; }
 		set {
-		    if (localDestinationTile == value) return;
+		    if (destinationTile == value) return;
 
-		    localDestinationTile = value;
+		    destinationTile = value;
 		    pathfinder = null;	
 		}
 	}
@@ -30,39 +45,41 @@ public class Character : IXmlSerializable
 
     private float movementPercentage;
 	private const float Speed = 5f;
+    private float jobSearchCooldown;
 
-    public event CharacterChangedEventHandler CharacterChanged;
-    public void OnCharacterChanged(CharacterEventArgs args)
+    public Callback<CharacterEventArgs> CharacterChanged { get; set; }
+
+    public Character()
     {
-        CharacterChangedEventHandler characterChanged = CharacterChanged;
-        if (characterChanged != null)
-        {
-            characterChanged(this, args);
-        }
+        CharacterChanged = new Callback<CharacterEventArgs>();
     }
 
-    public Character() { }
-	public Character(Tile tile)
+	public Character(Tile tile) : this()
     {
-		CurrentTile = destinationTile = nextTile = tile;
+		CurrentTile = DestinationTile = nextTile = tile;
 	}
 
     public void Update(float deltaTime)
     {
         DoJob(deltaTime);
         DoMovement(deltaTime);
-        OnCharacterChanged(new CharacterEventArgs(this));
+
+        CharacterChanged.Invoke(new CharacterEventArgs(this));
     }
 
     private void DoJob(float deltaTime)
     {
-		if(job == null)
+        jobSearchCooldown -= deltaTime;
+        if (job == null)
 		{
-			GetNewJob();
+            if (jobSearchCooldown > 0) return;
+
+            GetNewJob();
 
 			if(job == null)
             {
-				destinationTile = CurrentTile;
+                jobSearchCooldown = UnityEngine.Random.Range(0.1f, 0.5f);
+                DestinationTile = CurrentTile;
 				return;
 			}
 		}
@@ -90,7 +107,7 @@ public class Character : IXmlSerializable
 					}
 					else
                     {
-						destinationTile = job.Tile;
+						DestinationTile = job.Tile;
 						return;
 					}
 				}
@@ -118,20 +135,26 @@ public class Character : IXmlSerializable
 				}
 				else
                 {
-					// Find the first thing in the Job that isn't satisfied.
-					Inventory desiredInventory = job.GetFirstDesiredInventory();
-					Inventory closestInventory = World.Current.InventoryManager.GetClosestInventoryOfType(desiredInventory.Type, 
+                    // Find the first thing in the Job that isn't satisfied.
+                    Inventory desiredInventory = job.GetFirstDesiredInventory();
+
+                    if (pathfinder != null && pathfinder.DestinationTile != null && pathfinder.DestinationTile.Inventory != null &&
+                        pathfinder.DestinationTile.Inventory.Type == desiredInventory.Type) return;
+
+                    Pathfinder pathToClosestInventory = World.Current.InventoryManager.GetPathToClosestInventoryOfType(desiredInventory.Type, 
                         CurrentTile, desiredInventory.MaxStackSize - desiredInventory.StackSize, job.CanTakeFromStockpile);
 
-					if(closestInventory == null)
+                    if (pathToClosestInventory == null || pathToClosestInventory.Length <= 0)
                     {
-						Debug.LogWarning("Character::DoJob: No tile contains inventory of type: '" + desiredInventory.Type + "' to satisfy job.");
-						AbandonJob();
-						return;
-					}
+                        AbandonJob();
+                        return;
+                    }
 
-					destinationTile = closestInventory.Tile;
-					return;
+                    DestinationTile = pathToClosestInventory.DestinationTile;
+                    pathfinder = pathToClosestInventory;
+                    nextTile = pathfinder.Dequeue();
+
+                    return;
 				}
 
 			}
@@ -139,7 +162,7 @@ public class Character : IXmlSerializable
 			return; 
 		}
 
-		destinationTile = job.Tile;
+		DestinationTile = job.Tile;
 		if(CurrentTile == job.Tile)
         {
 			job.DoWork(deltaTime);
@@ -151,27 +174,27 @@ public class Character : IXmlSerializable
         job = World.Current.JobQueue.Dequeue();
         if (job == null) return;
 
-        destinationTile = job.Tile;
+        DestinationTile = job.Tile;
         job.JobStopped += OnJobStopped;
 
-        pathfinder = new Pathfinder(World.Current, CurrentTile, destinationTile);	
+        pathfinder = new Pathfinder(CurrentTile, DestinationTile);	
         if (pathfinder.Length != 0) return;
 
         Debug.LogError("Character::DoJob: Pathfinder returned no path to destination");
         AbandonJob();
-        destinationTile = CurrentTile;
+        DestinationTile = CurrentTile;
     }
 
     public void AbandonJob()
     {
-		nextTile = destinationTile = CurrentTile;
+		nextTile = DestinationTile = CurrentTile;
         World.Current.JobQueue.Enqueue(job);
 		job = null;
 	}
 
     private void DoMovement(float deltaTime)
     {
-		if(CurrentTile == destinationTile)
+		if(CurrentTile == DestinationTile)
         {
 			pathfinder = null;
 			return;	// We're already were we want to be.
@@ -183,7 +206,7 @@ public class Character : IXmlSerializable
 			if(pathfinder == null || pathfinder.Length == 0)
             {
 				// Generate a path to our destination
-				pathfinder = new Pathfinder(World.Current, CurrentTile, destinationTile);	
+				pathfinder = new Pathfinder(CurrentTile, DestinationTile);	
 				if(pathfinder.Length == 0)
                 {
 					Debug.LogError("Character::DoMovement: Pathfinder returned no path to destination!");
@@ -230,7 +253,7 @@ public class Character : IXmlSerializable
 			Debug.LogError("Character::SetDestination: Our destination tile isn't actually our neighbour.");
 		}
 
-		destinationTile = tile;
+		DestinationTile = tile;
 	}
 
     private void OnJobStopped(object sender, JobEventArgs args)
@@ -239,7 +262,6 @@ public class Character : IXmlSerializable
 
 		if(args.Job != job)
         {
-			Debug.LogError("Character::OnJobEnded: Character being told about job that isn't his; might have forgot to unregister something.");
 			return;
 		}
 
