@@ -38,6 +38,8 @@ public class MouseController : MonoBehaviour
 	// Update is called once per frame
     private void Update ()
     {
+        if (WorldController.Instance.IsModal) return;
+
 		currentFramePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 		currentFramePosition.z = 0;
 
@@ -202,7 +204,7 @@ public class MouseController : MonoBehaviour
 
     private void RebuildSelectionInfo()
     {
-        CurrentSelectionInfo.SelectionObjects = new object[CurrentSelectionInfo.Tile.Characters.Count + 3];
+        CurrentSelectionInfo.SelectionObjects = new ISelectable[CurrentSelectionInfo.Tile.Characters.Count + 3];
 
         for (int i = 0; i < CurrentSelectionInfo.Tile.Characters.Count; i++)
         {

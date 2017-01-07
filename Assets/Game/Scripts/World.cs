@@ -349,12 +349,12 @@ public class World : IXmlSerializable
         InventoryManager.PlaceInventory(tileAt, inventory);
         InventoryCreated.Invoke(new InventoryEventArgs(tileAt.Inventory));
 
-        inventory = new Inventory("Steel Plate", 50, 4);
+        inventory = new Inventory("Steel Plate", 50, 40);
         tileAt = GetTileAt(Width / 2 + 2, Height / 2);
         InventoryManager.PlaceInventory(tileAt, inventory);
         InventoryCreated.Invoke(new InventoryEventArgs(tileAt.Inventory));
 
-        inventory = new Inventory("Steel Plate", 50, 3);
+        inventory = new Inventory("Steel Plate", 50, 10);
         tileAt = GetTileAt(Width / 2 + 1, Height / 2 + 2);
         InventoryManager.PlaceInventory(tileAt, inventory);
         InventoryCreated.Invoke(new InventoryEventArgs(tileAt.Inventory));

@@ -2,13 +2,23 @@
 using UnityEngine.SceneManagement;
 using System.Xml.Serialization;
 using System.IO;
+using UnityEngine.UI;
 
 public class WorldController : MonoBehaviour
 {
 	public static WorldController Instance { get; protected set; }
 	public World World { get; protected set; }
 
-    private static bool loadWorld;
+    private static string loadWorldFromFile;
+
+    private bool isPaused;
+    public bool IsPaused
+    {
+        get { return isPaused || IsModal; }
+        set { isPaused = value; }
+    }
+
+    public bool IsModal { get; set; }
 
 	// Use this for initialization
     private void OnEnable ()
@@ -19,12 +29,12 @@ public class WorldController : MonoBehaviour
 		}
 		Instance = this;
 
-		if(loadWorld)
+		if(!string.IsNullOrEmpty(loadWorldFromFile))
         {
-			loadWorld = false;
 			CreateWorldFromSaveFile();
-		}
-		else
+            loadWorldFromFile = null;
+        }
+        else
         {
 			GenerateEmpty();
 		}
@@ -33,7 +43,10 @@ public class WorldController : MonoBehaviour
     private void Update()
     {
 		// TODO: Add pause/unpause, speed controls, etc...
-		World.Update(Time.deltaTime);
+        if (!IsPaused)
+        {
+            World.Update(Time.deltaTime);
+        }
 
 	}
 		
@@ -50,19 +63,19 @@ public class WorldController : MonoBehaviour
 		SceneManager.LoadScene( SceneManager.GetActiveScene().name );
 	}
 
-	public void Save()
+	public string Save()
     {
-		XmlSerializer serializer = new XmlSerializer(typeof(World));
+        XmlSerializer serializer = new XmlSerializer(typeof(World));
 		TextWriter writer = new StringWriter();
 		serializer.Serialize(writer, World);
 		writer.Close();
 
-		PlayerPrefs.SetString("SaveGame00", writer.ToString());
-	}
+        return writer.ToString();
+    }
 
-	public void Load()
+	public void Load(string filePath)
     {
-		loadWorld = true;
+		loadWorldFromFile = filePath;
 		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 	}
 
@@ -77,7 +90,8 @@ public class WorldController : MonoBehaviour
     private void CreateWorldFromSaveFile()
     {
 		XmlSerializer serializer = new XmlSerializer(typeof(World));
-		TextReader reader = new StringReader(PlayerPrefs.GetString("SaveGame00"));
+        TextReader reader = new StringReader(File.ReadAllText(loadWorldFromFile));
+
 		World = (World)serializer.Deserialize(reader);
 		reader.Close();
 

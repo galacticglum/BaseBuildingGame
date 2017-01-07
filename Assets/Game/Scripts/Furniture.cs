@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 using MoonSharp.Interpreter;
 
 [MoonSharpUserData]
-public class Furniture : IXmlSerializable
+public class Furniture : IXmlSerializable, ISelectable
 {
     public static CallbackHandler<JobEventArgs> BuildCallback
     {
@@ -199,6 +199,7 @@ public class Furniture : IXmlSerializable
 	private void RemoveJob(Job job)
 	{
 	    job.JobStopped -= OnJobStopped;
+        World.Current.JobQueue.Remove(job);
 		jobs.Remove(job);
         job.Furniture = null;
 	}
@@ -254,6 +255,21 @@ public class Furniture : IXmlSerializable
         }
 
         return (TileEnterability)Lua.Call(tryEnterFunction, this).UserData.Object;
+    }
+
+    public string GetName()
+    {
+        return Name;
+    }
+
+    public string GetDescription()
+    {
+        return "A furniture description in a galaxy far, far away (jurrasic park?).";
+    }
+
+    public IEnumerable<string> GetAdditionalInfo()
+    {
+        return null;
     }
 
     public XmlSchema GetSchema()

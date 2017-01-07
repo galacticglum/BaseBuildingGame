@@ -23,10 +23,14 @@ public class Job
     public Callback<JobEventArgs> JobCompleted;
     public Callback<JobEventArgs> JobStopped;
     public Callback<JobEventArgs> JobWorked;
+ 
+    public LuaEventManager EventManager { get; set; }
 
-    public Job(Tile tile, string type, float workTime, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false)
+    public Job(Tile tile, string type, float workTime, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob)
     {
         this.repeatingJob = repeatingJob;
+
+        CanTakeFromStockpile = true;
         requiredWorkTime = WorkTime = workTime;
 
         Initialize(tile, type, new Callback<JobEventArgs>(jobCompleted), inventoryRequirements);
@@ -35,6 +39,8 @@ public class Job
     public Job (Tile tile, string type, float workTime, CallbackHandler<JobEventArgs> jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false)
     {
         this.repeatingJob = repeatingJob;
+
+        CanTakeFromStockpile = true;
         requiredWorkTime = WorkTime = workTime;
 
         Initialize(tile, type, new Callback<JobEventArgs>(jobCompleted), inventoryRequirements);
@@ -79,6 +85,9 @@ public class Job
         JobStopped = new Callback<JobEventArgs>();
         JobWorked = new Callback<JobEventArgs>();
 
+        EventManager = new LuaEventManager();
+        EventManager.RegisterEvent("foo");
+
         InventoryRequirements = new Dictionary<string, Inventory>();
         if (inventoryRequirements == null) return;
         foreach (Inventory inventory in inventoryRequirements)
@@ -89,15 +98,15 @@ public class Job
 
 	public void DoWork(float workTime)
     {
-		if(HasAllMaterials() == false)
+        EventManager.Trigger("foo");
+
+        if (HasAllMaterials() == false)
         {
             JobWorked.Invoke(new JobEventArgs(this));
-
             return;
 		}
 
 		WorkTime -= workTime;
-
         JobWorked.Invoke(new JobEventArgs(this));
 
         if (!(WorkTime <= 0)) return;

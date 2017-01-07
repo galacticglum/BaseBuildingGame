@@ -8,7 +8,7 @@ using System.Linq;
 public class Pathfinder
 {
     public int Length { get { return path == null ? 0 : path.Count; }}
-    public Tile DestinationTile { get { return path.LastOrDefault(); }}
+    public Tile DestinationTile { get { return path == null || path.Count == 0 ? null : path.Last(); }}
 
     private Queue<Tile> path;
 
@@ -23,7 +23,6 @@ public class Pathfinder
         }
 
         Dictionary<Tile, Node<Tile>> nodes = World.Current.TileGraph.Nodes;
-
         if (nodes.ContainsKey(tileStart) == false)
         {
             Debug.LogError("Pathfinder::Pathfinder: The starting tile (param: Tile tileStart) isn't in the list of nodes!");
@@ -157,6 +156,6 @@ public class Pathfinder
 
     public Tile Dequeue()
     {
-        return path.Dequeue();
+        return path == null || path.Count == 0 ? null : path.Dequeue();
     }
 }

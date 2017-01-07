@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 
-public class Character : IXmlSerializable
+public class Character : IXmlSerializable, ISelectable
 {
     public float X { get { return nextTile == null ? CurrentTile.X : Mathf.Lerp(CurrentTile.X, nextTile.X, movementPercentage); }}
     public float Y { get { return nextTile == null ? CurrentTile.Y : Mathf.Lerp(CurrentTile.Y, nextTile.Y, movementPercentage); }}
@@ -135,16 +136,19 @@ public class Character : IXmlSerializable
 				}
 				else
                 {
+                    if (currentTile != nextTile) return;
+
                     // Find the first thing in the Job that isn't satisfied.
                     Inventory desiredInventory = job.GetFirstDesiredInventory();
 
-                    if (pathfinder != null && pathfinder.DestinationTile != null && pathfinder.DestinationTile.Inventory != null &&
+                    if(pathfinder != null && pathfinder.DestinationTile != null &&
+                        pathfinder.DestinationTile.Inventory != null && pathfinder.DestinationTile.Furniture != null && 
+                        !(job.CanTakeFromStockpile == false && pathfinder.DestinationTile.Furniture.IsStockpile()) && 
                         pathfinder.DestinationTile.Inventory.Type == desiredInventory.Type) return;
 
-                    Pathfinder pathToClosestInventory = World.Current.InventoryManager.GetPathToClosestInventoryOfType(desiredInventory.Type, 
-                        CurrentTile, desiredInventory.MaxStackSize - desiredInventory.StackSize, job.CanTakeFromStockpile);
+                    Pathfinder pathToClosestInventory = World.Current.InventoryManager.GetPathToClosestInventoryOfType(desiredInventory.Type, CurrentTile, job.CanTakeFromStockpile);
 
-                    if (pathToClosestInventory == null || pathToClosestInventory.Length <= 0)
+                    if (pathToClosestInventory == null || pathToClosestInventory.Length == 0)
                     {
                         AbandonJob();
                         return;
@@ -171,8 +175,7 @@ public class Character : IXmlSerializable
 
     private void GetNewJob()
     {
-        job = World.Current.JobQueue.Dequeue();
-        if (job == null) return;
+        job = World.Current.JobQueue.Dequeue() ?? new Job(CurrentTile, "Idle", UnityEngine.Random.Range(0.1f, 0.5f), null, null);
 
         DestinationTile = job.Tile;
         job.JobStopped += OnJobStopped;
@@ -180,7 +183,7 @@ public class Character : IXmlSerializable
         pathfinder = new Pathfinder(CurrentTile, DestinationTile);	
         if (pathfinder.Length != 0) return;
 
-        Debug.LogError("Character::DoJob: Pathfinder returned no path to destination");
+        Debug.LogError("Character::GetNewJob: Pathfinder returned no path to destination");
         AbandonJob();
         DestinationTile = CurrentTile;
     }
@@ -194,7 +197,7 @@ public class Character : IXmlSerializable
 
     private void DoMovement(float deltaTime)
     {
-		if(CurrentTile == DestinationTile)
+        if (CurrentTile.X == DestinationTile.X && CurrentTile.Y == DestinationTile.Y)
         {
 			pathfinder = null;
 			return;	// We're already were we want to be.
@@ -202,15 +205,15 @@ public class Character : IXmlSerializable
 
 		if(nextTile == null || nextTile == CurrentTile)
         {
-			// Get the next tile from the pathfinder.
-			if(pathfinder == null || pathfinder.Length == 0)
+            // Get the next tile from the pathfinder.
+            if (pathfinder == null || pathfinder.Length == 0)
             {
 				// Generate a path to our destination
-				pathfinder = new Pathfinder(CurrentTile, DestinationTile);	
+                pathfinder = new Pathfinder(CurrentTile, DestinationTile);	
 				if(pathfinder.Length == 0)
                 {
 					Debug.LogError("Character::DoMovement: Pathfinder returned no path to destination!");
-					AbandonJob();
+				    AbandonJob();
 					return;
 				}
 
@@ -218,10 +221,10 @@ public class Character : IXmlSerializable
 			}
 
 			nextTile = pathfinder.Dequeue();
-			if( nextTile == CurrentTile )
+			if(nextTile == CurrentTile)
             {
 				Debug.LogError("Character::DoMovement: nextTile is currentTile?");
-			}
+            }
 		}
 
 		switch (nextTile.TryEnter())
@@ -246,16 +249,6 @@ public class Character : IXmlSerializable
         movementPercentage = 0;
     }
 
-	public void SetDestination(Tile tile)
-    {
-		if(CurrentTile.IsNeighbour(tile, true) == false)
-        {
-			Debug.LogError("Character::SetDestination: Our destination tile isn't actually our neighbour.");
-		}
-
-		DestinationTile = tile;
-	}
-
     private void OnJobStopped(object sender, JobEventArgs args)
     {
 		args.Job.JobStopped -= OnJobStopped;
@@ -267,6 +260,21 @@ public class Character : IXmlSerializable
 
 		job = null;
 	}
+
+    public string GetName()
+    {
+        return "Elessar Ole Tetlie";
+    }
+
+    public string GetDescription()
+    {
+        return "A fluffy dog who sleeps way to much.";
+    }
+
+    public IEnumerable<string> GetAdditionalInfo()
+    {
+        return null;
+    }
 
     public XmlSchema GetSchema()
     {

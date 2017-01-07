@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -41,7 +42,14 @@ public class SelectionInfoInspector : MonoBehaviour
         canvasGroup.interactable = true;
         canvasGroup.blocksRaycasts = true;
 
-        textComponent.text = mouseController.CurrentSelectionInfo.ToString();
+	    ISelectable selection = mouseController.CurrentSelectionInfo.SelectionObjects[mouseController.CurrentSelectionInfo.SelectionIndex];
 
+	    string additionalInfo = string.Empty;
+	    if (selection.GetAdditionalInfo() != null)
+	    {
+	        additionalInfo = selection.GetAdditionalInfo().Aggregate(string.Empty, (current, info) => current + (info + "\n"));
+        }
+
+        textComponent.text = selection.GetName() + "\n" + selection.GetDescription() + "\n" + additionalInfo;
     }
 }

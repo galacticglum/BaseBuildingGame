@@ -11,7 +11,11 @@ Bug Fixes/Polish:
         ✔ Delete jobs when deconstructing furniture. @done (1/6/2017, 12:02:42 PM)
         ✔ Update neighbouring graphics to reflect changes (ex: walls). @done (1/6/2017, 12:06:17 PM)
     
-Features:
+Tasks:
+    ☐ Project refactor.
+    ☐ Lua event manager system.
+    ☐ Redo job queue.
+    
     ☐ Check validity of work site for job.
     ☐ Box selection.
     ☐ Logging system.

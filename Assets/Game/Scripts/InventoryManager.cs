@@ -113,13 +113,21 @@ public class InventoryManager
 		return true;
 	}
 
-	public Inventory GetClosestInventoryOfType(string type, Tile tile, int desiredAmount, bool canTakeFromStockpile)
+	public Inventory GetClosestInventoryOfType(string type, Tile tile, bool canTakeFromStockpile)
 	{
-        return GetPathToClosestInventoryOfType(type, tile, desiredAmount, canTakeFromStockpile).DestinationTile.Inventory;
-    }
+	    Tile destinationTile = GetPathToClosestInventoryOfType(type, tile, canTakeFromStockpile).DestinationTile;
+	    return destinationTile != null ? destinationTile.Inventory : null;
+	}
 
-    public Pathfinder GetPathToClosestInventoryOfType(string type, Tile tile, int desiredAmount, bool canTakeFromStockpile)
+    public Pathfinder GetPathToClosestInventoryOfType(string type, Tile tile, bool canTakeFromStockpile)
     {
-        return Inventories.ContainsKey(type) ? new Pathfinder(tile, type, canTakeFromStockpile) : null;
+        if (Inventories.ContainsKey(type) == false
+            || !canTakeFromStockpile && Inventories[type].TrueForAll(inventory => inventory.Tile != null && 
+            inventory.Tile.Furniture != null && inventory.Tile.Furniture.IsStockpile())) 
+        {
+            return null;
+        }
+
+        return new Pathfinder(tile, type, canTakeFromStockpile);
     }
 }

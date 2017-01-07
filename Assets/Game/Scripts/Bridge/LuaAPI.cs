@@ -18,6 +18,7 @@ public static class LuaAPI
         ExposeType<TileEventArgs>(lua);
 
         ExposeType<Callback>(lua);
+        ExposeType<LuaEventManager>(lua);
 
         ExposeType<World>(lua);
         ExposeType<Inventory>(lua);

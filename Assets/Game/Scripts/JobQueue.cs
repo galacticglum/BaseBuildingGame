@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System;
+using MoonSharp.Interpreter;
 
+[MoonSharpUserData]
 public class JobQueue
 {
     private Queue<Job> jobQueue;
-
     public Callback<JobEventArgs> JobCreated;
 
     public JobQueue()

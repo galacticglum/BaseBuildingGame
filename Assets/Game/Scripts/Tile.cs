@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using System.Xml;
 using System.Xml.Schema;
@@ -6,7 +7,7 @@ using System.Xml.Serialization;
 using MoonSharp.Interpreter;
 
 [MoonSharpUserData]
-public class Tile : IXmlSerializable
+public class Tile : IXmlSerializable, ISelectable
 {
     public Tile North { get { return World.Current.GetTileAt(X, Y + 1); }}
     public Tile South { get { return World.Current.GetTileAt(X, Y - 1); }}
@@ -180,6 +181,21 @@ public class Tile : IXmlSerializable
         }
 
         return Furniture != null ? Furniture.TryEnter() : TileEnterability.Immediate;
+    }
+
+    public string GetName()
+    {
+        return Enum.GetName(typeof(TileType), Type);
+    }
+
+    public string GetDescription()
+    {
+        return "The best tile in the known universe!";
+    }
+
+    public IEnumerable<string> GetAdditionalInfo()
+    {
+        return null;
     }
 
     public XmlSchema GetSchema()

@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using MoonSharp.Interpreter;
 
 [MoonSharpUserData]
-public class Inventory
+public class Inventory : ISelectable
 {
 	public string Type { get; set; }
     public int MaxStackSize { get; set; }
@@ -52,4 +53,19 @@ public class Inventory
     {
 		return new Inventory(this);
 	}
+
+    public string GetName()
+    {
+        return Type;
+    }
+
+    public string GetDescription()
+    {
+        return "An inventory.. (what else do you want!)";
+    }
+
+    public IEnumerable<string> GetAdditionalInfo()
+    {
+        return null;
+    }
 }

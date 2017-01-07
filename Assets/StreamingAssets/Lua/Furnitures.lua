@@ -33,7 +33,7 @@ function UpdateStockpile(sender, args)
         itemFilter = { desiredInventory }
     end
 
-    job = Job.new(args.Furniture.Tile, nil, 0, nil, itemFilter)
+    job = Job.new(args.Furniture.Tile, nil, 0, nil, itemFilter, false)
     job.CanTakeFromStockpile = false
 
     job.JobWorked.AddHandler(StockpileJobWorked)
@@ -115,5 +115,3 @@ end
 function MiningDroneJobCompleted(sender, args)
     World.Current.InventoryManager.PlaceInventory(args.Job.Furniture.InventorySpawnTile, Inventory.new("Steel Plate", 50, 10))
 end
-
-
