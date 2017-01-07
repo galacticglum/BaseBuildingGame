@@ -48,11 +48,23 @@ public class Character : IXmlSerializable, ISelectable
 	private const float Speed = 5f;
     private float jobSearchCooldown;
 
-    public Callback<CharacterEventArgs> CharacterChanged { get; set; }
+    public LuaEventManager EventManager { get; set; }
+
+    public event CharacterChangedEventHandler CharacterChanged;
+    public void OnCharacterChanged(CharacterEventArgs args)
+    {
+        CharacterChangedEventHandler characterChanged = CharacterChanged;
+        if (characterChanged != null)
+        {
+            characterChanged(this, args);
+        }
+
+        EventManager.Trigger("CharacterChanged", this, args);
+    }
 
     public Character()
     {
-        CharacterChanged = new Callback<CharacterEventArgs>();
+        EventManager = new LuaEventManager("CharacterChanged");
     }
 
 	public Character(Tile tile) : this()
@@ -65,7 +77,7 @@ public class Character : IXmlSerializable, ISelectable
         DoJob(deltaTime);
         DoMovement(deltaTime);
 
-        CharacterChanged.Invoke(new CharacterEventArgs(this));
+        OnCharacterChanged(new CharacterEventArgs(this));
     }
 
     private void DoJob(float deltaTime)

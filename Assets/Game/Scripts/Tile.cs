@@ -34,7 +34,7 @@ public class Tile : IXmlSerializable, ISelectable
             type = value;
 
             if (oldType == type) return;
-            TileChanged.Invoke(new TileEventArgs(this));
+            OnTileChanged(new TileEventArgs(this));
         }
     }
 
@@ -51,7 +51,18 @@ public class Tile : IXmlSerializable, ISelectable
         }
     }
 
-    public Callback<TileEventArgs> TileChanged;
+    public LuaEventManager EventManager { get; set; }
+    public event TileChangedEventHandler TileChanged;
+    public void OnTileChanged(TileEventArgs args)
+    {
+        TileChangedEventHandler tileChanged = TileChanged;
+        if (tileChanged != null)
+        {
+            tileChanged(this, args);
+        }
+
+        EventManager.Trigger("TileChanged");
+    }
 
     public Tile(int x, int y)
     {
@@ -59,7 +70,7 @@ public class Tile : IXmlSerializable, ISelectable
 		Y = y;
 
         Characters = new List<Character>();
-        TileChanged = new Callback<TileEventArgs>();
+        EventManager = new LuaEventManager("TileChanged");
 	}
 
 	public bool PlaceFurniture(Furniture furniture)

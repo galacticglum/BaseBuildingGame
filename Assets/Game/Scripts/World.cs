@@ -27,10 +27,55 @@ public class World : IXmlSerializable
     public InventoryManager InventoryManager { get; protected set; }
     public Room OutsideRoom { get { return Rooms[0]; } }
 
-    public Callback<TileEventArgs> TileChanged;
-    public Callback<FurnitureEventArgs> FurnitureCreated;
-    public Callback<CharacterEventArgs> CharacterCreated;
-    public Callback<InventoryEventArgs> InventoryCreated;
+    public LuaEventManager EventManager { get; set; }
+
+    public event TileChangedEventHandler TileChanged;
+    public void OnTileChanged(TileEventArgs args)
+    {
+        TileChangedEventHandler tileChanged = TileChanged;
+        if (tileChanged != null)
+        {
+            tileChanged(this, args);
+        }
+
+        EventManager.Trigger("TileChanged", this, args);
+    }
+
+    public event FurnitureCreatedEventHandler FurnitureCreated;
+    public void OnFurnitureCreated(FurnitureEventArgs args)
+    {
+        FurnitureCreatedEventHandler furnitureCreated = FurnitureCreated;
+        if (furnitureCreated != null)
+        {
+            furnitureCreated(this, args);
+        }
+
+        EventManager.Trigger("FurnitureCreated", this, args);
+    }
+
+    public event CharacterCreatedEventHandler CharacterCreated;
+    public void OnCharacterCreated(CharacterEventArgs args)
+    {
+        CharacterCreatedEventHandler characterCreated = CharacterCreated;
+        if (characterCreated != null)
+        {
+            characterCreated(this, args);
+        }
+
+        EventManager.Trigger("CharacterCreated", this, args);
+    }
+
+    public event InventoryCreatedEventHandler InventoryCreated;
+    public void OnInventoryCreated(InventoryEventArgs args)
+    {
+        InventoryCreatedEventHandler inventoryCreated = InventoryCreated;
+        if (inventoryCreated != null)
+        {
+            inventoryCreated(this, args);
+        }
+
+        EventManager.Trigger("InventoryCreated", this, args);
+    }
 
     private Tile[,] tiles;
 
@@ -47,10 +92,7 @@ public class World : IXmlSerializable
     {
         Current = this;
 
-        TileChanged = new Callback<TileEventArgs>();
-        FurnitureCreated = new Callback<FurnitureEventArgs>();
-        CharacterCreated = new Callback<CharacterEventArgs>();
-        InventoryCreated = new Callback<InventoryEventArgs>(); 
+        EventManager = new LuaEventManager("TileChanged", "FurnitureCreated", "CharacterCreated", "InventoryCreated");
 
 		Width = width;
 		Height = height;
@@ -113,7 +155,7 @@ public class World : IXmlSerializable
     {
 		Character characterInstance = new Character( tile ); 
 		Characters.Add(characterInstance);
-        CharacterCreated.Invoke(new CharacterEventArgs(characterInstance));
+        OnCharacterCreated(new CharacterEventArgs(characterInstance));
 
 		return characterInstance;
 	}
@@ -202,7 +244,7 @@ public class World : IXmlSerializable
 		}
 
         if (FurnitureCreated == null) return furnitureInstance;
-        FurnitureCreated.Invoke(new FurnitureEventArgs(furnitureInstance));
+        OnFurnitureCreated(new FurnitureEventArgs(furnitureInstance));
 
         if(furnitureInstance.MovementCost != 1)
         {
@@ -214,7 +256,7 @@ public class World : IXmlSerializable
 
     private void OnTileChangedEvent(object sender, TileEventArgs args)
     {
-		TileChanged.Invoke(new TileEventArgs(args.Tile));
+		OnTileChanged(new TileEventArgs(args.Tile));
 		InvalidateTileGraph();
 	}
 
@@ -347,17 +389,17 @@ public class World : IXmlSerializable
         Inventory inventory = new Inventory("Steel Plate", 50, 50);
         Tile tileAt = GetTileAt(Width / 2, Height / 2);
         InventoryManager.PlaceInventory(tileAt, inventory);
-        InventoryCreated.Invoke(new InventoryEventArgs(tileAt.Inventory));
+        OnInventoryCreated(new InventoryEventArgs(tileAt.Inventory));
 
         inventory = new Inventory("Steel Plate", 50, 40);
         tileAt = GetTileAt(Width / 2 + 2, Height / 2);
         InventoryManager.PlaceInventory(tileAt, inventory);
-        InventoryCreated.Invoke(new InventoryEventArgs(tileAt.Inventory));
+        OnInventoryCreated(new InventoryEventArgs(tileAt.Inventory));
 
         inventory = new Inventory("Steel Plate", 50, 10);
         tileAt = GetTileAt(Width / 2 + 1, Height / 2 + 2);
         InventoryManager.PlaceInventory(tileAt, inventory);
-        InventoryCreated.Invoke(new InventoryEventArgs(tileAt.Inventory));
+        OnInventoryCreated(new InventoryEventArgs(tileAt.Inventory));
     }
 
     private void ReadXmlTiles(XmlReader reader)

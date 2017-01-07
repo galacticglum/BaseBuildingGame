@@ -7,12 +7,24 @@ using MoonSharp.Interpreter;
 public class JobQueue
 {
     private Queue<Job> jobQueue;
-    public Callback<JobEventArgs> JobCreated;
+
+    public LuaEventManager EventManager { get; set; }
+    public event JobCreatedEventHandler JobCreated;
+    public void OnJobCreated(JobEventArgs args)
+    {
+        JobCreatedEventHandler jobCreated = JobCreated;
+        if (jobCreated != null)
+        {
+            jobCreated(this, args);
+        }
+
+        EventManager.Trigger("JobCreated", this, args);
+    }
 
     public JobQueue()
     {
 		jobQueue = new Queue<Job>();
-        JobCreated = new Callback<JobEventArgs>();
+        EventManager = new LuaEventManager("JobCreated");
 	}
 
     public void PrintQueue()
@@ -29,7 +41,7 @@ public class JobQueue
 		}
 
 		jobQueue.Enqueue(job);
-        JobCreated.Invoke(new JobEventArgs(job));
+        OnJobCreated(new JobEventArgs(job));
 	}
 
 	public Job Dequeue()

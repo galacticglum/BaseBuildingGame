@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using MoonSharp.Interpreter;
 using MoonSharp.Interpreter.Interop;
+using UnityEngine;
 
 public class LuaEventManager
 {
@@ -10,6 +11,12 @@ public class LuaEventManager
     public LuaEventManager()
     {
         luaFunctions = new Dictionary<string, List<Closure>>();
+    }
+
+    [MoonSharpVisible(false)]
+    public LuaEventManager(params string[] eventTags) : this()
+    {
+        RegisterEvents(eventTags);
     }
 
     [MoonSharpVisible(false)]
@@ -47,7 +54,11 @@ public class LuaEventManager
     [MoonSharpVisible(false)]
     public void Trigger(string eventTag, params object[] args)
     {
-        if (!luaFunctions.ContainsKey(eventTag)) return;
+        if (!luaFunctions.ContainsKey(eventTag))
+        {
+            Debug.LogError("LuaEventManager::Trigger: Tried to trigger unregistered event with tag '" + eventTag + "'!");
+            return;
+        }
 
         foreach (Closure function in luaFunctions[eventTag])
         {

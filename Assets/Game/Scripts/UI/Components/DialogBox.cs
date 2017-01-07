@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class DialogBox : MonoBehaviour
 {
-    private Dictionary<string, object> t;
-
     public virtual void Show()
     {
         WorldController.Instance.IsModal = true;

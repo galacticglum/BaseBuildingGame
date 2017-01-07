@@ -29,6 +29,6 @@ public class FurnitureMenuManager : MonoBehaviour
             {
                 constructionController.BuildFurniture(type);
             });
-;        } 
+        } 
     }
 }

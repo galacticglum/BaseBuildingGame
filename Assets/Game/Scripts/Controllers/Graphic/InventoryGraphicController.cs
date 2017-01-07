@@ -24,7 +24,7 @@ public class InventoryGraphicController : MonoBehaviour
         {
 			foreach(Inventory inventory in world.InventoryManager.Inventories[type])
             {
-				world.InventoryCreated.Invoke(new InventoryEventArgs(inventory));
+				world.OnInventoryCreated(new InventoryEventArgs(inventory));
 			}
 		}
 	}

@@ -82,7 +82,6 @@ public class Furniture : IXmlSerializable, ISelectable
     public Furniture()
     {
         EventManager = new LuaEventManager("FurnitureUpdate", "FurnitureChanged", "FurnitureRemoved");
-        FurnitureParameters = new Dictionary<string, float>();
 
         jobs = new List<Job>();
         Tint = Color.white;
@@ -100,7 +99,7 @@ public class Furniture : IXmlSerializable, ISelectable
         LinksToNeighbour = furniture.LinksToNeighbour;
         WorkPositionOffset = furniture.WorkPositionOffset;
 
-        EventManager = new LuaEventManager("FurnitureUpdate", "FurnitureChanged", "FurnitureRemoved");
+        EventManager = new LuaEventManager();
 
         FurnitureParameters = new Dictionary<string, float>(furniture.FurnitureParameters);
         jobs = new List<Job>();

@@ -18,7 +18,7 @@ public class CharacterGraphicController : MonoBehaviour
 
 		foreach(Character character in world.Characters)
         {
-			world.CharacterCreated.Invoke(new CharacterEventArgs(character));
+			world.OnCharacterCreated(new CharacterEventArgs(character));
 		}
 	}
 

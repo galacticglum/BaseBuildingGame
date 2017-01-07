@@ -17,18 +17,30 @@ public class Inventory : ISelectable
             if (localStackSize == value) return;
             localStackSize = value;
 
-            InventoryChanged.Invoke(new InventoryEventArgs(this));
+            OnInventoryChanged(new InventoryEventArgs(this));
         }
 	}
 
     public Tile Tile { get; set; }
     public Character Character { get; set; }
 
-    public Callback<InventoryEventArgs> InventoryChanged;
+    public LuaEventManager EventManager { get; set; }
+
+    public event InventoryChangedEventHandler InventoryChanged;
+    public void OnInventoryChanged(InventoryEventArgs args)
+    {
+        InventoryChangedEventHandler inventoryChanged = InventoryChanged;
+        if (inventoryChanged != null)
+        {
+            inventoryChanged(this, args);
+        }
+
+        EventManager.Trigger("InventoryChanged", this, args);
+    }
 
     public Inventory()
     {
-        InventoryChanged = new Callback<InventoryEventArgs>();
+        EventManager = new LuaEventManager("InventoryChanged");
 
         Type = "Steel Plate";
         MaxStackSize = 50;
