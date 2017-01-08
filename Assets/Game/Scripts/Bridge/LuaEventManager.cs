@@ -8,14 +8,9 @@ public class LuaEventManager
     private readonly Dictionary<string, List<Closure>> luaFunctions;
 
     [MoonSharpVisible(false)]
-    public LuaEventManager()
+    public LuaEventManager(params string[] eventTags)
     {
         luaFunctions = new Dictionary<string, List<Closure>>();
-    }
-
-    [MoonSharpVisible(false)]
-    public LuaEventManager(params string[] eventTags) : this()
-    {
         RegisterEvents(eventTags);
     }
 

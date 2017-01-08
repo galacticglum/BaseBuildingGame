@@ -2,13 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityUtilities.ObjectPool;
 
-public class FileLoadDialogBox : DialogBox
+public class FileDialogBox : DialogBox
 {
-    private static string FileSaveBasePath  { get { return Path.Combine(Application.persistentDataPath, "Saves"); }}
+    protected static string SaveDirectoryBasePath  { get { return Path.Combine(Application.persistentDataPath, "Saves"); }}
 
     [SerializeField]
     private GameObject fileListItemPrefab;
@@ -25,14 +26,17 @@ public class FileLoadDialogBox : DialogBox
     {
         base.Show();
 
+        FileInfo[] files = new DirectoryInfo(SaveDirectoryBasePath).GetFiles("*.save");
+        files = files.OrderByDescending(file => file.CreationTime).ToArray();
+
         InputField inputField = GetComponentInChildren<InputField>();
-        foreach (string file in Directory.GetFiles(FileSaveBasePath, "*.save"))
+        foreach (FileInfo file in files)
         {
             GameObject listItem = ObjectPool.Spawn(fileListItemPrefab, Vector3.one, Quaternion.identity);
 
             listItem.GetComponent<DialogBoxListItem>().InputField = inputField;
             listItem.transform.SetParent(fileList.transform);
-            listItem.GetComponentInChildren<Text>().text = Path.GetFileNameWithoutExtension(file);
+            listItem.GetComponentInChildren<Text>().text = Path.GetFileNameWithoutExtension(file.FullName);
 
             fileList.GetComponent<AutomaticVerticalSize>().Recalculate();
         }
@@ -48,20 +52,5 @@ public class FileLoadDialogBox : DialogBox
         }
 
         GetComponentInChildren<InputField>().text = string.Empty;
-    }
-
-    public void DoLoad()
-    {
-        string fileName = GetComponentInChildren<InputField>().text;
-        string filePath = Path.Combine(FileSaveBasePath, Path.ChangeExtension(fileName, ".save"));
-
-        if (string.IsNullOrEmpty(fileName))
-        {
-            Debug.Log("FileLoadDialogBox::DoLoad: Filename is empty, no can do!");
-            return;
-        }
-
-        Close();
-        WorldController.Instance.Load(filePath);
     }
 }

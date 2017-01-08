@@ -15,7 +15,6 @@ public static class Lua
         lua.Options.DebugPrint = Debug.Log;
 
         LuaAPI.Register(lua);
-
         parsedFilePaths = new List<string>();
     }
 
