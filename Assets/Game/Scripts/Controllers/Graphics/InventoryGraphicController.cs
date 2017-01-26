@@ -18,13 +18,13 @@ public class InventoryGraphicController : MonoBehaviour
     private void Start ()
     {
 		inventoryGameObjectMap = new Dictionary<Inventory, GameObject>();
-		world.InventoryCreated += OnInventoryCreated;
+		world.InventoryManager.InventoryCreated += OnInventoryCreated;
 
 		foreach(string type in world.InventoryManager.Inventories.Keys)
         {
 			foreach(Inventory inventory in world.InventoryManager.Inventories[type])
             {
-				world.OnInventoryCreated(new InventoryEventArgs(inventory));
+				world.InventoryManager.OnInventoryCreated(new InventoryEventArgs(inventory));
 			}
 		}
 	}

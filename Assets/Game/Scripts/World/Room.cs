@@ -10,7 +10,7 @@ using UnityEngine;
 [MoonSharpUserData]
 public class Room : IXmlSerializable
 {
-    public int Index { get { return World.Current.GetRoomIndex(this); }}
+    public int Index { get { return World.Current.RoomManager.GetRoomIndex(this); }}
 
     private readonly Dictionary<string, float> atmosphericGasses;
     private List<Tile> tiles;
@@ -41,7 +41,7 @@ public class Room : IXmlSerializable
 	{
 	    foreach (Tile tile in tiles)
 	    {
-	        tile.Room = World.Current.OutsideRoom;	
+	        tile.Room = World.Current.RoomManager.OutsideRoom;	
 	    }
 	    tiles = new List<Tile>();
 	}
@@ -69,7 +69,7 @@ public class Room : IXmlSerializable
                 Debug.LogError("Room::CreateRooms: Room 'oldRoom' still has tiles assigned to it!");
             }
 
-            World.Current.DeleteRoom(oldRoom);
+            World.Current.RoomManager.DeleteRoom(oldRoom);
         }
         else
         {
@@ -143,7 +143,7 @@ public class Room : IXmlSerializable
             // TODO: Distribute and merge gas.   
         }
 
-        World.Current.AddRoom(newRoom);
+        World.Current.RoomManager.AddRoom(newRoom);
 	}
 
     public void ModifyGasValue(string name, float amount)
@@ -196,7 +196,7 @@ public class Room : IXmlSerializable
 
     public bool IsOutsideRoom()
     {
-        return this == World.Current.OutsideRoom;
+        return this == World.Current.RoomManager.OutsideRoom;
     }
 
     public XmlSchema GetSchema()

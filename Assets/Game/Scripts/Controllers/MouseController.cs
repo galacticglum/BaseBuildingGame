@@ -247,7 +247,7 @@ public class MouseController : MonoBehaviour
             new Color(0.5f, 1f, 0.5f, 0.25f) : // Green: placement is valid
             new Color(1f, 0.5f, 0.5f, 0.25f);  // Red: placement is invalid
 
-        Furniture furniturePrototype = World.Current.FurniturePrototypes[type];
+        Furniture furniturePrototype = PrototypeManager.Furnitures[type];
         spawnInstance.transform.position = new Vector3(tile.X + (furniturePrototype.Width - 1) / 2f, tile.Y + (furniturePrototype.Height - 1) / 2f, 0);
     }
 

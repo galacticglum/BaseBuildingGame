@@ -14,9 +14,9 @@ public class FurnitureGraphicController : MonoBehaviour
     private void Start ()
     {
 		furnitureGameObjectMap = new Dictionary<Furniture, GameObject>();
-		world.FurnitureCreated += OnFurnitureCreated;
+		world.FurnitureManager.FurnitureCreated += OnFurnitureCreated;
         
-		foreach(Furniture furniture in world.Furnitures)
+		foreach(Furniture furniture in world.FurnitureManager)
         {
             OnFurnitureCreated(this, new FurnitureEventArgs(furniture));
         }
@@ -48,8 +48,9 @@ public class FurnitureGraphicController : MonoBehaviour
 			Tile southTile = world.GetTileAt(args.Furniture.Tile.X, args.Furniture.Tile.Y - 1 );
 
 			if(northTile != null && southTile != null && northTile.Furniture != null && southTile.Furniture != null &&
-				northTile.Furniture.Type=="Wall" && southTile.Furniture.Type=="Wall") {
-				furnitureGameObject.transform.rotation = Quaternion.Euler(0, 0, 90);
+				northTile.Furniture.Type == "Furniture_SteelWall" && southTile.Furniture.Type == "Furniture_SteelWall")
+            {
+                furnitureGameObject.transform.rotation = Quaternion.Euler(0, 0, 90);
 			}
 		}
 
@@ -150,15 +151,11 @@ public class FurnitureGraphicController : MonoBehaviour
 		}
 
         return SpriteManager.Current.GetSprite("Furniture", spriteName);
-        //Debug.LogError("FurnitureGraphicController::GetSprite: No sprites with name: " + spriteName + ".");
-        //return null;
     }
 
 
 	public Sprite GetSpriteForFurniture(string type)
 	{
         return SpriteManager.Current.GetSprite("Furniture", type) ?? SpriteManager.Current.GetSprite("Furniture", type + "_");
-	    //Debug.LogError("FurnitureGraphicController::GetSprite: No sprites with name: '" + type + "'.");
-		//return null;
 	}
 }

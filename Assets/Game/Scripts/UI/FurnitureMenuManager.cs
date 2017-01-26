@@ -13,9 +13,9 @@ public class FurnitureMenuManager : MonoBehaviour
 
         constructionController = FindObjectOfType<ConstructionController>();
 
-        foreach (string furnitureType in World.Current.FurniturePrototypes.Keys)
+        foreach (string furnitureType in PrototypeManager.Furnitures.Keys)
         {
-            string furnitureName = World.Current.FurniturePrototypes[furnitureType].Name;
+            string furnitureName = PrototypeManager.Furnitures[furnitureType].Name;
             GameObject buttonGameObject = Instantiate(buildFurnitureButtonPrefab);
             buttonGameObject.transform.SetParent(transform);
 

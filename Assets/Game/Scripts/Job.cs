@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Linq;
+using System.Xml;
 using MoonSharp.Interpreter;
 
 [MoonSharpUserData]
@@ -88,6 +89,8 @@ public class Job
         CanTakeFromStockpile = job.CanTakeFromStockpile;
 
         JobCompleted = job.JobCompleted;
+        EventManager = new LuaEventManager("JobCompleted", "JobStopped", "JobWorked");
+
         requiredWorkTime = job.requiredWorkTime;
 
         InventoryRequirements = new Dictionary<string, Inventory>();
@@ -180,5 +183,4 @@ public class Job
 	{
 	    return InventoryRequirements.Values.FirstOrDefault(inv => inv.MaxStackSize > inv.StackSize);
 	}
-		
 }

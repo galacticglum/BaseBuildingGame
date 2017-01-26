@@ -3,7 +3,7 @@ function GetStockpileItemFilter()
 end
 
 function BuildFurniture(sender, args)
-    World.Current.PlaceFurniture(args.Job.Type, args.Job.Tile)
+    World.Current.FurnitureManager.Place(args.Job.Type, args.Job.Tile)
     args.Job.Tile.PendingFurnitureJob = nil
 end
 
@@ -45,7 +45,7 @@ function StockpileJobWorked(sender, args)
 
     for i, inventory in pairs(args.Job.InventoryRequirements) do
         if inventory.StackSize > 0 then
-            World.Current.InventoryManager.PlaceInventory(args.Job.Tile, inventory)
+            World.Current.InventoryManager.Place(args.Job.Tile, inventory)
             return
         end
     end
@@ -62,7 +62,7 @@ function UpdateDoor(sender, args)
     end
 
     args.Furniture.SetParameter("openness", Mathf.Clamp01(args.Furniture.GetParameter("openness")))
-    args.Furniture.FurnitureChanged.Invoke(FurnitureEventArgs.new(args.Furniture))
+    args.Furniture.OnFurnitureChanged(FurnitureEventArgs.new(args.Furniture))
 end
 
 function DoorTryEnter(furniture)
@@ -113,5 +113,5 @@ function UpdateMiningDrone(sender, args)
 end
 
 function MiningDroneJobCompleted(sender, args)
-    World.Current.InventoryManager.PlaceInventory(args.Job.Furniture.InventorySpawnTile, Inventory.new("Steel Plate", 50, 10))
+    World.Current.InventoryManager.Place(args.Job.Furniture.InventorySpawnTile, Inventory.new("Steel Plate", 50, 10))
 end

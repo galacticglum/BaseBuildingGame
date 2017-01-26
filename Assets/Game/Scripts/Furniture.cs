@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 using MoonSharp.Interpreter;
 
 [MoonSharpUserData]
-public class Furniture : IXmlSerializable, ISelectable
+public class Furniture : IPrototypable, IXmlSerializable, ISelectable
 {
     public static JobCompletedEventHandler BuildCallback { get { return (sender, args) => { Lua.Call("BuildFurniture", sender, args); }; }}
 

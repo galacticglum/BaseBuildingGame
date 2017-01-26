@@ -7,7 +7,7 @@ public class AudioController : MonoBehaviour
 	// Use this for initialization
 	private void Start ()
     {
-		WorldController.Instance.World.FurnitureCreated += OnFurnitureCreated;
+		WorldController.Instance.World.FurnitureManager.FurnitureCreated += OnFurnitureCreated;
 		WorldController.Instance.World.TileChanged += OnTileChanged;
 	}
 	

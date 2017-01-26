@@ -1263,7 +1263,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 745374352}
-        m_MethodName: DoLoad
+        m_MethodName: Load
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1894,7 +1894,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1609015225}
-        m_MethodName: DoSave
+        m_MethodName: Save
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3642,7 +3642,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 230.6, y: 10}
-  m_SizeDelta: {x: 210.6, y: 3}
+  m_SizeDelta: {x: 210.6, y: 135}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1376947280
 MonoBehaviour:

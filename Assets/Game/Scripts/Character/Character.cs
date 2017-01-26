@@ -1,12 +1,9 @@
 ﻿using UnityEngine;
-using System;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using MoonSharp.Interpreter;
 
-[MoonSharpUserData]
 public class Character : IXmlSerializable, ISelectable
 {
     public float X { get { return nextTile == null ? CurrentTile.X : Mathf.Lerp(CurrentTile.X, nextTile.X, movementPercentage); }}
@@ -107,7 +104,7 @@ public class Character : IXmlSerializable, ISelectable
                 {
 					if(CurrentTile == job.Tile)
                     {
-						World.Current.InventoryManager.PlaceInventory(job, Inventory);
+						World.Current.InventoryManager.Place(job, Inventory);
 						job.DoWork(0); 
 
 						if(Inventory.StackSize == 0)
@@ -129,7 +126,7 @@ public class Character : IXmlSerializable, ISelectable
 				else
                 {
 					// TODO: Actually, walk to the nearest empty tile and dump it there.
-                    if (World.Current.InventoryManager.PlaceInventory(CurrentTile, Inventory))
+                    if (World.Current.InventoryManager.Place(CurrentTile, Inventory))
                     {
                         return; // We can't continue until all materials are satisfied.
                     }
@@ -145,7 +142,7 @@ public class Character : IXmlSerializable, ISelectable
 					job.GetDesiredInventoryAmount(CurrentTile.Inventory) > 0)
                 {
 					// Pick up the stuff!
-					World.Current.InventoryManager.PlaceInventory(this, CurrentTile.Inventory, job.GetDesiredInventoryAmount(CurrentTile.Inventory));
+					World.Current.InventoryManager.Place(this, CurrentTile.Inventory, job.GetDesiredInventoryAmount(CurrentTile.Inventory));
 
 				}
 				else

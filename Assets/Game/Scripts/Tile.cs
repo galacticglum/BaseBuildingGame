@@ -225,6 +225,6 @@ public class Tile : IXmlSerializable, ISelectable
     public void ReadXml(XmlReader reader)
     {
         Type = (TileType)int.Parse(reader.GetAttribute("Type"));
-        Room = World.Current.GetRoom(int.Parse(reader.GetAttribute("RoomIndex")));
+        Room = World.Current.RoomManager.GetRoom(int.Parse(reader.GetAttribute("RoomIndex")));
     }
 }

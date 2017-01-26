@@ -68,7 +68,7 @@ public class ConstructionController : MonoBehaviour
 	            }
 
 	            tile.PendingFurnitureJob = job;
-	            job.FurniturePrototype = WorldController.Instance.World.FurniturePrototypes[furnitureType];
+	            job.FurniturePrototype = PrototypeManager.Furnitures[furnitureType];
 	            job.JobStopped += (sender, args) =>
 	            {
 	                args.Job.Tile.PendingFurnitureJob = null;
@@ -96,7 +96,7 @@ public class ConstructionController : MonoBehaviour
             return true;
         }
 
-        Furniture furniturePrototype = WorldController.Instance.World.FurniturePrototypes[ConstructionObjectType];
+        Furniture furniturePrototype = PrototypeManager.Furnitures[ConstructionObjectType];
         return furniturePrototype.Width == 1 && furniturePrototype.Height == 1;
     }
 }

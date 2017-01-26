@@ -23,7 +23,6 @@ public static class LuaAPI
         ExposeType<Inventory>(lua);
         ExposeType<Job>(lua);
         ExposeType<InventoryManager>(lua);
-        ExposeType<Character>(lua);
 
         ExposeType<TileType>(lua);
         ExposeType<TileEnterability>(lua);

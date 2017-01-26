@@ -14,11 +14,12 @@ public class CharacterGraphicController : MonoBehaviour
     private void Start ()
     {
 		characterGameObjectMap = new Dictionary<Character, GameObject>();
-		world.CharacterCreated += OnCharacterCreated;
+		world.CharacterManager.CharacterCreated += OnCharacterCreated;
 
-		foreach(Character character in world.Characters)
+		foreach(Character character in world.CharacterManager)
         {
-			world.OnCharacterCreated(new CharacterEventArgs(character));
+			world.CharacterManager.OnCharacterCreated(
+                new CharacterEventArgs(character));
 		}
 	}
 

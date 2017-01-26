@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 using MoonSharp.Interpreter;
 
 [MoonSharpUserData]
@@ -8,12 +7,26 @@ public class InventoryManager
 {
 	public Dictionary< string, List<Inventory>> Inventories { get; protected set; }
 
-	public InventoryManager()
+    public LuaEventManager EventManager { get; protected set; }
+    public event InventoryCreatedEventHandler InventoryCreated;
+    public void OnInventoryCreated(InventoryEventArgs args)
     {
+        InventoryCreatedEventHandler inventoryCreated = InventoryCreated;
+        if (inventoryCreated != null)
+        {
+            inventoryCreated(this, args);
+        }
+
+        EventManager.Trigger("InventoryCreated", this, args);
+    }
+
+    public InventoryManager()
+    {
+        EventManager = new LuaEventManager("InventoryCreated");
 		Inventories = new Dictionary< string, List<Inventory> >();
 	}
 
-    private void CleanupInventory(Inventory inventory)
+    private void Cleanup(Inventory inventory)
     {
         if (inventory.StackSize != 0) return;
         if( Inventories.ContainsKey(inventory.Type) )
@@ -32,7 +45,7 @@ public class InventoryManager
         inventory.Character = null;
     }
 
-	public bool PlaceInventory(Tile tile, Inventory sourceInventory)
+	public bool Place(Tile tile, Inventory sourceInventory)
     {
 		bool tileWasEmpty = tile.Inventory == null;
 
@@ -41,7 +54,7 @@ public class InventoryManager
 			return false;
 		}
 
-		CleanupInventory(sourceInventory);
+		Cleanup(sourceInventory);
         if (!tileWasEmpty) return true;
 
         if( Inventories.ContainsKey(tile.Inventory.Type) == false )
@@ -50,12 +63,12 @@ public class InventoryManager
         }
 
         Inventories[tile.Inventory.Type].Add(tile.Inventory);
-        World.Current.OnInventoryCreated(new InventoryEventArgs(tile.Inventory));
+        OnInventoryCreated(new InventoryEventArgs(tile.Inventory));
 
         return true;
 	}
 
-	public bool PlaceInventory(Job job, Inventory sourceInventory)
+	public bool Place(Job job, Inventory sourceInventory)
     {
 		if ( job.InventoryRequirements.ContainsKey(sourceInventory.Type) == false )
         {
@@ -75,12 +88,12 @@ public class InventoryManager
 			sourceInventory.StackSize = 0;
 		}
 
-		CleanupInventory(sourceInventory);
+		Cleanup(sourceInventory);
 
 		return true;
 	}
 
-	public bool PlaceInventory(Character character, Inventory sourceInventory, int amount = -1)
+	public bool Place(Character character, Inventory sourceInventory, int amount = -1)
     {
 		amount = amount < 0 ? sourceInventory.StackSize : Mathf.Min( amount, sourceInventory.StackSize );
 
@@ -108,7 +121,7 @@ public class InventoryManager
 			sourceInventory.StackSize -= amount;
 		}
 
-		CleanupInventory(sourceInventory);
+		Cleanup(sourceInventory);
 
 		return true;
 	}
