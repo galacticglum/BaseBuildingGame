@@ -20,6 +20,8 @@ public class MouseController : MonoBehaviour
     private bool isDragging;
     private MouseMode currentMouseMode;
 
+    private float zoomTarget;
+
     private ConstructionController constructionController;
     private FurnitureGraphicController furnitureGraphicController;
 
@@ -262,7 +264,7 @@ public class MouseController : MonoBehaviour
 
 		Camera.main.orthographicSize -= Camera.main.orthographicSize * Input.GetAxis("Mouse ScrollWheel");
 		Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize, 3f, 25f);
-	}
+    }
 
     public Tile GetMouseOverTile()
     {

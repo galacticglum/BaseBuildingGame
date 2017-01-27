@@ -12,6 +12,12 @@ public class Pathfinder
 
     private Queue<Tile> path;
 
+    public Pathfinder(Queue<Tile> pathQueue)
+    {
+        if (pathQueue == null || !pathQueue.Any()) return;
+        path = pathQueue;
+    }
+
     public Pathfinder(Tile tileStart, string inventoryType, bool canTakeFromStockpile = false) { Pathfind(tileStart, null, inventoryType, canTakeFromStockpile); }
 	public Pathfinder(Tile tileStart, Tile tileGoal) { Pathfind(tileStart, tileGoal, null, false); }
 
@@ -152,6 +158,11 @@ public class Pathfinder
         }
 
         path = new Queue<Tile>(totalPath.Reverse());
+    }
+
+    public IEnumerable<Tile> Reverse()
+    {
+        return path == null ? null : path.Reverse();
     }
 
     public Tile Dequeue()

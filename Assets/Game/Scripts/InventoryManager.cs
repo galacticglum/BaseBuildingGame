@@ -126,6 +126,12 @@ public class InventoryManager
 		return true;
 	}
 
+    public bool Check(string type)
+    {
+        if (Inventories.ContainsKey(type) == false) return false;
+        return Inventories[type].Count != 0;
+    }
+
 	public Inventory GetClosestInventoryOfType(string type, Tile tile, bool canTakeFromStockpile)
 	{
 	    Tile destinationTile = GetPathToClosestInventoryOfType(type, tile, canTakeFromStockpile).DestinationTile;
@@ -134,13 +140,14 @@ public class InventoryManager
 
     public Pathfinder GetPathToClosestInventoryOfType(string type, Tile tile, bool canTakeFromStockpile)
     {
-        if (Inventories.ContainsKey(type) == false
-            || !canTakeFromStockpile && Inventories[type].TrueForAll(inventory => inventory.Tile != null && 
-            inventory.Tile.Furniture != null && inventory.Tile.Furniture.IsStockpile())) 
+        Check(type);
+
+        if (!canTakeFromStockpile && Inventories[type].TrueForAll( inventory => inventory.Tile != null && 
+            inventory.Tile.Furniture != null && inventory.Tile.Furniture.IsStockpile()))
         {
             return null;
         }
 
-        return new Pathfinder(tile, type, canTakeFromStockpile);
+        return Inventories[type].Find(inventory => inventory.Tile != null) == null ? null : new Pathfinder(tile, type, canTakeFromStockpile);
     }
 }

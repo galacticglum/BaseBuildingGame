@@ -17,11 +17,9 @@ public class Job
 
     public JobPriority Priority { get; protected set; }
     public float WorkTime { get; protected set; }
+    public bool WorkAdjacent { get; protected set; }
 	public bool AcceptsAnyInventoryItem { get; set; }
 	public bool CanTakeFromStockpile { get; set; }
-
-    private readonly float requiredWorkTime;
-    private readonly bool repeatingJob;
 
     public LuaEventManager EventManager { get; set; }
     public event JobCompletedEventHandler JobCompleted;
@@ -60,25 +58,18 @@ public class Job
         EventManager.Trigger("JobWorked", this, args);
     }
 
-    public Job(Tile tile, string type, float workTime, JobPriority priority, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob)
+    private float requiredWorkTime;
+    private bool repeatingJob;
+
+    public Job(Tile tile, string type, float workTime, JobPriority priority, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob, bool workAdjacent)
     {
-        this.repeatingJob = repeatingJob;
-
-        CanTakeFromStockpile = true;
-        requiredWorkTime = WorkTime = workTime;
-
-        Initialize(tile, type, priority, null, inventoryRequirements);
+        Initialize(tile, type, workTime, priority, null, inventoryRequirements, repeatingJob, workAdjacent);
         EventManager.AddHandler("JobCompleted", jobCompleted);
     }
 
-    public Job (Tile tile, string type, float workTime, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false)
+    public Job (Tile tile, string type, float workTime, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false, bool workAdjacent = false)
     {
-        this.repeatingJob = repeatingJob;
-
-        CanTakeFromStockpile = true;
-        requiredWorkTime = WorkTime = workTime;
-
-        Initialize(tile, type, priority, jobCompleted, inventoryRequirements);
+        Initialize(tile, type, workTime, priority, jobCompleted, inventoryRequirements, repeatingJob, workAdjacent);
     }
 
     protected Job(Job job)
@@ -87,6 +78,7 @@ public class Job
 		Type = job.Type;
         Priority = job.Priority;
 
+        WorkAdjacent = job.WorkAdjacent;
 		WorkTime = job.WorkTime;
         AcceptsAnyInventoryItem = job.AcceptsAnyInventoryItem;
         CanTakeFromStockpile = job.CanTakeFromStockpile;
@@ -109,8 +101,14 @@ public class Job
 		return new Job(this);
 	}
 
-    private void Initialize(Tile tile, string type, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements)
+    private void Initialize(Tile tile, string type, float workTime, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob, bool workAdjacent)
     {
+        this.repeatingJob = repeatingJob;
+        WorkAdjacent = workAdjacent;
+
+        CanTakeFromStockpile = true;
+        requiredWorkTime = WorkTime = workTime;
+
         Tile = tile;
         Type = type;
         Priority = priority;
@@ -160,7 +158,7 @@ public class Job
 
     public void DropPriority()
     {
-        Priority = (JobPriority) Mathf.Max(0, (int) Priority - 1);
+        Priority = (JobPriority) Mathf.Min((int) JobPriority.Low, (int) Priority + 1);
     }
 
 	public bool HasAllMaterials()

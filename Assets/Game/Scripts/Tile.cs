@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using System.Xml;
 using System.Xml.Schema;
@@ -183,6 +184,11 @@ public class Tile : IXmlSerializable, ISelectable
 
         return neighbours;
 	}
+
+    public bool HasNeighboursOfType(TileType type)
+    {
+        return GetNeighbours(true).Any(neighbour => neighbour.Type == type);
+    }
 
     public TileEnterability TryEnter()
     {

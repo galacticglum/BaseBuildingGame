@@ -33,7 +33,7 @@ function UpdateStockpile(sender, args)
         itemFilter = { desiredInventory }
     end
 
-    job = Job.new(args.Furniture.Tile, nil, 0, JobPriority.Medium, nil, itemFilter, false)
+    job = Job.new(args.Furniture.Tile, nil, 0, JobPriority.Medium, nil, itemFilter, false, false)
     job.CanTakeFromStockpile = false
 
     job.EventManager.AddHandler("JobWorked", StockpileJobWorked)
@@ -108,7 +108,7 @@ function UpdateMiningDrone(sender, args)
     end
 
 
-    job = Job.new(workTile, nil, 1, MiningDroneJobCompleted, nil, true)
+    job = Job.new(workTile, nil, 1, JobPriority.Medium, MiningDroneJobCompleted, nil, true, false)
     args.Furniture.AddJob(job)
 end
 

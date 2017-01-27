@@ -22,6 +22,7 @@ public class World : IXmlSerializable
     public FurnitureManager FurnitureManager { get; protected set; }
     public Dictionary<string, Job> FurnitureJobPrototypes { get; protected set; }
 
+    public JobQueue JobWaitingQueue { get; protected set; }
     public JobQueue JobQueue { get; protected set; }
 
     public LuaEventManager EventManager { get; set; }
@@ -62,6 +63,8 @@ public class World : IXmlSerializable
 		Height = height;
 
 		tiles = new Tile[Width,Height];
+
+        JobWaitingQueue = new JobQueue();
         JobQueue = new JobQueue();
 
         RoomManager = new RoomManager();

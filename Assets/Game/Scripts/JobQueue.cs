@@ -6,6 +6,9 @@ using UnityUtilities.Generic;
 [MoonSharpUserData]
 public class JobQueue
 {
+    public bool Empty { get { return jobQueue == null || jobQueue.Count == 0; } }
+    public int Count { get { return jobQueue == null ? 0 : jobQueue.Count; } }
+
     public LuaEventManager EventManager { get; set; }
     public event JobCreatedEventHandler JobCreated;
     public void OnJobCreated(JobEventArgs args)
@@ -19,7 +22,7 @@ public class JobQueue
         EventManager.Trigger("JobCreated", this, args);
     }
 
-    private SortedList<JobPriority, Job> jobQueue;
+    private readonly SortedList<JobPriority, Job> jobQueue;
 
     public JobQueue()
     {
@@ -58,4 +61,9 @@ public class JobQueue
 	    if (jobQueue.ContainsValue(job) == false) return;
         jobQueue.RemoveAt(jobQueue.IndexOfValue(job));
 	}
+
+    public IEnumerable<Job> Peek()
+    {
+        return jobQueue.Values;
+    }
 }

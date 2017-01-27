@@ -10,11 +10,12 @@
         <DragMode>Border</DragMode>
 
         <BuildJob WorkTime="1">
+            <WorkAdjacent>true</WorkAdjacent>
             <Inventory Type="Steel Plate" Amount="5"/>
         </BuildJob>
 
         <!-- Implement me !-->
-        <DeconstructJob>
+        <DeconstructJob>     
             <Inventory Type="Steel Plate" Amount="3"/>
         </DeconstructJob>
     </Furniture>

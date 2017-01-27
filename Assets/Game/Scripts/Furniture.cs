@@ -359,19 +359,36 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
 
                 case "BuildJob":
                     float workTime = float.Parse(reader.GetAttribute("WorkTime"));
-                    List<Inventory> inventories = new List<Inventory>();
-                    XmlReader inventoryReader = readerSubtree.ReadSubtree();
+                    JobPriority priority = JobPriority.High;
+                    bool repeatingJob = false;
+                    bool workAdjacent = false;
 
-                    while (inventoryReader.Read())
+                    List<Inventory> inventories = new List<Inventory>();
+                    XmlReader subReader = readerSubtree.ReadSubtree();
+
+                    while (subReader.Read())
                     {
-                        if (inventoryReader.Name == "Inventory")
+                        switch (subReader.Name)
                         {
-                            inventories.Add(new Inventory(inventoryReader.GetAttribute("Type"), int.Parse(inventoryReader.GetAttribute("Amount")), 0));
+                            case "JobPriority":
+                                subReader.Read();
+                                priority = (JobPriority) Enum.Parse(typeof(JobPriority), reader.ReadContentAsString());
+                                break;
+                            case "RepeatingJob":
+                                subReader.Read();
+                                repeatingJob = reader.ReadContentAsBoolean();
+                                break;
+                            case "WorkAdjacent":
+                                subReader.Read();
+                                workAdjacent = reader.ReadContentAsBoolean();
+                                break;
+                            case "Inventory":
+                                inventories.Add(new Inventory(subReader.GetAttribute("Type"), int.Parse(subReader.GetAttribute("Amount")), 0));
+                                break;
                         }
                     }
 
-                    Job job = new Job(null, Type, workTime, JobPriority.High, BuildCallback, inventories.ToArray());
-                
+                    Job job = new Job(null, Type, workTime, priority, BuildCallback, inventories.ToArray(), repeatingJob, workAdjacent);                   
                     World.Current.FurnitureJobPrototypes[Type] = job;
                     break;;
 
