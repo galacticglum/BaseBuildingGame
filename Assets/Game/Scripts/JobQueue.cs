@@ -1,13 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System;
 using MoonSharp.Interpreter;
+using UnityUtilities.Generic;
 
 [MoonSharpUserData]
 public class JobQueue
 {
-    private Queue<Job> jobQueue;
-
     public LuaEventManager EventManager { get; set; }
     public event JobCreatedEventHandler JobCreated;
     public void OnJobCreated(JobEventArgs args)
@@ -21,9 +19,11 @@ public class JobQueue
         EventManager.Trigger("JobCreated", this, args);
     }
 
+    private SortedList<JobPriority, Job> jobQueue;
+
     public JobQueue()
     {
-		jobQueue = new Queue<Job>();
+		jobQueue = new SortedList<JobPriority, Job>(new DuplicateKeyComparer<JobPriority>(true));
         EventManager = new LuaEventManager("JobCreated");
 	}
 
@@ -40,25 +40,22 @@ public class JobQueue
 			return;
 		}
 
-		jobQueue.Enqueue(job);
+		jobQueue.Add(job.Priority, job);
         OnJobCreated(new JobEventArgs(job));
 	}
 
 	public Job Dequeue()
 	{
-	    return jobQueue.Count == 0 ? null : jobQueue.Dequeue();
+	    if (jobQueue.Count == 0) return null;
+
+	    Job job = jobQueue.Values[0];
+	    jobQueue.RemoveAt(0);
+	    return job;
 	}
 
 	public void Remove(Job job)
-    {
-		List<Job> jobs = new List<Job>(jobQueue);
-
-		if(jobs.Contains(job) == false)
-        {
-			return;
-		}
-
-		jobs.Remove(job);
-		jobQueue = new Queue<Job>(jobs);
+	{
+	    if (jobQueue.ContainsValue(job) == false) return;
+        jobQueue.RemoveAt(jobQueue.IndexOfValue(job));
 	}
 }

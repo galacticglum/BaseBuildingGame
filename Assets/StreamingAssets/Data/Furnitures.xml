@@ -7,6 +7,7 @@
         <Height>1</Height>
         <LinksToNeighbours>true</LinksToNeighbours>
         <RoomEnclosure>true</RoomEnclosure>
+        <DragMode>Border</DragMode>
 
         <BuildJob WorkTime="1">
             <Inventory Type="Steel Plate" Amount="5"/>

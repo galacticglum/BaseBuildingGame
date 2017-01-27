@@ -186,7 +186,7 @@ public class Character : IXmlSerializable, ISelectable
 
     private void GetNewJob()
     {
-        job = World.Current.JobQueue.Dequeue() ?? new Job(CurrentTile, "Idle", UnityEngine.Random.Range(0.1f, 0.5f), null, null);
+        job = World.Current.JobQueue.Dequeue() ?? new Job(CurrentTile, "Idle", UnityEngine.Random.Range(0.1f, 0.5f), JobPriority.Low, null, null);
 
         DestinationTile = job.Tile;
         job.JobStopped += OnJobStopped;
@@ -202,7 +202,9 @@ public class Character : IXmlSerializable, ISelectable
     public void AbandonJob()
     {
 		nextTile = DestinationTile = CurrentTile;
+        job.DropPriority();
         World.Current.JobQueue.Enqueue(job);
+        job.JobStopped -= OnJobStopped;
 		job = null;
 	}
 

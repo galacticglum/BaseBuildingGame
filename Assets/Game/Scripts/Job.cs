@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Xml;
 using MoonSharp.Interpreter;
+using UnityEngine;
 
 [MoonSharpUserData]
 public class Job
@@ -14,6 +15,7 @@ public class Job
 
     public Dictionary<string, Inventory> InventoryRequirements;
 
+    public JobPriority Priority { get; protected set; }
     public float WorkTime { get; protected set; }
 	public bool AcceptsAnyInventoryItem { get; set; }
 	public bool CanTakeFromStockpile { get; set; }
@@ -58,31 +60,32 @@ public class Job
         EventManager.Trigger("JobWorked", this, args);
     }
 
-    public Job(Tile tile, string type, float workTime, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob)
+    public Job(Tile tile, string type, float workTime, JobPriority priority, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob)
     {
         this.repeatingJob = repeatingJob;
 
         CanTakeFromStockpile = true;
         requiredWorkTime = WorkTime = workTime;
 
-        Initialize(tile, type, null, inventoryRequirements);
+        Initialize(tile, type, priority, null, inventoryRequirements);
         EventManager.AddHandler("JobCompleted", jobCompleted);
     }
 
-    public Job (Tile tile, string type, float workTime, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false)
+    public Job (Tile tile, string type, float workTime, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false)
     {
         this.repeatingJob = repeatingJob;
 
         CanTakeFromStockpile = true;
         requiredWorkTime = WorkTime = workTime;
 
-        Initialize(tile, type, jobCompleted, inventoryRequirements);
+        Initialize(tile, type, priority, jobCompleted, inventoryRequirements);
     }
 
     protected Job(Job job)
     {
 		Tile = job.Tile;
 		Type = job.Type;
+        Priority = job.Priority;
 
 		WorkTime = job.WorkTime;
         AcceptsAnyInventoryItem = job.AcceptsAnyInventoryItem;
@@ -106,10 +109,11 @@ public class Job
 		return new Job(this);
 	}
 
-    private void Initialize(Tile tile, string type, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements)
+    private void Initialize(Tile tile, string type, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements)
     {
         Tile = tile;
         Type = type;
+        Priority = priority;
         AcceptsAnyInventoryItem = false;
         CanTakeFromStockpile = true;
 
@@ -153,6 +157,11 @@ public class Job
         OnJobStopped(new JobEventArgs(this));
         World.Current.JobQueue.Remove(this);
 	}
+
+    public void DropPriority()
+    {
+        Priority = (JobPriority) Mathf.Max(0, (int) Priority - 1);
+    }
 
 	public bool HasAllMaterials()
 	{

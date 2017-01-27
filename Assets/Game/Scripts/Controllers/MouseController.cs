@@ -125,6 +125,24 @@ public class MouseController : MonoBehaviour
                 Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
                 if (tileAt == null) continue;
 
+                Furniture prototype = PrototypeManager.Furnitures[constructionController.ConstructionObjectType];
+                DragMode dragMode = prototype.DragMode;
+
+                bool doDrag = false;
+                if (dragMode == DragMode.Border)
+                {
+                    if (x == startX || x == endX || y == startY || y == endY)
+                    {
+                        doDrag = true;
+                    }
+                }
+                else
+                {
+                    doDrag = true;
+                }
+
+                if (!doDrag) continue;
+
                 if (constructionController.ConstructionMode == ConstructionMode.Furniture)
                 {
                     DrawFurnitureSprite(constructionController.ConstructionObjectType, tileAt);
@@ -149,6 +167,23 @@ public class MouseController : MonoBehaviour
         {
             for (int y = startY; y <= endY; y++)
             {
+                Furniture prototype = PrototypeManager.Furnitures[constructionController.ConstructionObjectType];
+                DragMode dragMode = prototype.DragMode;
+                bool doDrag = false;
+                if (dragMode == DragMode.Border)
+                {
+                    if (x == startX || x == endX || y == startY || y == endY)
+                    {
+                        doDrag = true;
+                    }
+                }
+                else
+                {
+                    doDrag = true;
+                }
+
+                if (!doDrag) continue;
+
                 Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
                 if (tileAt != null)
                 {

@@ -64,7 +64,7 @@ public class ConstructionController : MonoBehaviour
 	            }
 	            else
 	            {
-	                job = new Job(tile, furnitureType, 0.1f, Furniture.BuildCallback, null);
+	                job = new Job(tile, furnitureType, 0.1f, JobPriority.High, Furniture.BuildCallback, null);
 	            }
 
 	            tile.PendingFurnitureJob = job;

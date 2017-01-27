@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Schema;
@@ -49,6 +50,7 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
     public bool RoomEnclosure { get; protected set; }
 
     public Color Tint { get; set; }
+    public DragMode DragMode { get; protected set; }
 
     public LuaEventManager EventManager { get; set; }
     public event FurnitureChangedEventHandler FurnitureChanged;
@@ -368,7 +370,7 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
                         }
                     }
 
-                    Job job = new Job(null, Type, workTime, BuildCallback, inventories.ToArray());
+                    Job job = new Job(null, Type, workTime, JobPriority.High, BuildCallback, inventories.ToArray());
                 
                     World.Current.FurnitureJobPrototypes[Type] = job;
                     break;;
@@ -400,7 +402,11 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
                                        byte.Parse(readerSubtree.GetAttribute("B")),
                                        byte.Parse(alpha));
                     break;
+                case "DragMode":
+                    readerSubtree.Read();
+                    DragMode = (DragMode) Enum.Parse(typeof(DragMode), readerSubtree.ReadContentAsString());
 
+                    break;
                 case "WorkPositionOffset":
                     WorkPositionOffset = new Vector2(float.Parse(readerSubtree.GetAttribute("X")), 
                                                      float.Parse(readerSubtree.GetAttribute("Y")));
