@@ -49,7 +49,7 @@ public class Pathfinder
             goal = nodes[tileGoal];
         }
 
-        List<Node<Tile>> closedSet = new List<Node<Tile>>();
+        HashSet<Node<Tile>> closedSet = new HashSet<Node<Tile>>();
         SimplePriorityQueue<Node<Tile>> openSet = new SimplePriorityQueue<Node<Tile>>();
         openSet.Enqueue(start, 0);
 
