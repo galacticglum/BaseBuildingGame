@@ -35,6 +35,14 @@ public class CharacterGraphicController : MonoBehaviour
 		spriteRenderer.sprite = SpriteManager.Current.GetSprite("Characters", "p1_front");
 		spriteRenderer.sortingLayerName = "Characters";
 
+        GameObject inventoryGameObject = new GameObject("Inventory");
+        SpriteRenderer inventorySpriteRenderer = inventoryGameObject.AddComponent<SpriteRenderer>();
+        inventorySpriteRenderer.sortingOrder = 1;
+        inventorySpriteRenderer.sortingLayerName = "Characters";
+        inventoryGameObject.transform.SetParent(characterGameObject.transform);
+        inventoryGameObject.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+        inventoryGameObject.transform.localPosition = new Vector3(0, -0.37f, 0);
+
 		args.Character.CharacterChanged += OnCharacterChanged;
 	}
 
@@ -47,6 +55,9 @@ public class CharacterGraphicController : MonoBehaviour
 		}
 
 		GameObject characterGameObject = characterGameObjectMap[args.Character];
-        characterGameObject.transform.position = new Vector3( args.Character.X, args.Character.Y, 0);
-	}	
+        characterGameObject.transform.position = new Vector3(args.Character.X, args.Character.Y, 0);
+
+        SpriteRenderer inventorySpriteRenderer = characterGameObjectMap[args.Character].transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>();
+        inventorySpriteRenderer.sprite = args.Character.Inventory != null ? SpriteManager.Current.GetSprite("Inventory", args.Character.Inventory.GetName()) : null;
+    }	
 }

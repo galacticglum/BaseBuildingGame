@@ -308,7 +308,7 @@ public class MouseController : MonoBehaviour
         SpriteRenderer spriteRenderer = spawnInstance.AddComponent<SpriteRenderer>();
         spriteRenderer.sortingLayerName = "Jobs";
         spriteRenderer.sprite = furnitureGraphicController.GetSpriteForFurniture(type);
-        spriteRenderer.color = World.Current.IsFurniturePlacementValid(type, tile) ?
+        spriteRenderer.color = World.Current.IsFurniturePlacementValid(type, tile) && constructionController.IsBuildJobOverlap(type, tile) == false ?
             new Color(0.5f, 1f, 0.5f, 0.25f) : // Green: placement is valid
             new Color(1f, 0.5f, 0.5f, 0.25f);  // Red: placement is invalid
 

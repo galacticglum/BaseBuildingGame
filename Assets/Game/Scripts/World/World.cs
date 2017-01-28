@@ -118,7 +118,7 @@ public class World : IXmlSerializable
 			    if (x != length && x != length + 9 && y != sBase && y != sBase + 9) continue;
 			    if(x != length + 9 && y != sBase + 4)
                 {
-			        FurnitureManager.Place("Furniture_SteelWall", tiles[x,y]);
+			        FurnitureManager.Place("Steel Wall", tiles[x,y]);
 			    }
 			}
 		}

@@ -50,6 +50,8 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
     public Color Tint { get; set; }
     public DragMode DragMode { get; protected set; }
 
+    public List<string> ReplaceableFurnitureTypes { get; private set; }
+
     public LuaEventManager EventManager { get; set; }
     public event FurnitureChangedEventHandler FurnitureChanged;
     public void OnFurnitureChanged(FurnitureEventArgs args)
@@ -75,8 +77,8 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
         EventManager.Trigger("FurnitureRemoved", this, args);
     }
 
+    private HashSet<string> typeTags;
     private readonly List<Job> jobs;
-
     private string tryEnterFunction = string.Empty;
 
     public Furniture()
@@ -86,12 +88,15 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
 
         jobs = new List<Job>();
         Tint = Color.white;
+        typeTags = new HashSet<string>();
+        ReplaceableFurnitureTypes = new List<string>();
     }
 
     protected Furniture(Furniture furniture)
     {
         Name = furniture.Name;
         Type = furniture.Type;
+        typeTags = new HashSet<string>(furniture.typeTags);
         MovementCost = furniture.MovementCost;
         RoomEnclosure = furniture.RoomEnclosure;
         Tint = furniture.Tint;
@@ -164,13 +169,30 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
             for (int y = tile.Y; y < tile.Y + Height; y++)
             {
                 Tile tileAt = World.Current.GetTileAt(x, y);
+                bool isReplaceable = false;
+
+                if (tileAt.Furniture != null)
+                {
+                    foreach (string furnitureType in ReplaceableFurnitureTypes)
+                    {
+                        if (tileAt.Furniture.IsTypeTag(furnitureType))
+                        {
+                            isReplaceable = true;
+                        }
+                    }
+                }
 
                 if (tileAt.Type != TileType.Floor)
                 {
                     return false;
                 }
 
-                if (tileAt.Furniture != null || tileAt.Inventory != null)
+                if (tileAt.Furniture != null && isReplaceable == false)
+                {
+                    return false;
+                }
+
+                if (tileAt.Inventory != null)
                 {
                     return false;
                 }
@@ -279,6 +301,11 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
         return (TileEnterability)Lua.Call(tryEnterFunction, this).UserData.Object;
     }
 
+    public bool IsTypeTag(string typeTag)
+    {
+        return typeTags.Contains(typeTag);
+    }
+
     public string GetName()
     {
         return Name;
@@ -356,6 +383,17 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
                 case "RoomEnclosure":
                     readerSubtree.Read();
                     RoomEnclosure = readerSubtree.ReadContentAsBoolean();
+                    break;
+
+                case "TypeTag":
+                    readerSubtree.Read();
+                    typeTags.Add(readerSubtree.ReadContentAsString());
+                    break;
+                case "CanReplaceFurniture":
+                    if (!string.IsNullOrEmpty(readerSubtree.GetAttribute("TypeTag")))
+                    {
+                        ReplaceableFurnitureTypes.Add(readerSubtree.GetAttribute("TypeTag"));
+                    }
                     break;
 
                 case "BuildJob":

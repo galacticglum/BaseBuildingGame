@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Sprites>
+    <Sprite Name="Steel Wall_"     X="0" Y="224" Width="32" Height="32" PixelsPerUnit="32"/>
+ 
+    <Sprite Name="Steel Wall_E"    X="320" Y="192" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_ES"   X="0" Y="160" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_ESW"  X="192" Y="32" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_EW"   X="32" Y="160" Width="32" Height="32" PixelsPerUnit="32"/>
+ 
+    <Sprite Name="Steel Wall_N"    X="352" Y="160" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_NE"   X="0" Y="96" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_NES"  X="128" Y="192" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_NESW" X="352" Y="192" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_NEW"  X="192" Y="96" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_NS"   X="64" Y="128" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_NSW"  X="256" Y="192" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_NW"   X="64" Y="96" Width="32" Height="32" PixelsPerUnit="32"/>
+ 
+    <Sprite Name="Steel Wall_S"    X="352" Y="224" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_SW"   X="64" Y="160" Width="32" Height="32" PixelsPerUnit="32"/>
+    <Sprite Name="Steel Wall_W"    X="384" Y="192" Width="32" Height="32" PixelsPerUnit="32"/>
+</Sprites> 

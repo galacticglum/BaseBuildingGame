@@ -48,7 +48,7 @@ public class FurnitureGraphicController : MonoBehaviour
 			Tile southTile = world.GetTileAt(args.Furniture.Tile.X, args.Furniture.Tile.Y - 1 );
 
 			if(northTile != null && southTile != null && northTile.Furniture != null && southTile.Furniture != null &&
-				northTile.Furniture.Type == "Furniture_SteelWall" && southTile.Furniture.Type == "Furniture_SteelWall")
+				northTile.Furniture.Type == "Steel Wall" && southTile.Furniture.Type == "Steel Wall")
             {
                 furnitureGameObject.transform.rotation = Quaternion.Euler(0, 0, 90);
 			}

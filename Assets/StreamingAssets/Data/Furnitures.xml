@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Furnitures>
-    <Furniture Type="Furniture_SteelWall">
+    <Furniture Type="Steel Wall">
+        <TypeTag>Wall</TypeTag>
         <Name>Steel Wall</Name>
         <MovementCost>0</MovementCost>
         <Width>1</Width>
@@ -27,6 +28,7 @@
         <Height>1</Height>
         <LinksToNeighbours>false</LinksToNeighbours>
         <RoomEnclosure>true</RoomEnclosure>
+        <CanReplaceFurniture TypeTag="Wall"/>
 
         <BuildJob WorkTime="1">  
             <Inventory Type="Steel Plate" Amount="2"/>
@@ -47,6 +49,7 @@
     </Furniture>
 
     <Furniture Type="Stockpile">
+        <TypeTag>Storage</TypeTag>
         <Name>Stockpile</Name>
         <MovementCost>1</MovementCost>
         <Width>1</Width>

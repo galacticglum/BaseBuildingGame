@@ -53,28 +53,43 @@ public class ConstructionController : MonoBehaviour
 	    {
 	        case ConstructionMode.Furniture:
 	            string furnitureType = ConstructionObjectType;
-
-	            if (!WorldController.Instance.World.IsFurniturePlacementValid(furnitureType, tile) || tile.PendingFurnitureJob != null) return;
-
-	            Job job;
-	            if(WorldController.Instance.World.FurnitureJobPrototypes.ContainsKey(furnitureType))
+	            if (WorldController.Instance.World.IsFurniturePlacementValid(furnitureType, tile) && IsBuildJobOverlap(furnitureType, tile) == false)
 	            {
-	                job = WorldController.Instance.World.FurnitureJobPrototypes[furnitureType].Clone();
-	                job.Tile = tile;
+
+	                if (tile.Furniture != null)
+	                {
+	                    tile.Furniture.Deconstruct();
+	                }
+
+	                Job job;
+	                if (WorldController.Instance.World.FurnitureJobPrototypes.ContainsKey(furnitureType))
+	                {
+	                    job = WorldController.Instance.World.FurnitureJobPrototypes[furnitureType].Clone();
+	                    job.Tile = tile;
+	                }
+	                else
+	                {
+	                    job = new Job(tile, furnitureType, 0.1f, JobPriority.High, Furniture.BuildCallback, null, false,
+	                        true);
+	                }
+
+                    job.FurniturePrototype = PrototypeManager.Furnitures[furnitureType];
+
+	                for (int xOffset = tile.X; xOffset < (tile.X + PrototypeManager.Furnitures[furnitureType].Width); xOffset++)
+	                {
+	                    for (int yOffset = tile.Y; yOffset < (tile.Y + PrototypeManager.Furnitures[furnitureType].Height); yOffset++)
+	                    {
+	                        Tile tileAt = WorldController.Instance.World.GetTileAt(xOffset, yOffset);
+	                        tileAt.PendingFurnitureJob = job;
+                            job.JobStopped += (sender, args) =>
+                            {
+                                tileAt.PendingFurnitureJob = null;
+                            };
+                        }
+	                }
+
+	                WorldController.Instance.World.JobQueue.Enqueue(job);
 	            }
-	            else
-	            {
-	                job = new Job(tile, furnitureType, 0.1f, JobPriority.High, Furniture.BuildCallback, null, false, true);
-	            }
-
-	            tile.PendingFurnitureJob = job;
-	            job.FurniturePrototype = PrototypeManager.Furnitures[furnitureType];
-	            job.JobStopped += (sender, args) =>
-	            {
-	                args.Job.Tile.PendingFurnitureJob = null;
-	            };
-
-	            WorldController.Instance.World.JobQueue.Enqueue(job);
 	            break;
 
 	        case ConstructionMode.Floor:
@@ -83,7 +98,10 @@ public class ConstructionController : MonoBehaviour
 	        default:
 	            if(ConstructionMode == ConstructionMode.Deconstruct && tile.Furniture != null)
 	            {
-	                tile.Furniture.Deconstruct();
+	                if (tile.Furniture != null)
+	                {
+	                    tile.Furniture.Deconstruct();
+	                }
 	            }
 	            break;
 	    }
@@ -98,5 +116,21 @@ public class ConstructionController : MonoBehaviour
 
         Furniture furniturePrototype = PrototypeManager.Furnitures[ConstructionObjectType];
         return furniturePrototype.Width == 1 && furniturePrototype.Height == 1;
+    }
+
+    public bool IsBuildJobOverlap(string furnitureType, Tile tile)
+    {
+        for (int xOffset = tile.X; xOffset < (tile.X + PrototypeManager.Furnitures[furnitureType].Width); xOffset++)
+        {
+            for (int yOffset = tile.Y; yOffset < (tile.Y + PrototypeManager.Furnitures[furnitureType].Height); yOffset++)
+            {
+                if (WorldController.Instance.World.GetTileAt(xOffset, yOffset).PendingFurnitureJob != null)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
