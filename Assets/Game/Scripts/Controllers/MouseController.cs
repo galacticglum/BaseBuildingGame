@@ -127,27 +127,28 @@ public class MouseController : MonoBehaviour
                 Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
                 if (tileAt == null) continue;
 
-                Furniture prototype = PrototypeManager.Furnitures[constructionController.ConstructionObjectType];
-                DragMode dragMode = prototype.DragMode;
-
-                bool doDrag = false;
-                if (dragMode == DragMode.Border)
+                if (constructionController.ConstructionMode == ConstructionMode.Furniture)
                 {
-                    if (x == startX || x == endX || y == startY || y == endY)
+                    Furniture prototype = PrototypeManager.Furnitures[constructionController.ConstructionObjectType];
+                    DragMode dragMode = prototype.DragMode;
+                    bool doDrag = false;
+
+                    if (dragMode == DragMode.Border)
+                    {
+                        if (x == startX || x == endX || y == startY || y == endY)
+                        {
+                            doDrag = true;
+                        }
+                    }
+                    else
                     {
                         doDrag = true;
                     }
-                }
-                else
-                {
-                    doDrag = true;
-                }
 
-                if (!doDrag) continue;
-
-                if (constructionController.ConstructionMode == ConstructionMode.Furniture)
-                {
-                    DrawFurnitureSprite(constructionController.ConstructionObjectType, tileAt);
+                    if (doDrag)
+                    {
+                        DrawFurnitureSprite(constructionController.ConstructionObjectType, tileAt);
+                    }
                 }
                 else
                 {
@@ -169,25 +170,32 @@ public class MouseController : MonoBehaviour
         {
             for (int y = startY; y <= endY; y++)
             {
-                Furniture prototype = PrototypeManager.Furnitures[constructionController.ConstructionObjectType];
-                DragMode dragMode = prototype.DragMode;
-                bool doDrag = false;
-                if (dragMode == DragMode.Border)
+                Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
+                if (constructionController.ConstructionMode == ConstructionMode.Furniture)
                 {
-                    if (x == startX || x == endX || y == startY || y == endY)
+                    Furniture prototype = PrototypeManager.Furnitures[constructionController.ConstructionObjectType];
+                    DragMode dragMode = prototype.DragMode;
+                    bool doDrag = false;
+                    if (dragMode == DragMode.Border)
+                    {
+                        if (x == startX || x == endX || y == startY || y == endY)
+                        {
+                            doDrag = true;
+                        }
+                    }
+                    else
                     {
                         doDrag = true;
                     }
-                }
-                else
-                {
-                    doDrag = true;
-                }
 
-                if (!doDrag) continue;
+                    if (!doDrag) continue;
+                    if (tileAt != null)
+                    {
+                        constructionController.DoBuild(tileAt);
 
-                Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
-                if (tileAt != null)
+                    }
+                }
+                else if(tileAt != null)
                 {
                     constructionController.DoBuild(tileAt);
                 }
