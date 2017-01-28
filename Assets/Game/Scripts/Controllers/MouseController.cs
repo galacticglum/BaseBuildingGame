@@ -45,7 +45,7 @@ public class MouseController : MonoBehaviour
 		currentFramePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 		currentFramePosition.z = 0;
 
-        if (Input.GetKeyUp(KeyCode.Escape))
+        if (Input.GetKeyUp(KeyCode.Escape) || Input.GetMouseButtonUp(1))
         {
             switch (currentMouseMode)
             {
@@ -212,6 +212,16 @@ public class MouseController : MonoBehaviour
 
         if (currentMouseMode != MouseMode.Selection) return;
         if (EventSystem.current.IsPointerOverGameObject()) return;
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            Tile tileUnderMouse = GetMouseOverTile();
+            if (tileUnderMouse.PendingFurnitureJob != null)
+            {
+                tileUnderMouse.PendingFurnitureJob.CancelJob();
+            }
+        }
+
         if (!Input.GetMouseButtonUp(0)) return;
 
         Tile mouseOverTile = GetMouseOverTile();
