@@ -24,8 +24,6 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
         EventManager.Trigger("FurnitureUpdate", this, args);
     }
 
-    // public Func<Furniture, TileEnterability> TryEnter { get; set; }
-
     private string name = string.Empty;
     public string Name
     {
