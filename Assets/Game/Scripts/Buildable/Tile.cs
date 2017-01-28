@@ -20,7 +20,7 @@ public class Tile : IXmlSerializable, ISelectable
     public List<Character> Characters { get; set; }
 
 	public Room Room { get; set; }
-	public Job PendingFurnitureJob { get; set; }
+	public Job PendingBuildJob { get; set; }
 
 	public readonly int X;
     public readonly int Y;
@@ -43,11 +43,6 @@ public class Tile : IXmlSerializable, ISelectable
     {
         get
         {
-            if (Type == TileType.Empty)
-            {
-                return 0;
-            }
-
             return Furniture == null ? 1 : Furniture.MovementCost;
         }
     }
@@ -198,6 +193,12 @@ public class Tile : IXmlSerializable, ISelectable
         }
 
         return Furniture != null ? Furniture.TryEnter() : TileEnterability.Immediate;
+    }
+
+    public static void OnJobCompleted(object sender, JobEventArgs args)
+    {
+        args.Job.Tile.Type = args.Job.TileType;
+        args.Job.Tile.PendingBuildJob = null;
     }
 
     public string GetName()

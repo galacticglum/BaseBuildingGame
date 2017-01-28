@@ -214,9 +214,9 @@ public class MouseController : MonoBehaviour
         if (Input.GetMouseButtonDown(1))
         {
             Tile tileUnderMouse = GetMouseOverTile();
-            if (tileUnderMouse.PendingFurnitureJob != null)
+            if (tileUnderMouse.PendingBuildJob != null)
             {
-                tileUnderMouse.PendingFurnitureJob.CancelJob();
+                tileUnderMouse.PendingBuildJob.CancelJob();
             }
         }
 

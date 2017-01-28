@@ -12,6 +12,7 @@ public class Job
     public Furniture FurniturePrototype { get; set; }
     public Furniture Furniture { get; set; }
     public string Type { get; protected set; }
+    public TileType TileType { get; protected set; }
 
     public Dictionary<string, Inventory> InventoryRequirements;
 
@@ -67,9 +68,22 @@ public class Job
         EventManager.AddHandler("JobCompleted", jobCompleted);
     }
 
+    public Job(Tile tile, TileType tileType, float workTime, JobPriority priority, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob, bool workAjdacent)
+    {
+        Initialize(tile, null, workTime, priority, null, inventoryRequirements, repeatingJob, workAjdacent);
+        EventManager.AddHandler("JobCompleted", jobCompleted);
+        TileType = tileType;
+    }
+
     public Job (Tile tile, string type, float workTime, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false, bool workAdjacent = false)
     {
         Initialize(tile, type, workTime, priority, jobCompleted, inventoryRequirements, repeatingJob, workAdjacent);
+    }
+
+    public Job(Tile tile, TileType tileType, float workTime, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false, bool workAdjacent = false)
+    {
+        Initialize(tile, null, workTime, priority, jobCompleted, inventoryRequirements, repeatingJob, workAdjacent);
+        TileType = tileType;
     }
 
     protected Job(Job job)

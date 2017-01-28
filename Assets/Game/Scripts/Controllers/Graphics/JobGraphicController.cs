@@ -17,7 +17,7 @@ public class JobGraphicController : MonoBehaviour
 
     private void OnJobCreated(object sender, JobEventArgs args) 
     {
-		if(args.Job.Type == null)
+		if(args.Job.Type == null && args.Job.TileType == TileType.Empty)
         {
 			return;
 		}
@@ -31,13 +31,22 @@ public class JobGraphicController : MonoBehaviour
 		GameObject jobGameObject = new GameObject();
 		jobGameObjectMap.Add(args.Job, jobGameObject);
 		jobGameObject.name = "JOB_" + args.Job.Type + "_" + args.Job.Tile.X + "_" + args.Job.Tile.Y;
-		jobGameObject.transform.position = new Vector3(args.Job.Tile.X + (args.Job.FurniturePrototype.Width - 1) / 2f, args.Job.Tile.Y + (args.Job.FurniturePrototype.Height - 1) / 2f, 0);
 		jobGameObject.transform.SetParent(transform, true);
 
 		SpriteRenderer spriteRenderer = jobGameObject.AddComponent<SpriteRenderer>();
-		spriteRenderer.sprite = furnitureGraphicController.GetSpriteForFurniture(args.Job.Type);
 		spriteRenderer.color = new Color(0.5f, 1f, 0.5f, 0.25f);
 		spriteRenderer.sortingLayerName = "Jobs";
+
+        if (args.Job.TileType != TileType.Empty)
+        {
+            jobGameObject.transform.position = new Vector3(args.Job.Tile.X, args.Job.Tile.Y);
+            spriteRenderer.sprite = SpriteManager.Current.GetSprite("Tiles", "Empty");
+        }
+        else
+        {
+            jobGameObject.transform.position = new Vector3(args.Job.Tile.X + (args.Job.FurniturePrototype.Width - 1) / 2f, args.Job.Tile.Y + (args.Job.FurniturePrototype.Height - 1) / 2f, 0);
+            spriteRenderer.sprite = furnitureGraphicController.GetSpriteForFurniture(args.Job.Type);
+        }
 
 		if(args.Job.Type == "Door")
         {

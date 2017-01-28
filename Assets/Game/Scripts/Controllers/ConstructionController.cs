@@ -80,10 +80,10 @@ public class ConstructionController : MonoBehaviour
 	                    for (int yOffset = tile.Y; yOffset < (tile.Y + PrototypeManager.Furnitures[furnitureType].Height); yOffset++)
 	                    {
 	                        Tile tileAt = WorldController.Instance.World.GetTileAt(xOffset, yOffset);
-	                        tileAt.PendingFurnitureJob = job;
+	                        tileAt.PendingBuildJob = job;
                             job.JobStopped += (sender, args) =>
                             {
-                                tileAt.PendingFurnitureJob = null;
+                                tileAt.PendingBuildJob = null;
                             };
                         }
 	                }
@@ -93,15 +93,23 @@ public class ConstructionController : MonoBehaviour
 	            break;
 
 	        case ConstructionMode.Floor:
-	            tile.Type = constructionTileType;
-	            break;
-	        default:
-	            if(ConstructionMode == ConstructionMode.Deconstruct && tile.Furniture != null)
+	            TileType tileType = constructionTileType;
+	            if (tile.Type != tileType && tile.Furniture == null && tile.PendingBuildJob == null)
 	            {
-	                if (tile.Furniture != null)
+	                Job job = new Job(tile, tileType, 0.1f, JobPriority.High, Tile.OnJobCompleted, null);
+	                tile.PendingBuildJob = job;
+	                job.JobStopped += (sender, args) =>
 	                {
-	                    tile.Furniture.Deconstruct();
-	                }
+	                    args.Job.Tile.PendingBuildJob = null;
+	                };
+
+                    WorldController.Instance.World.JobQueue.Enqueue(job);
+	            }
+	            break;
+	        case ConstructionMode.Deconstruct:
+	            if (tile.Furniture != null)
+	            {
+	                tile.Furniture.Deconstruct();
 	            }
 	            break;
 	    }
@@ -124,7 +132,7 @@ public class ConstructionController : MonoBehaviour
         {
             for (int yOffset = tile.Y; yOffset < (tile.Y + PrototypeManager.Furnitures[furnitureType].Height); yOffset++)
             {
-                if (WorldController.Instance.World.GetTileAt(xOffset, yOffset).PendingFurnitureJob != null)
+                if (WorldController.Instance.World.GetTileAt(xOffset, yOffset).PendingBuildJob != null)
                 {
                     return true;
                 }
