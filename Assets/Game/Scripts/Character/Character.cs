@@ -139,7 +139,7 @@ public class Character : IXmlSerializable, ISelectable
         }
         else
         {
-            if (CurrentTile.Inventory != null &&
+                if (CurrentTile.Inventory != null &&
                     (job.CanTakeFromStockpile || CurrentTile.Furniture == null || CurrentTile.Furniture.IsStockpile() == false) &&
                     job.GetDesiredInventoryAmount(CurrentTile.Inventory) > 0)
             {

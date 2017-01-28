@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 public class TileGraph
 {
@@ -19,35 +20,30 @@ public class TileGraph
             }
         }
 
-        foreach (Tile tile in Nodes.Keys)
+        foreach (Tile node in Nodes.Keys)
         {
-            Node<Tile> node = Nodes[tile];
-            List<Edge<Tile>> edges = new List<Edge<Tile>>();
+            GenerateEdges(node);
+        }
+    }
 
-            // Get a list of neighbours for the tile
-            Tile[] neighbours = tile.GetNeighbours(true);
-            // If the neighbour is walkable, create an edge to the relevant node.
-            foreach (Tile neighbour in neighbours)
+    private void GenerateEdges(Tile tile)
+    {
+        Node<Tile> node = Nodes[tile];
+        Tile[] neighbours = tile.GetNeighbours(true);
+
+        node.Edges = (from neighbour in neighbours where neighbour != null && neighbour.MovementCost > 0 && !ClippingCorner(tile, neighbour)
+            select new Edge<Tile>
             {
-                if (neighbour == null || !(neighbour.MovementCost > 0)) continue;
-                // This neighbour exists and is walkable, so create an edge
-                // But first, make sure we aren't clipping a diagonal or trying to squeeze inappropriately
-                if (ClippingCorner(tile, neighbour))
-                {
-                    // Skip to the next neighbour with building an edge
-                    continue;
-                }
+                Cost = neighbour.MovementCost, Node = Nodes[neighbour]
+            }).ToArray();
+    }
 
-                Edge<Tile> edge = new Edge<Tile>
-                {
-                    Cost = neighbour.MovementCost,
-                    Node = Nodes[neighbour]
-                };
-
-                // Add the edge to our edge list (which is converted to an array)
-                edges.Add(edge);
-            }
-            node.Edges = edges.ToArray();
+    public void Regenerate(Tile tile)
+    {
+        GenerateEdges(tile);
+        foreach (Tile neighbour in tile.GetNeighbours(true))
+        {
+            GenerateEdges(neighbour);
         }
     }
 

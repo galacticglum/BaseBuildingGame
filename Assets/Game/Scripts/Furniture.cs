@@ -259,8 +259,11 @@ public class Furniture : IPrototypable, IXmlSerializable, ISelectable
         {
             Room.CalculateRooms(Tile);
         }
-        
-        World.Current.InvalidateTileGraph();
+
+        if (World.Current.TileGraph != null)
+        {
+            World.Current.TileGraph.Regenerate(Tile);
+        }
     }
 
     private void OnJobStopped(object sender, JobEventArgs args)

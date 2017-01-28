@@ -62,7 +62,10 @@ public class FurnitureManager : IEnumerable<Furniture>, IXmlSerializable
         OnFurnitureCreated(new FurnitureEventArgs(furnitureInstance));
         if (furnitureInstance.MovementCost != 1)
         {
-            World.Current.InvalidateTileGraph();
+            if (World.Current.TileGraph != null)
+            {
+                World.Current.TileGraph.Regenerate(tile);
+            }
         }
 
         return furnitureInstance;

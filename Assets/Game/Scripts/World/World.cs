@@ -131,7 +131,10 @@ public class World : IXmlSerializable
     private void OnTileChangedEvent(object sender, TileEventArgs args)
     {
 		OnTileChanged(new TileEventArgs(args.Tile));
-		InvalidateTileGraph();
+        if (TileGraph != null)
+        {
+            TileGraph.Regenerate(args.Tile);
+        }
 	}
 
 	public void InvalidateTileGraph()
