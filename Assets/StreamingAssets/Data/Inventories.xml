@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Inventories>
+    <Inventory Type="Steel Plate">
+        <MaxStackSize>50</MaxStackSize>
+    </Inventory>
+</Inventories>

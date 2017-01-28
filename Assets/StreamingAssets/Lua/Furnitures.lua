@@ -34,6 +34,7 @@ function UpdateStockpile(sender, args)
     end
 
     job = Job.new(args.Furniture.Tile, nil, 0, JobPriority.Medium, nil, itemFilter, false, false)
+    job.AcceptsAnyInventoryItem = true
     job.CanTakeFromStockpile = false
 
     job.EventManager.AddHandler("JobWorked", StockpileJobWorked)

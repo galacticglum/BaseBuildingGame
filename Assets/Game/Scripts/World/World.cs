@@ -67,6 +67,7 @@ public class World : IXmlSerializable
         JobWaitingQueue = new JobQueue();
         JobQueue = new JobQueue();
 
+        FurnitureManager = new FurnitureManager();
         RoomManager = new RoomManager();
         CharacterManager = new CharacterManager();
         InventoryManager = new InventoryManager();
@@ -92,11 +93,16 @@ public class World : IXmlSerializable
 
     private void CreateFurniturePrototypes()
     {
-        FurnitureManager = new FurnitureManager();
         FurnitureJobPrototypes = new Dictionary<string, Job>();
 
         string filePath = Path.Combine(Application.streamingAssetsPath, Path.Combine("Data", "Furnitures.xml"));
         PrototypeManager.Furnitures.Load(File.ReadAllText(filePath));
+    }
+
+    private void CreateInventoryPrototypes()
+    {
+        string filePath = Path.Combine(Application.streamingAssetsPath, Path.Combine("Data", "Inventories.xml"));
+        PrototypeManager.Inventories.Load(File.ReadAllText(filePath));
     }
 
 	public void SetupPathfindingExample()

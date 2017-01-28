@@ -41,10 +41,13 @@ public class Inventory : ISelectable
     public Inventory()
     {
         EventManager = new LuaEventManager("InventoryChanged");
+    }
 
-        Type = "Steel Plate";
-        MaxStackSize = 50;
-        StackSize = 1;
+    public Inventory(string type, int stackSize) : this()
+    {
+        Type = type;
+        MaxStackSize = PrototypeManager.Inventories.Contains(type) ? PrototypeManager.Inventories[type].MaxStackSize : 50;
+        StackSize = stackSize;
     }
 
     public Inventory(string type, int maxStackSize, int stackSize) : this()

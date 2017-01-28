@@ -104,13 +104,13 @@ public class Character : IXmlSerializable, ISelectable
 
     private bool CheckForJobMaterials()
     {
-        if (job.HasAllMaterials())
+        if (job == null || job.NeedsMaterial())
         {
             return true;
         }
-
-        Inventory desiredInventory = job.GetFirstDesiredInventory();
-        if (!World.Current.InventoryManager.Check(desiredInventory.Type))
+    
+        List<string> desiredInventories = GetDesiredInventories(job);
+        if (desiredInventories == null || desiredInventories.Count == 0)
         {
             AbandonJob(true);
             return false;
@@ -150,15 +150,22 @@ public class Character : IXmlSerializable, ISelectable
             {
                 if (currentTile != nextTile) return false;
 
-                // Find the first thing in the Job that isn't satisfied.
-                desiredInventory = job.GetFirstDesiredInventory();
+                if (WalkingToDesiredInventory() && desiredInventories.Contains(pathfinder.DestinationTile.Inventory.Type)) return false;
+     
+                Pathfinder pathToClosestInventory = null;
+                foreach (string inventoryType in desiredInventories)
+                {
+                    Inventory desiredInventory = job.InventoryRequirements[inventoryType];
+                    pathToClosestInventory = World.Current.InventoryManager.GetPathToClosestInventoryOfType(desiredInventory.Type, CurrentTile,job.CanTakeFromStockpile);
 
-                if (pathfinder != null && pathfinder.DestinationTile != null &&
-                     pathfinder.DestinationTile.Inventory != null && pathfinder.DestinationTile.Furniture != null &&
-                     !(job.CanTakeFromStockpile == false && pathfinder.DestinationTile.Furniture.IsStockpile()) &&
-                     pathfinder.DestinationTile.Inventory.Type == desiredInventory.Type) return false;
+                    if (pathToClosestInventory == null || pathToClosestInventory.Length < 1)
+                    {
+                        continue;
+                    }
 
-                Pathfinder pathToClosestInventory = World.Current.InventoryManager.GetPathToClosestInventoryOfType(desiredInventory.Type, CurrentTile, job.CanTakeFromStockpile);
+                    break;
+                }
+
                 if (pathToClosestInventory == null || pathToClosestInventory.Length < 1)
                 {
                     AbandonJob(true);
@@ -179,6 +186,38 @@ public class Character : IXmlSerializable, ISelectable
     private void DumpExcessInventory()
     {
         Inventory = null;
+    }
+
+    private List<string> GetDesiredInventories(Job job)
+    {
+        List<string> desiredInventories = new List<string>();
+        foreach (Inventory inventory in job.InventoryRequirements.Values)
+        {
+            if (job.AcceptsAnyInventoryItem == false)
+            {
+                if (World.Current.InventoryManager.Check(inventory.Type) == false)
+                {
+                    return null;
+                }
+
+                desiredInventories.Add(inventory.Type);
+            }
+            else if (World.Current.InventoryManager.Check(inventory.Type))
+            {
+                desiredInventories.Add(inventory.Type);
+            }
+        }
+
+        return desiredInventories;
+    }
+
+    private bool WalkingToDesiredInventory()
+    {
+        bool hasInventory = pathfinder != null && pathfinder.DestinationTile != null &&
+                            pathfinder.DestinationTile.Inventory != null;
+        return hasInventory &&
+               !(pathfinder.DestinationTile.Furniture != null && job.CanTakeFromStockpile == false && 
+               pathfinder.DestinationTile.Furniture.IsStockpile());
     }
 
     private void GetNewJob()
@@ -288,17 +327,20 @@ public class Character : IXmlSerializable, ISelectable
     private void OnInventoryCreated(object sender, InventoryEventArgs args)
     {
         World.Current.InventoryManager.InventoryCreated -= OnInventoryCreated;
-        Job job = World.Current.JobWaitingQueue.Dequeue();
-        Inventory desiredInventory = job.GetFirstDesiredInventory();
+        Job waitJob = World.Current.JobWaitingQueue.Dequeue();
 
-        if (args.Inventory.Type == desiredInventory.Type)
+        if (waitJob != null)
         {
-            World.Current.JobQueue.Enqueue(job);
-        }
-        else
-        {
-            World.Current.JobWaitingQueue.Enqueue(job);
-            World.Current.InventoryManager.InventoryCreated += OnInventoryCreated;
+            List<string> desiredInventories = GetDesiredInventories(waitJob);
+            if (desiredInventories.Contains(args.Inventory.Type))
+            {
+                World.Current.JobQueue.Enqueue(waitJob);
+            }
+            else
+            {
+                World.Current.JobWaitingQueue.Enqueue(waitJob);
+                World.Current.InventoryManager.InventoryCreated += OnInventoryCreated;
+            }
         }
     }
 

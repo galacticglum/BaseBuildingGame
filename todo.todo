@@ -3,7 +3,7 @@ Bug Fixes/Polish:
        picks up a stack with not enough items (it goes to job site and drops off items before
        collecting more).
 
-    ☐ Build adjacent from work tile (not on tile).
+    ✔ Build adjacent from work tile (not on tile). @done (1/27/2017, 7:28:57 PM)
     ✔ Factor inventory (and other objects) when computing IsValidPlacement. @done (1/6/2017, 12:14:20 PM)
         ☐ Make character (or any other friendly npc) move before starting a work order.
 
@@ -16,7 +16,7 @@ Tasks:
     ✔ Lua event manager system. @done (1/27/2017, 4:04:59 PM)
     ☐ Redo job queue.
         ✔ Job priority. @done (1/27/2017, 4:05:30 PM)
-        ☐ Waiting queue.
+        ✔ Waiting queue. @done (1/27/2017, 7:28:52 PM)
     
     ☐ Check validity of work site for job.
     ✔ Box selection. @done (1/27/2017, 4:05:57 PM)

@@ -284,7 +284,7 @@ public class MouseController : MonoBehaviour
         UpdateCameraBounds();
     }
 
-    private void UpdateCameraBounds()
+    private static void UpdateCameraBounds()
     {
         Vector3 oldPosition = Camera.main.transform.position;
 

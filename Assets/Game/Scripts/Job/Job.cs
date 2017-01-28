@@ -128,15 +128,13 @@ public class Job
 
 	public void DoWork(float workTime)
     {
-        if (HasAllMaterials() == false)
+        OnJobWorked(new JobEventArgs(this));
+        if (NeedsMaterial() == false)
         {
-            OnJobWorked(new JobEventArgs(this));
             return;
 		}
 
 		WorkTime -= workTime;
-        OnJobWorked(new JobEventArgs(this));
-
         if (!(WorkTime <= 0)) return;
 
         OnJobCompleted(new JobEventArgs(this));
@@ -166,25 +164,40 @@ public class Job
 	    return InventoryRequirements.Values.All(inventory => inventory.MaxStackSize <= inventory.StackSize);
 	}
 
-	public int GetDesiredInventoryAmount(Inventory inventory)
+    public bool HasAnyMaterial()
     {
-		if(AcceptsAnyInventoryItem)
-        {
-			return inventory.MaxStackSize;
-		}
+        return InventoryRequirements.Values.Any(inventory => inventory.StackSize > 0);
+    }
 
-		if(InventoryRequirements.ContainsKey(inventory.Type) == false)
+    public bool NeedsMaterial()
+    {
+        if (AcceptsAnyInventoryItem && HasAnyMaterial())
         {
-			return 0;
-		}
+            return true;
+        }
 
-		if(InventoryRequirements[inventory.Type].StackSize >= InventoryRequirements[inventory.Type].MaxStackSize)
+        return AcceptsAnyInventoryItem == false && HasAllMaterials();
+    }
+
+	public int GetDesiredInventoryAmount(string type)
+    {
+        if (InventoryRequirements.ContainsKey(type) == false)
         {
-			return 0;
-		}
+            return 0;
+        }
 
-		return InventoryRequirements[inventory.Type].MaxStackSize - InventoryRequirements[inventory.Type].StackSize;
-	}
+        if (InventoryRequirements[type].StackSize >= InventoryRequirements[type].MaxStackSize)
+        {
+            return 0;
+        }
+
+        return InventoryRequirements[type].MaxStackSize - InventoryRequirements[type].StackSize;
+    }
+
+    public int GetDesiredInventoryAmount(Inventory inventory)
+    {
+        return GetDesiredInventoryAmount(inventory.Type);
+    }
 
 	public Inventory GetFirstDesiredInventory()
 	{
