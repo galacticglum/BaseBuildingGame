@@ -1,28 +1,32 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
 public class TileGraph
 {
-    public Dictionary<Tile, Node<Tile>> Nodes { get; protected set; }
+    public Dictionary<Tile, Node<Tile>> Nodes { get; private set; }
 
-    public TileGraph(World world)
+    public TileGraph()
     {
         Nodes = new Dictionary<Tile, Node<Tile>>();
-
-        for (int x = 0; x < world.Width; x++)
+        for (int x = 0; x < World.Current.Width; x++)
         {
-            for (int y = 0; y < world.Height; y++)
+            for (int y = 0; y < World.Current.Height; y++)
             {
-                Tile tile = world.GetTileAt(x, y);
-                Node<Tile> node = new Node<Tile> { Tile = tile };
-                Nodes.Add(tile, node);
+
+                Tile tileAt = World.Current.GetTileAt(x, y);
+                Node<Tile> n = new Node<Tile>
+                {
+                    Data = tileAt
+                };
+
+                Nodes.Add(tileAt, n);
             }
         }
 
-        foreach (Tile node in Nodes.Keys)
+        foreach (Tile tile in Nodes.Keys)
         {
-            GenerateEdges(node);
+            GenerateEdges(tile);
         }
     }
 
@@ -31,10 +35,10 @@ public class TileGraph
         Node<Tile> node = Nodes[tile];
         Tile[] neighbours = tile.GetNeighbours(true);
 
-        node.Edges = (from neighbour in neighbours where neighbour != null && neighbour.MovementCost > 0 && !ClippingCorner(tile, neighbour)
+        node.Edges = (from neigbour in neighbours where neigbour != null && neigbour.MovementCost > 0 && !IsClippingCorner(tile, neigbour)
             select new Edge<Tile>
             {
-                Cost = neighbour.MovementCost, Node = Nodes[neighbour]
+                Cost = neigbour.MovementCost, Node = Nodes[neigbour]
             }).ToArray();
     }
 
@@ -47,18 +51,15 @@ public class TileGraph
         }
     }
 
-    private static bool ClippingCorner(Tile current, Tile neighbour)
+    private static bool IsClippingCorner(Tile curr, Tile neigh)
     {
-        int differenceX = current.X - neighbour.X;
-        int differentY = current.Y - neighbour.Y;
+        int dX = curr.X - neigh.X;
+        int dY = curr.Y - neigh.Y;
 
-        if ((Mathf.Abs(differenceX) + Mathf.Abs(differentY)) != 2) return false;
+        if (Mathf.Abs(dX) + Mathf.Abs(dY) != 2) return false;
+        if (World.Current.GetTileAt(curr.X - dX, curr.Y).MovementCost == 0) return true; 
 
-        if (World.Current.GetTileAt(current.X - differenceX, current.Y).MovementCost == 0)
-        {
-            return true;
-        }
-
-        return World.Current.GetTileAt(current.X, current.Y - differentY).MovementCost == 0;
+        return World.Current.GetTileAt(curr.X, curr.Y - dY).MovementCost == 0;
     }
+
 }

@@ -1,136 +1,57 @@
-﻿using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
 using MoonSharp.Interpreter;
 using UnityEngine;
 
 [MoonSharpUserData]
 public class Job
-{ 
-	public Tile Tile { get; set; }
+{
+    public string Description { get; set; }
+    public string Type { get; private set; }
+    public TileType TileType { get; private set; }
+
+    public Tile Tile { get; set; }
     public Furniture FurniturePrototype { get; set; }
     public Furniture Furniture { get; set; }
-    public string Type { get; protected set; }
-    public TileType TileType { get; protected set; }
 
-    public Dictionary<string, Inventory> InventoryRequirements;
+    public Dictionary<string, Inventory> InventoryRequirements { get; set; }
+    
+    public JobPriority Priority { get; private set; }
+    public float WorkTime { get; private set; }
+    public bool WorkAdjacent { get; set; }
 
-    public JobPriority Priority { get; protected set; }
-    public float WorkTime { get; protected set; }
-    public bool WorkAdjacent { get; protected set; }
-	public bool AcceptsAnyInventoryItem { get; set; }
-	public bool CanTakeFromStockpile { get; set; }
+    public bool CanTakeFromStockpile { get; set; }
+    public bool AcceptsAnyInventoryItem { get; set; }
 
-    public LuaEventManager EventManager { get; set; }
-    public event JobCompletedEventHandler JobCompleted;
-    public void OnJobCompleted(JobEventArgs args)
-    {
-        JobCompletedEventHandler jobCompleted = JobCompleted;
-        if (jobCompleted != null)
-        {
-            jobCompleted(this, args);
-        }
+    public bool IsNeed { get; private set; }
+    public bool Critical { get; private set; }
 
-        EventManager.Trigger("JobCompleted", this, args);
-    }
+    public event Action<Job> cbJobCompleted;
+    public event Action<Job> cbJobStopped;
+    public event Action<Job> cbJobWorked;
 
-    public event JobStoppedEventHandler JobStopped;
-    public void OnJobStopped(JobEventArgs args)
-    {
-        JobStoppedEventHandler jobStopped = JobStopped;
-        if (jobStopped != null)
-        {
-            jobStopped(this, args);
-        }
+    protected float requiredWorkTime;
+    protected bool repeatingJob;
 
-        EventManager.Trigger("JobStopped", this, args);
-    }
+    private readonly List<string> cbJobCompletedLua;
+    private readonly List<string> cbJobWorkedLua;
 
-    public event JobWorkedEventHandler JobWorked;
-    public void OnJobWorked(JobEventArgs args)
-    {
-        JobWorkedEventHandler jobWorked = JobWorked;
-        if (jobWorked != null)
-        {
-            jobWorked(this, args);
-        }
-
-        EventManager.Trigger("JobWorked", this, args);
-    }
-
-    private float requiredWorkTime;
-    private bool repeatingJob;
-
-    public Job(Tile tile, string type, float workTime, JobPriority priority, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob, bool workAdjacent)
-    {
-        Initialize(tile, type, workTime, priority, null, inventoryRequirements, repeatingJob, workAdjacent);
-        EventManager.AddHandler("JobCompleted", jobCompleted);
-    }
-
-    public Job(Tile tile, TileType tileType, float workTime, JobPriority priority, Closure jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob, bool workAjdacent)
-    {
-        Initialize(tile, null, workTime, priority, null, inventoryRequirements, repeatingJob, workAjdacent);
-        EventManager.AddHandler("JobCompleted", jobCompleted);
-        TileType = tileType;
-    }
-
-    public Job (Tile tile, string type, float workTime, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false, bool workAdjacent = false)
-    {
-        Initialize(tile, type, workTime, priority, jobCompleted, inventoryRequirements, repeatingJob, workAdjacent);
-    }
-
-    public Job(Tile tile, TileType tileType, float workTime, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob = false, bool workAdjacent = false)
-    {
-        Initialize(tile, null, workTime, priority, jobCompleted, inventoryRequirements, repeatingJob, workAdjacent);
-        TileType = tileType;
-    }
-
-    protected Job(Job job)
-    {
-		Tile = job.Tile;
-		Type = job.Type;
-        Priority = job.Priority;
-
-        WorkAdjacent = job.WorkAdjacent;
-		WorkTime = job.WorkTime;
-        AcceptsAnyInventoryItem = job.AcceptsAnyInventoryItem;
-        CanTakeFromStockpile = job.CanTakeFromStockpile;
-
-        JobCompleted = job.JobCompleted;
-        EventManager = new LuaEventManager("JobCompleted", "JobStopped", "JobWorked");
-
-        requiredWorkTime = job.requiredWorkTime;
-
-        InventoryRequirements = new Dictionary<string, Inventory>();
-        if (InventoryRequirements == null) return;
-        foreach(Inventory inventory in job.InventoryRequirements.Values)
-        {
-            InventoryRequirements[inventory.Type] = inventory.Clone();
-        }
-    }
-
-	public virtual Job Clone()
-    {
-		return new Job(this);
-	}
-
-    private void Initialize(Tile tile, string type, float workTime, JobPriority priority, JobCompletedEventHandler jobCompleted, Inventory[] inventoryRequirements, bool repeatingJob, bool workAdjacent)
+    public Job(Tile tile, string type, Action<Job> cbJobComplete, float workTime, Inventory[] inventoryRequirements, JobPriority priority, bool repeatingJob = false, bool isNeed = false, bool critical = false)
     {
         this.repeatingJob = repeatingJob;
-        WorkAdjacent = workAdjacent;
-
-        CanTakeFromStockpile = true;
-        requiredWorkTime = WorkTime = workTime;
 
         Tile = tile;
         Type = type;
+        cbJobCompleted += cbJobComplete;
+        requiredWorkTime = WorkTime = workTime;
+        IsNeed = isNeed;
+        Critical = critical;
         Priority = priority;
-        AcceptsAnyInventoryItem = false;
-        CanTakeFromStockpile = true;
+        Description = "job_error_missing_desc";
 
-        JobCompleted = jobCompleted;
-        EventManager = new LuaEventManager("JobCompleted", "JobStopped", "JobWorked");
+        cbJobWorkedLua = new List<string>();
+        cbJobCompletedLua = new List<string>();
 
         InventoryRequirements = new Dictionary<string, Inventory>();
         if (inventoryRequirements == null) return;
@@ -140,21 +61,95 @@ public class Job
         }
     }
 
-	public void DoWork(float workTime)
+    public Job(Tile tile, TileType tileType, Action<Job> cbJobComplete, float workTime, Inventory[] inventoryRequirements, JobPriority priority, bool repeatingJob = false, bool workAdjacent = false)
     {
-        OnJobWorked(new JobEventArgs(this));
+        this.repeatingJob = repeatingJob;
+        Tile = tile;
+        TileType = tileType;
+        cbJobCompleted += cbJobComplete;
+        requiredWorkTime = WorkTime = workTime;
+        Priority = priority;
+        WorkAdjacent = workAdjacent;
+        Description = "job_error_missing_desc";
+
+        cbJobWorkedLua = new List<string>();
+        cbJobCompletedLua = new List<string>();
+
+        InventoryRequirements = new Dictionary<string, Inventory>();
+        if (inventoryRequirements == null) return;
+        foreach (Inventory inventory in inventoryRequirements)
+        {
+            InventoryRequirements[inventory.Type] = inventory.Clone();
+        }
+    }
+
+    protected Job(Job other)
+    {
+        Tile = other.Tile;
+        Type = other.Type;
+        TileType = other.TileType;
+        cbJobCompleted = other.cbJobCompleted;
+        WorkTime = other.WorkTime;
+        Priority = other.Priority;
+        WorkAdjacent = other.WorkAdjacent;
+        Description = other.Description;
+        AcceptsAnyInventoryItem = other.AcceptsAnyInventoryItem;
+
+        cbJobWorkedLua = new List<string>(other.cbJobWorkedLua);
+        cbJobCompletedLua = new List<string>(other.cbJobWorkedLua);
+
+        InventoryRequirements = new Dictionary<string, Inventory>();
+        if (InventoryRequirements == null) return;
+        foreach (Inventory inventory in other.InventoryRequirements.Values)
+        {
+            InventoryRequirements[inventory.Type] = inventory.Clone();
+        }
+    }
+
+    public virtual Job Clone()
+    {
+        return new Job(this);
+    }
+
+    public void DoWork(float workTime)
+    {
+        if (cbJobWorked != null)
+        {
+            cbJobWorked(this);
+        }
+
+        if (cbJobWorkedLua != null)
+        {
+            foreach (string function in cbJobWorkedLua)
+            {
+                LuaUtilities.CallFunction(function, this);
+            }
+        }
+
         if (NeedsMaterial() == false)
         {
             return;
-		}
+        }
 
-		WorkTime -= workTime;
+        WorkTime -= workTime;
         if (!(WorkTime <= 0)) return;
 
-        OnJobCompleted(new JobEventArgs(this));
+        if (cbJobCompleted != null)
+        {
+            cbJobCompleted(this);
+        }
+
+        foreach (string function in cbJobCompletedLua)
+        {
+            LuaUtilities.CallFunction(function, this);
+        }
+
         if (repeatingJob == false)
         {
-            OnJobStopped(new JobEventArgs(this));
+            if (cbJobStopped != null)
+            {
+                cbJobStopped(this);
+            }
         }
         else
         {
@@ -162,25 +157,30 @@ public class Job
         }
     }
 
-	public void CancelJob()
+    public void CancelJob()
     {
-        OnJobStopped(new JobEventArgs(this));
+        if (cbJobStopped != null)
+        {
+            cbJobStopped(this);
+        }
+
+        World.Current.JobWaitingQueue.Remove(this);
         World.Current.JobQueue.Remove(this);
-	}
+    }
 
     public void DropPriority()
     {
-        Priority = (JobPriority) Mathf.Min((int) JobPriority.Low, (int) Priority + 1);
+        Priority = (JobPriority)Mathf.Min((int)JobPriority.Low, (int)Priority + 1);
     }
 
-	public bool HasAllMaterials()
-	{
-	    return InventoryRequirements.Values.All(inventory => inventory.MaxStackSize <= inventory.StackSize);
-	}
+    public bool HasAllMaterial()
+    {
+        return InventoryRequirements == null || InventoryRequirements.Values.All(inv => inv.MaxStackSize <= inv.StackSize);
+    }
 
     public bool HasAnyMaterial()
     {
-        return InventoryRequirements.Values.Any(inventory => inventory.StackSize > 0);
+        return InventoryRequirements.Values.Any(inv => inv.StackSize > 0);
     }
 
     public bool NeedsMaterial()
@@ -190,22 +190,22 @@ public class Job
             return true;
         }
 
-        return AcceptsAnyInventoryItem == false && HasAllMaterials();
+        return AcceptsAnyInventoryItem == false && HasAllMaterial();
     }
 
-	public int GetDesiredInventoryAmount(string type)
+    public int GetDesiredInventoryAmount(string objectType)
     {
-        if (InventoryRequirements.ContainsKey(type) == false)
+        if (InventoryRequirements.ContainsKey(objectType) == false)
         {
             return 0;
         }
 
-        if (InventoryRequirements[type].StackSize >= InventoryRequirements[type].MaxStackSize)
+        if (InventoryRequirements[objectType].StackSize >= InventoryRequirements[objectType].MaxStackSize)
         {
             return 0;
         }
 
-        return InventoryRequirements[type].MaxStackSize - InventoryRequirements[type].StackSize;
+        return InventoryRequirements[objectType].MaxStackSize - InventoryRequirements[objectType].StackSize;
     }
 
     public int GetDesiredInventoryAmount(Inventory inventory)
@@ -213,8 +213,28 @@ public class Job
         return GetDesiredInventoryAmount(inventory.Type);
     }
 
-	public Inventory GetFirstDesiredInventory()
-	{
-	    return InventoryRequirements.Values.FirstOrDefault(inv => inv.MaxStackSize > inv.StackSize);
-	}
+    public Inventory GetFirstDesiredInventory()
+    {
+        return InventoryRequirements.Values.FirstOrDefault(inv => inv.MaxStackSize > inv.StackSize);
+    }
+
+    public void RegisterJobCompletedCallback(string cb)
+    {
+        cbJobCompletedLua.Add(cb);
+    }
+
+    public void UnregisterJobCompletedCallback(string cb)
+    {
+        cbJobCompletedLua.Remove(cb);
+    }
+    
+    public void RegisterJobWorkedCallback(string cb)
+    {
+        cbJobWorkedLua.Add(cb);
+    }
+
+    public void UnregisterJobWorkedCallback(string cb)
+    {
+        cbJobWorkedLua.Remove(cb);
+    }
 }

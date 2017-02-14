@@ -1,45 +1,39 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-public class AudioController : MonoBehaviour
+public class AudioController
 {
-	private float audioCooldown;
-
-	// Use this for initialization
-	private void Start ()
+    private float audioCooldown;
+    public AudioController()
     {
-		WorldController.Instance.World.FurnitureManager.FurnitureCreated += OnFurnitureCreated;
-		WorldController.Instance.World.TileChanged += OnTileChanged;
-	}
+        World.Current.cbFurnitureCreated += OnFurnitureCreated;
+        World.Current.cbTileChanged += OnTileChanged;
+    }
 	
-	// Update is called once per frame
-	private void Update ()
+    public void Update(float deltaTime)
     {
-		audioCooldown -= Time.deltaTime;
-	}
+        audioCooldown -= deltaTime;
+    }
 
-	private void OnTileChanged(object sender, TileEventArgs args)
-    {
-        if (audioCooldown > 0)
-        {
-            return;
-        }
-
-        AudioClip audioClip = Resources.Load<AudioClip>("Sounds/Floor_OnCreated");
-		AudioSource.PlayClipAtPoint(audioClip, Camera.main.transform.position);
-		audioCooldown = 0.1f;
-	}
-
-	public void OnFurnitureCreated(object sender, FurnitureEventArgs args)
+    private void OnTileChanged(Tile tile_data)
     {
         if (audioCooldown > 0)
         {
             return;
         }
 
-        AudioClip audioClip = Resources.Load<AudioClip>("Sounds/"+ args.Furniture.Type +"_OnCreated") ?? 
-            Resources.Load<AudioClip>("Sounds/Wall_OnCreated");
+        AudioSource.PlayClipAtPoint(Resources.Load<AudioClip>("Sounds/Floor_OnCreated"), Camera.main.transform.position);
+        audioCooldown = 0.1f;
+    }
 
+    public void OnFurnitureCreated(Furniture furn)
+    {
+        if (audioCooldown > 0)
+        {
+            return;
+        }
+		
+        AudioClip audioClip = Resources.Load<AudioClip>("Sounds/" + furn.Type + "_OnCreated") ?? Resources.Load<AudioClip>("Sounds/Wall_OnCreated");
         AudioSource.PlayClipAtPoint(audioClip, Camera.main.transform.position);
-		audioCooldown = 0.1f;
-	}
+        audioCooldown = 0.1f;
+    }
 }

@@ -1,5 +1,5 @@
-﻿public class Edge<T>
+public struct Edge<T>
 {
-	public float Cost { get; set; }	
-	public Node<T> Node { get; set; }
+    public float Cost { get; set; }
+    public Node<T> Node { get; set; }
 }

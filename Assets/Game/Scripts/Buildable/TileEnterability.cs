@@ -3,4 +3,4 @@
     Immediate,
     Never,
     Wait
-}
+};

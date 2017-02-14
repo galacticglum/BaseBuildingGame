@@ -1,55 +1,46 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(Text))]
 public class SelectionInfoInspector : MonoBehaviour
 {
-    [SerializeField]
-    private CanvasGroup canvasGroup;
+    public CanvasGroup canvasGroup;
 
-    private Text textComponent;
     private MouseController mouseController;
+    private Text text;
 
     // Use this for initialization
-    private void Start ()
+    private void Start()
     {
-        mouseController = FindObjectOfType<MouseController>();
-        if (mouseController == null)
-        {
-            Debug.LogError("SelectionInspector::Start: No instance of class: 'MouseController' found!");
-            enabled = false;
-            return;
-        }
-
-        textComponent = GetComponent<Text>();
+        mouseController = WorldController.Instance.MouseController;
+        text = GetComponent<Text>();
     }
 	
-	// Update is called once per frame
-	private void Update ()
-	{
-	    if (mouseController.CurrentSelectionInfo == null)
-	    {
-	        canvasGroup.alpha = 0;
-	        canvasGroup.interactable = false;
-	        canvasGroup.blocksRaycasts = false;
-	        return;
-	    }
+    // Update is called once per frame
+    private void Update()
+    {
+        if (mouseController.CurrentSelectionInfo == null)
+        {
+            canvasGroup.alpha = 0;
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+
+            return;
+        }
 
         canvasGroup.alpha = 1;
         canvasGroup.interactable = true;
         canvasGroup.blocksRaycasts = true;
 
-	    ISelectable selection = mouseController.CurrentSelectionInfo.SelectionObjects[mouseController.CurrentSelectionInfo.SelectionIndex];
-
-	    string additionalInfo = string.Empty;
-	    if (selection.GetAdditionalInfo() != null)
-	    {
-	        additionalInfo = selection.GetAdditionalInfo().Aggregate(string.Empty, (current, info) => current + (info + "\n"));
+        ISelectable selection = mouseController.CurrentSelectionInfo.Selection;
+        if(selection.GetType() == typeof(Character))
+        {
+            text.text = selection.GetName() + "\n" + selection.GetDescription() + "\n" + selection.GetHitPointString() + "\n" + 
+                LocalizationTable.GetLocalization(selection.GetJobDescription()); 
         }
-
-        textComponent.text = selection.GetName() + "\n" + selection.GetDescription() + "\n" + additionalInfo;
+        else
+        {
+            text.text = LocalizationTable.GetLocalization(selection.GetName()) + "\n" + 
+                LocalizationTable.GetLocalization(selection.GetDescription()) + "\n" + selection.GetHitPointString(); 
+        }
     }
 }

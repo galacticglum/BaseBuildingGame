@@ -1,36 +1,40 @@
-﻿using System.Linq;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(Text))]
 public class RoomDetailInspector : MonoBehaviour
 {
-    private Text textComponent;
+    private Text text;
     private MouseController mouseController;
 
+    // Use this for initialization
     private void Start()
     {
-        mouseController = FindObjectOfType<MouseController>();
-        if (mouseController == null)
+        text = GetComponent<Text>();
+
+        if (text == null)
         {
-            Debug.LogError("RoomDetailInspector::Start: No instance of class: 'MouseController' found!");
             enabled = false;
             return;
         }
 
-        textComponent = GetComponent<Text>();
+        mouseController = WorldController.Instance.MouseController;
     }
-
+	
+    // Update is called once per frame
     private void Update()
     {
-        Tile tile = mouseController.GetMouseOverTile();
-        if (tile == null || tile.Room == null)
+        Tile mouseOverTile = mouseController.MouseOverTile;
+        if (mouseOverTile == null || mouseOverTile.Room == null)
         {
-            textComponent.text = "";
+            text.text = "";
             return;
         }
 
-        textComponent.text = tile.Room.GetAllGasses().Aggregate(string.Empty, 
-            (current, gas) => current + (gas + ": " + tile.Room.GetGasValue(gas) + " (" + tile.Room.GetGasPercentage(gas) * 100) + "%) ");
+        string result = mouseOverTile.Room.GasNames.Aggregate("", (current, gasName) => current + 
+        string.Format("{0}: ({1}) {2:0.000} atm ({3:0.0}%)\n", gasName, mouseOverTile.Room.GetModifiedGases(gasName), 
+        mouseOverTile.Room.GetGasPressure(gasName), mouseOverTile.Room.GetGasFraction(gasName) * 100));
+
+        text.text = result;
     }
 }

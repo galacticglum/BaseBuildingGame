@@ -1,5 +1,6 @@
 ﻿public enum MouseMode
 {
     Selection,
-    Construction
+    Build,
+    SpawnInventory
 }

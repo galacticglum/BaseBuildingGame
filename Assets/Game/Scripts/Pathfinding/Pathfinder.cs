@@ -1,67 +1,56 @@
-﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
-using Priority_Queue;
 using System.Linq;
 
-// Mixed algorithm of dijkstra and A*
 public class Pathfinder
 {
-    public int Length { get { return path == null ? 0 : path.Count; }}
-    public Tile DestinationTile { get { return path == null || path.Count == 0 ? null : path.Last(); }}
+    public int Length { get { return path == null ? 0 : path.Count; } }
+    public Tile DestinationTile { get { return path == null || path.Count == 0 ? null : path.Last(); } }
 
     private Queue<Tile> path;
 
-    public Pathfinder(Queue<Tile> pathQueue)
+    public Pathfinder(Queue<Tile> path)
     {
-        if (pathQueue == null || !pathQueue.Any()) return;
-        path = pathQueue;
+        if (path == null || !path.Any()) { return; }
+        this.path = path;
     }
 
-    public Pathfinder(Tile tileStart, string inventoryType, bool canTakeFromStockpile = false) { Pathfind(tileStart, null, inventoryType, canTakeFromStockpile); }
-	public Pathfinder(Tile tileStart, Tile tileGoal) { Pathfind(tileStart, tileGoal, null, false); }
-
-    private void Pathfind(Tile tileStart, Tile tileGoal, string inventoryType, bool canTakeFromStockpile)
+    public Pathfinder(World world, Tile tileStart, Tile tileEnd, string objectType = null, int desiredAmount = 0, bool canTakeFromStockpile = false, bool lookingForFurn = false)
     {
-        if (World.Current.TileGraph == null)
+        if (world.TileGraph == null)
         {
-            World.Current.TileGraph = new TileGraph(World.Current);
+            world.TileGraph = new TileGraph();
         }
 
-        Dictionary<Tile, Node<Tile>> nodes = World.Current.TileGraph.Nodes;
+        Dictionary<Tile, Node<Tile>> nodes = world.TileGraph.Nodes;
         if (nodes.ContainsKey(tileStart) == false)
         {
             Debug.LogError("Pathfinder::Pathfinder: The starting tile (param: Tile tileStart) isn't in the list of nodes!");
             return;
         }
 
-        // Grab a copy of our start and goal node(s) from out dictionary
+
         Node<Tile> start = nodes[tileStart];
         Node<Tile> goal = null;
-        if (tileGoal != null)
+        if (tileEnd != null)
         {
-            if (nodes.ContainsKey(tileGoal) == false)
+            if (nodes.ContainsKey(tileEnd) == false)
             {
                 Debug.LogError("Pathfinder::Pathfinder: The goal tile (param: Tile tileGoal) isn't in the list of nodes!");
                 return;
             }
 
-            goal = nodes[tileGoal];
+            goal = nodes[tileEnd];
         }
 
+
         HashSet<Node<Tile>> closedSet = new HashSet<Node<Tile>>();
-        SimplePriorityQueue<Node<Tile>> openSet = new SimplePriorityQueue<Node<Tile>>();
+        PathfindingPriorityQueue<Node<Tile>> openSet = new PathfindingPriorityQueue<Node<Tile>>();
         openSet.Enqueue(start, 0);
 
         Dictionary<Node<Tile>, Node<Tile>> cameFrom = new Dictionary<Node<Tile>, Node<Tile>>();
-
         Dictionary<Node<Tile>, float> gCost = new Dictionary<Node<Tile>, float>();
         Dictionary<Node<Tile>, float> fCost = new Dictionary<Node<Tile>, float>();
-        foreach (Node<Tile> node in nodes.Values)
-        {
-            gCost[node] = Mathf.Infinity;
-            fCost[node] = Mathf.Infinity;
-        }
 
         gCost[start] = 0;
         fCost[start] = HeuristicCostEstimate(start, goal);
@@ -69,7 +58,6 @@ public class Pathfinder
         while (openSet.Count > 0)
         {
             Node<Tile> current = openSet.Dequeue();
-
             if (goal != null)
             {
                 if (current == goal)
@@ -78,86 +66,91 @@ public class Pathfinder
                     return;
                 }
             }
-            else 
+            else
             {
-                if (current.Tile.Inventory != null && current.Tile.Inventory.Type == inventoryType)
+                if (current.Data.Inventory != null && current.Data.Inventory.Type == objectType && lookingForFurn == false && current.Data.Inventory.Locked == false)
                 {
-                    if (canTakeFromStockpile || current.Tile.Furniture == null || current.Tile.Furniture.IsStockpile() == false)
+                    if (canTakeFromStockpile || current.Data.Furniture == null || current.Data.Furniture.IsStockpile() == false)
                     {
                         ConstructPath(cameFrom, current);
                         return;
                     }
+                }
+
+                if (current.Data.Furniture != null && current.Data.Furniture.Type == objectType && lookingForFurn)
+                {
+                    ConstructPath(cameFrom, current);
+                    return;
                 }
             }
 
             closedSet.Add(current);
             foreach (Edge<Tile> neighbouringEdge in current.Edges)
             {
-                Node<Tile> neighbour = neighbouringEdge.Node;
+                Node<Tile> neighbor = neighbouringEdge.Node;
+                if (closedSet.Contains(neighbor)) continue; 
 
-                if (closedSet.Contains(neighbour))
-                {
-                    continue;
-                }
+                float movementCostToNeighbor = neighbor.Data.MovementCost * DistanceBetween(current, neighbor);
+                float tentativeGScore = gCost[current] + movementCostToNeighbor;
 
-                float tentativeGCost = gCost[current] + (neighbour.Tile.MovementCost * DistanceBetween(current, neighbour));
-                if (openSet.Contains(neighbour) && tentativeGCost >= gCost[neighbour])
-                {
-                    continue;
-                }
+                if (openSet.Contains(neighbor) && tentativeGScore >= gCost[neighbor]) continue;
 
-                cameFrom[neighbour] = current;
-                gCost[neighbour] = tentativeGCost;
-                fCost[neighbour] = gCost[neighbour] + HeuristicCostEstimate(neighbour, goal);
+                cameFrom[neighbor] = current;
+                gCost[neighbor] = tentativeGScore;
+                fCost[neighbor] = gCost[neighbor] + HeuristicCostEstimate(neighbor, goal);
 
-                if (openSet.Contains(neighbour) == false)
-                {
-                    openSet.Enqueue(neighbour, fCost[neighbour]);
-                }
-                else
-                {
-                    openSet.UpdatePriority(neighbour, fCost[neighbour]);
-                }
-            }
-        }
+                openSet.EnqueueOrUpdate(neighbor, fCost[neighbor]);
+            } 
+        } 
     }
 
-    private static float HeuristicCostEstimate(Node<Tile> start, Node<Tile> goal)
+    private static float HeuristicCostEstimate(Node<Tile> a, Node<Tile> b)
     {
-        return goal == null ? 0f : Mathf.Sqrt(Mathf.Pow(start.Tile.X - goal.Tile.X, 2) + Mathf.Pow(start.Tile.Y - goal.Tile.Y, 2));
-    }
-
-    private static float DistanceBetween(Node<Tile> start, Node<Tile> goal)
-    {
-        if ((Mathf.Abs(start.Tile.X - goal.Tile.X) + Mathf.Abs(start.Tile.Y - goal.Tile.Y)) == 1)
+        if (b == null)
         {
-            return 1;
+            return 0f;
+        }
+
+        return Mathf.Sqrt(Mathf.Pow(a.Data.X - b.Data.X, 2) + Mathf.Pow(a.Data.Y - b.Data.Y, 2));
+    }
+
+    private static float DistanceBetween(Node<Tile> a, Node<Tile> b)
+    {
+        if (Mathf.Abs(a.Data.X - b.Data.X) + Mathf.Abs(a.Data.Y - b.Data.Y) == 1)
+        {
+            return 1f;
         }
 
         // Diagonal neighbours have a distance of 1.41421356237
-        if (Mathf.Abs(start.Tile.X - goal.Tile.X) == 1 && Mathf.Abs(start.Tile.Y - goal.Tile.Y) == 1)
+        if (Mathf.Abs(a.Data.X - b.Data.X) == 1 && Mathf.Abs(a.Data.Y - b.Data.Y) == 1)
         {
             return 1.41421356237f;
         }
 
-        // Otherwise do the actual math
-        return Mathf.Sqrt(Mathf.Pow(start.Tile.X - goal.Tile.X, 2) + Mathf.Pow(start.Tile.Y - goal.Tile.Y, 2));
+        // Otherwise, do the actual math.
+        return Mathf.Sqrt(Mathf.Pow(a.Data.X - b.Data.X, 2) + Mathf.Pow(a.Data.Y - b.Data.Y, 2));
     }
 
     private void ConstructPath(IDictionary<Node<Tile>, Node<Tile>> cameFrom, Node<Tile> current)
     {
-        // At this point current IS the goal.
-        // What we want to do is walk backwards through the came from map, until we reach the "end" of the map (which will be our starting node).
+        // At this point Current IS the goal.
+        // What we want to do is walk backwards through the came from map, 
+        // until we reach the "end" of the map (which will be our starting node).
         Queue<Tile> totalPath = new Queue<Tile>();
-        totalPath.Enqueue(current.Tile);
+        totalPath.Enqueue(current.Data); 
 
         while (cameFrom.ContainsKey(current))
         {
             current = cameFrom[current];
-            totalPath.Enqueue(current.Tile);
+            totalPath.Enqueue(current.Data);
         }
 
         path = new Queue<Tile>(totalPath.Reverse());
+    }
+
+    public Tile Dequeue()
+    {
+        return path == null || path.Count <= 0 ? null : path.Dequeue();
     }
 
     public IEnumerable<Tile> Reverse()
@@ -165,8 +158,8 @@ public class Pathfinder
         return path == null ? null : path.Reverse();
     }
 
-    public Tile Dequeue()
+    public List<Tile> ToList()
     {
-        return path == null || path.Count == 0 ? null : path.Dequeue();
+        return path.ToList();
     }
 }

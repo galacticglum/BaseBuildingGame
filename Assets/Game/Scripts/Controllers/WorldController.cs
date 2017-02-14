@@ -1,16 +1,16 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Xml.Serialization;
 using System.IO;
-using UnityEngine.UI;
 
 public class WorldController : MonoBehaviour
 {
-	public static WorldController Instance { get; protected set; }
-	public World World { get; protected set; }
+    public static WorldController Instance { get; private set; }
 
-    private static string loadWorldFromFile;
+    public World World { get; private set; }
+    public string FileSaveBasePath { get { return Path.Combine(Application.persistentDataPath, "Saves"); } }
 
+    public bool IsModal;
     private bool isPaused;
     public bool IsPaused
     {
@@ -18,86 +18,151 @@ public class WorldController : MonoBehaviour
         set { isPaused = value; }
     }
 
-    public bool IsModal { get; set; }
+    public ConstructionController ConstructionController { get; private set; }
+    public MouseController MouseController { get; private set; }
+    public KeyboardController KeyboardController { get; private set; }
+    public CameraController CameraController { get; private set; }
+    public InventoryDebugController InventoryDebugController { get; private set; }
+    public ModManager ModManager { get; private set; }
 
-	// Use this for initialization
-    private void OnEnable ()
+    private AudioController audioController;
+    private TileGraphicController tileGraphicController;
+    private CharacterGraphicController characterGraphicController;
+    private JobGraphicController jobGraphicController;
+    private InventoryGraphicController inventoryGraphicController;
+    private FurnitureGraphicController furnitureGraphicController;
+    private QuestController questController;
+
+    private float timeScale = 1f;
+    public float TimeScale
     {
-		if(Instance != null)
-        {
-			Debug.LogError("WorldController::OnEnable: There should never be two world controllers.");
-		}
-		Instance = this;
+        get { return timeScale; }
+        set { timeScale = value; }
+    }
 
-		if(!string.IsNullOrEmpty(loadWorldFromFile))
+    private static string loadWorldFromFile;
+
+    [SerializeField]
+    private bool developmentMode;
+    public bool DevelopmentMode
+    {
+        get { return developmentMode; }
+        set { developmentMode = value; }
+    }
+
+    [SerializeField]
+    private GameObject inventoryUI;
+    [SerializeField]
+    private GameObject circleCursorPrefab;
+
+    // Use this for initialization
+    private void OnEnable()
+    {
+        if (Instance != null)
         {
-			CreateWorldFromSaveFile();
+            Debug.LogError("There should never be two world controllers.");
+        }
+
+        Instance = this;
+        ModManager = new ModManager(Path.Combine(Application.streamingAssetsPath, "Data"));
+
+        if (loadWorldFromFile != null)
+        {
+            CreateWorldFromSaveFile();
             loadWorldFromFile = null;
         }
         else
         {
-			GenerateEmpty();
-		}
-	}
+            CreateEmptyWorld();
+        }
+
+        audioController = new AudioController();
+    }
+
+    private void Start()
+    {
+        GameObject visualPath = new GameObject("VisualPath", typeof(VisualPath));
+
+        tileGraphicController = new TileGraphicController();
+        characterGraphicController = new CharacterGraphicController();
+        furnitureGraphicController = new FurnitureGraphicController();
+        jobGraphicController = new JobGraphicController(furnitureGraphicController);
+        inventoryGraphicController = new InventoryGraphicController(inventoryUI);
+        ConstructionController = new ConstructionController();
+
+        if(Settings.getSettingAsBool("DevTools_enabled", false))
+        {
+            InventoryDebugController = new InventoryDebugController();
+        }
+
+        MouseController = new MouseController(ConstructionController, furnitureGraphicController, circleCursorPrefab);
+        KeyboardController = new KeyboardController(ConstructionController, Instance);
+        questController = new QuestController();
+        CameraController = new CameraController();
+
+        GameObject controllers = GameObject.Find("Controllers");
+        Instantiate(Resources.Load("UIController"), controllers.transform);
+
+        GameObject Canvas = GameObject.Find("Canvas");
+        GameObject obj = Instantiate(Resources.Load("UI/ContextMenu"),Canvas.transform.position, Canvas.transform.rotation, Canvas.transform) as GameObject;
+        if (obj != null)
+        {
+            obj.name = "ContextMenu";
+        }
+    }
 
     private void Update()
     {
-		// TODO: Add pause/unpause, speed controls, etc...
-        if (!IsPaused)
+        MouseController.Update(IsModal);
+        KeyboardController.Update(IsModal);
+        CameraController.Update(IsModal);
+
+        if (IsPaused == false)
         {
-            World.Update(Time.deltaTime);
+            World.Update(Time.deltaTime * timeScale);
         }
 
-	}
-		
-	public Tile GetTileAtWorldCoordinates(Vector3 coordinate)
-    {
-		int x = Mathf.FloorToInt(coordinate.x + 0.5f);
-		int y = Mathf.FloorToInt(coordinate.y + 0.5f);
-		
-		return World.GetTileAt(x, y);
-	}
-
-	public void New()
-    {
-		SceneManager.LoadScene( SceneManager.GetActiveScene().name );
-	}
-
-	public string Save()
-    {
-        XmlSerializer serializer = new XmlSerializer(typeof(World));
-		TextWriter writer = new StringWriter();
-		serializer.Serialize(writer, World);
-		writer.Close();
-
-        return writer.ToString();
+        questController.Update(Time.deltaTime);
+        audioController.Update(Time.deltaTime);
     }
 
-	public void Load(string filePath)
+    public Tile GetTileAtWorldCoordinate(Vector3 coord)
     {
-		loadWorldFromFile = filePath;
-		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-	}
+        int x = Mathf.FloorToInt(coord.x + 0.5f);
+        int y = Mathf.FloorToInt(coord.y + 0.5f);
 
-    private void GenerateEmpty()
+        return World.GetTileAt(x, y);
+    }
+
+    public void CreateWorld()
     {
-		World = new World(100, 100);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
 
-        // Center the Camera
+    public void LoadWorld(string fileName)
+    {
+        loadWorldFromFile = fileName;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    private void CreateEmptyWorld()
+    {
+        // get world size from settings
+        int width = Settings.getSettingAsInt("worldWidth", 100);
+        int height = Settings.getSettingAsInt("worldHeight", 100);
+
+        World = new World(width, height);
         Camera.main.transform.position = new Vector3(World.Width / 2.0f, World.Height / 2.0f, Camera.main.transform.position.z);
-	}
+    }
 
     private void CreateWorldFromSaveFile()
     {
-		XmlSerializer serializer = new XmlSerializer(typeof(World));
+        XmlSerializer serializer = new XmlSerializer(typeof(World));
         TextReader reader = new StringReader(File.ReadAllText(loadWorldFromFile));
 
-		World = (World)serializer.Deserialize(reader);
-		reader.Close();
+        World = (World)serializer.Deserialize(reader);
+        reader.Close();
 
-		// Center the Camera
-		Camera.main.transform.position = new Vector3(World.Width / 2.0f, World.Height / 2.0f, Camera.main.transform.position.z );
-
-	}
-
+        Camera.main.transform.position = new Vector3(World.Width / 2.0f, World.Height / 2.0f, Camera.main.transform.position.z);
+    }
 }

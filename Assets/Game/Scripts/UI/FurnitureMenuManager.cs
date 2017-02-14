@@ -1,34 +1,55 @@
-﻿using UnityEngine;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class FurnitureMenuManager : MonoBehaviour
 {
-    [SerializeField]
-    private GameObject buildFurnitureButtonPrefab;
-    private ConstructionController constructionController;
+    public GameObject buildFurnitureButtonPrefab;
+    private string lastLanguage;
 
     private void Start()
     {
-        if (buildFurnitureButtonPrefab == null) return;
-
-        constructionController = FindObjectOfType<ConstructionController>();
-
-        foreach (string furnitureType in PrototypeManager.Furnitures.Keys)
+        ConstructionController constructionController = WorldController.Instance.ConstructionController;
+        foreach (string key in World.Current.FurniturePrototypes.Keys)
         {
-            string furnitureName = PrototypeManager.Furnitures[furnitureType].Name;
-            GameObject buttonGameObject = Instantiate(buildFurnitureButtonPrefab);
-            buttonGameObject.transform.SetParent(transform);
+            GameObject instance = Instantiate(buildFurnitureButtonPrefab);
+            instance.transform.SetParent(transform);
 
-            buttonGameObject.name = "Button - Build " + furnitureName;
-            buttonGameObject.GetComponentInChildren<Text>().text = "Build " + furnitureName;
+            string id = key;
+            instance.name = "Button - Build " + id;
 
-            Button button = buttonGameObject.GetComponent<Button>();
+            instance.transform.GetComponentInChildren<TextLocalizer>().FormatValues = new[] { LocalizationTable.GetLocalization(World.Current.FurniturePrototypes[key].LocalizationCode) };
 
-            string type = furnitureType;
-            button.onClick.AddListener(delegate
+            Button b = instance.GetComponent<Button>();
+
+            b.onClick.AddListener(() => 
             {
-                constructionController.BuildFurniture(type);
+                constructionController.BuildFurniture(id);
+                gameObject.SetActive(false);
             });
-        } 
+
+            string furniture = key;
+            LocalizationTable.CBLocalizationFilesChanged += () =>
+            {
+                instance.transform.GetComponentInChildren<TextLocalizer>().FormatValues = new[] { LocalizationTable.GetLocalization(World.Current.FurniturePrototypes[furniture].LocalizationCode) };
+            };
+        }
+
+        lastLanguage = LocalizationTable.CurrentLanguage;
+    }
+
+    private void Update()
+    {
+        if (lastLanguage == LocalizationTable.CurrentLanguage) return;
+
+        lastLanguage = LocalizationTable.CurrentLanguage;
+        TextLocalizer[] localizers = GetComponentsInChildren<TextLocalizer>();
+        for (int i = 0; i < localizers.Length; i++)
+        {
+            localizers[i].UpdateText(new[]
+            {
+                LocalizationTable.GetLocalization(World.Current.FurniturePrototypes.ElementAt(i).Value.GetName())
+            });
+        }
     }
 }

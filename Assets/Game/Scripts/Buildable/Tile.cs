@@ -1,29 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using MoonSharp.Interpreter;
 
 [MoonSharpUserData]
-public class Tile : IXmlSerializable, ISelectable
+public class Tile :IXmlSerializable, ISelectable
 {
-    public Tile North { get { return World.Current.GetTileAt(X, Y + 1); }}
-    public Tile South { get { return World.Current.GetTileAt(X, Y - 1); }}
-    public Tile East { get { return World.Current.GetTileAt(X + 1, Y); }}
-    public Tile West { get { return World.Current.GetTileAt(X - 1, Y); }}
+    public Tile North { get { return World.Current.GetTileAt(X, Y + 1); } }
+    public Tile South { get { return World.Current.GetTileAt(X, Y - 1); } }
+    public Tile East { get { return World.Current.GetTileAt(X + 1, Y); } }
+    public Tile West { get { return World.Current.GetTileAt(X - 1, Y); } }
 
-    public Furniture Furniture { get; protected set; }
-    public Inventory Inventory { get; set; }
-    public List<Character> Characters { get; set; }
-
-	public Room Room { get; set; }
-	public Job PendingBuildJob { get; set; }
-
-	public readonly int X;
-    public readonly int Y;
+    public int X { get; private set; }
+    public int Y { get; private set; }
+    public float MovementCost { get { return (float)LuaUtilities.CallFunction(Type.MovementCostLua, this).Number; } }
 
     private TileType type = TileType.Empty;
     public TileType Type
@@ -31,63 +25,52 @@ public class Tile : IXmlSerializable, ISelectable
         get { return type; }
         set
         {
-            TileType oldType = type;
+            if (type == value) return;
             type = value;
 
-            if (oldType == type) return;
-            OnTileChanged(new TileEventArgs(this));
+            if (cbTileChanged != null)
+            {
+                cbTileChanged(this);
+            }
         }
     }
 
-    public float MovementCost
-    {
-        get
-        {
-            return Furniture == null ? 1 : Furniture.MovementCost;
-        }
-    }
+    public Inventory Inventory { get; set; }
+    public Furniture Furniture { get; private set; }
+    public Job PendingBuildJob { get; set; }
 
-    public LuaEventManager EventManager { get; set; }
-    public event TileChangedEventHandler TileChanged;
-    public void OnTileChanged(TileEventArgs args)
-    {
-        TileChangedEventHandler tileChanged = TileChanged;
-        if (tileChanged != null)
-        {
-            tileChanged(this, args);
-        }
+    public Room Room { get; set; }
+    public List<Character> Characters { get; private set; }
 
-        EventManager.Trigger("TileChanged");
-    }
+    public bool IsSelected { get; set; }
+    public event Action<Tile> cbTileChanged;
 
     public Tile(int x, int y)
     {
-		X = x;
-		Y = y;
-
+        X = x;
+        Y = y;
         Characters = new List<Character>();
-        EventManager = new LuaEventManager("TileChanged");
-	}
+    }
 
-	public bool PlaceFurniture(Furniture furniture)
-	{
+    public bool PlaceFurniture(Furniture furniture)
+    {
         if (furniture == null)
         {
             return RemoveFurniture();
         }
 
-	    if (furniture.IsValidPosition(this) == false)
-	    {
-            Debug.LogError("Tile::PlaceFurniture: trying to assign a furniture to an invald tile!");
-	        return false;
-	    }
-
-        for (int x = X; x < X + furniture.Width; x++)
+        if (furniture.IsValidPosition(this) == false)
         {
-            for (int y = Y; y < Y + furniture.Height; y++)
+            return false;
+        }
+
+        for (int xOffset = X; xOffset < (X + furniture.Width); xOffset++)
+        {
+            for (int yOffset = Y; yOffset < (Y + furniture.Height); yOffset++)
             {
-                Tile tileAt = World.Current.GetTileAt(x, y);
+                Tile tileAt = World.Current.GetTileAt(xOffset, yOffset);
                 tileAt.Furniture = furniture;
+
             }
         }
 
@@ -96,17 +79,17 @@ public class Tile : IXmlSerializable, ISelectable
 
     public bool RemoveFurniture()
     {
-        if (Furniture == null) return false;
-
-        int width = Furniture.Width;
-        int height = Furniture.Height;
-
-        // Loops through all the furniture tiles (this is because a furniture may be bigger than 1x1)
-        for (int x = X; x < X + width; x++)
+        if (Furniture == null)
         {
-            for (int y = Y; y < Y + height; y++)
+            return false;
+        }
+
+        Furniture furniture = Furniture;
+        for (int xOffset = X; xOffset < X + furniture.Width; xOffset++)
+        {
+            for (int yOffset = Y; yOffset < (Y + furniture.Height); yOffset++)
             {
-                Tile tileAt = World.Current.GetTileAt(x, y);
+                Tile tileAt = World.Current.GetTileAt(xOffset, yOffset);
                 tileAt.Furniture = null;
             }
         }
@@ -116,73 +99,75 @@ public class Tile : IXmlSerializable, ISelectable
 
     public bool PlaceInventory(Inventory inventory)
     {
-		if(inventory == null)
+        if (inventory == null)
         {
-			Inventory = null;
-			return true;
-		}
+            Inventory = null;
+            return true;
+        }
 
-		if(Inventory != null)
+        if (Inventory != null)
         {
-			if(Inventory.Type != inventory.Type)
+            if (Inventory.Type != inventory.Type)
             {
-				Debug.LogError("Tile::PlaceInventory: trying to assign a inventory to a tile that already has inventory of different type!");
-				return false;
-			}
+                return false;
+            }
 
-			int stackSize = inventory.StackSize;
-			if(Inventory.StackSize + stackSize > Inventory.MaxStackSize)
+            int stack = inventory.StackSize;
+            if (Inventory.StackSize + stack > Inventory.MaxStackSize)
             {
-				stackSize = Inventory.MaxStackSize - Inventory.StackSize;
-			}
+                stack = Inventory.MaxStackSize - Inventory.StackSize;
+            }
 
-			Inventory.StackSize += stackSize;
-			inventory.StackSize -= stackSize;
+            Inventory.StackSize += stack;
+            inventory.StackSize -= stack;
 
-			return true;
-		}
+            return true;
+        }
 
-		Inventory = inventory.Clone();
-		Inventory.Tile = this;
-		inventory.StackSize = 0;
+        Inventory = inventory.Clone();
+        Inventory.Tile = this;
+        inventory.StackSize = 0;
 
-		return true;
-	}
+        return true;
+    }
 
-	public bool IsNeighbour(Tile tile, bool diagonal = false)
+    // Tells us if two tiles are adjacent.
+    public bool IsNeighbour(Tile tile, bool diagonal = false)
     {
-		return Mathf.Abs(X - tile.X ) + Mathf.Abs( Y - tile.Y ) == 1 || (diagonal && Mathf.Abs( X - tile.X ) == 1 && Mathf.Abs( Y - tile.Y ) == 1);
-	}
+        return Mathf.Abs(X - tile.X) + Mathf.Abs(this.Y - tile.Y) == 1 || 
+            diagonal && (Mathf.Abs(X - tile.X) == 1 && Mathf.Abs(Y - tile.Y) == 1); 
+    }
 
-	public Tile[] GetNeighbours(bool diagonal = false)
+    public Tile[] GetNeighbours(bool diagonal = false)
     {
         Tile[] neighbours = diagonal == false ? new Tile[4] : new Tile[8];
-        Tile tileAt = World.Current.GetTileAt(X, Y + 1);
 
-		neighbours[0] = tileAt;	
-		tileAt = World.Current.GetTileAt(X + 1, Y);
-		neighbours[1] = tileAt;	
-		tileAt = World.Current.GetTileAt(X, Y - 1);
-		neighbours[2] = tileAt;	
-		tileAt = World.Current.GetTileAt(X - 1, Y);
-		neighbours[3] = tileAt;
+        Tile tileAt = World.Current.GetTileAt(X, Y + 1);
+        neighbours[0] = tileAt;	
+        tileAt = World.Current.GetTileAt(X + 1, Y);
+        neighbours[1] = tileAt;
+        tileAt = World.Current.GetTileAt(X, Y - 1);
+        neighbours[2] = tileAt;	
+        tileAt = World.Current.GetTileAt(X - 1, Y);
+        neighbours[3] = tileAt;	
 
         if (diagonal != true) return neighbours;
+
         tileAt = World.Current.GetTileAt(X + 1, Y + 1);
-        neighbours[4] = tileAt;	
+        neighbours[4] = tileAt;
         tileAt = World.Current.GetTileAt(X + 1, Y - 1);
-        neighbours[5] = tileAt;	
+        neighbours[5] = tileAt;
         tileAt = World.Current.GetTileAt(X - 1, Y - 1);
-        neighbours[6] = tileAt;
+        neighbours[6] = tileAt;	
         tileAt = World.Current.GetTileAt(X - 1, Y + 1);
         neighbours[7] = tileAt;	
 
         return neighbours;
-	}
+    }
 
-    public bool HasNeighboursOfType(TileType type)
+    public bool HasNeighboursOfType(TileType tileType)
     {
-        return GetNeighbours(true).Any(neighbour => neighbour.Type == type);
+        return GetNeighbours(true).Any(tile => tile.Type == tileType);
     }
 
     public TileEnterability TryEnter()
@@ -195,25 +180,35 @@ public class Tile : IXmlSerializable, ISelectable
         return Furniture != null ? Furniture.TryEnter() : TileEnterability.Immediate;
     }
 
-    public static void OnJobCompleted(object sender, JobEventArgs args)
+    public void EqualizeGas(float leakFactor)
     {
-        args.Job.Tile.Type = args.Job.TileType;
-        args.Job.Tile.PendingBuildJob = null;
+        Room.EqualizeGas(this, leakFactor);
+    }
+
+    public static void OnJobComplete(Job job)
+    {
+        job.Tile.Type = job.TileType;
+        job.Tile.PendingBuildJob = null;
     }
 
     public string GetName()
     {
-        return Enum.GetName(typeof(TileType), Type);
+        return "tile_" + type;
     }
 
     public string GetDescription()
     {
-        return "The best tile in the known universe!";
+        return "tile_" + type + "_desc";
     }
 
-    public IEnumerable<string> GetAdditionalInfo()
+    public string GetHitPointString()
     {
-        return null;
+        return "";
+    }
+
+    public string GetJobDescription()
+    {
+        return "";
     }
 
     public XmlSchema GetSchema()
@@ -225,13 +220,17 @@ public class Tile : IXmlSerializable, ISelectable
     {
         writer.WriteAttributeString("X", X.ToString());
         writer.WriteAttributeString("Y", Y.ToString());
-        writer.WriteAttributeString("Type", ((int)Type).ToString());
-        writer.WriteAttributeString("RoomIndex", Room == null ? "-1" : Room.Index.ToString());
+        writer.WriteAttributeString("RoomID", Room == null ? "-1" : Room.Index.ToString());
+        writer.WriteAttributeString("Type", Type.Type);
     }
 
     public void ReadXml(XmlReader reader)
     {
-        Type = (TileType)int.Parse(reader.GetAttribute("Type"));
-        Room = World.Current.RoomManager.GetRoom(int.Parse(reader.GetAttribute("RoomIndex")));
+        Room = World.Current.GetRoom(int.Parse(reader.GetAttribute("RoomID")));
+        if (Room != null)
+        {
+            Room.AssignTile(this);
+        }
+        Type = TileType.Parse(reader.GetAttribute("Type"));
     }
 }

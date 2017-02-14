@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -10,118 +9,236 @@ using UnityEngine;
 [MoonSharpUserData]
 public class Room : IXmlSerializable
 {
-    public int Index { get { return World.Current.RoomManager.GetRoomIndex(this); }}
+    public int Index { get { return World.Current.GetRoomIndex(this); } }
+    public int Size { get { return tiles.Count; } }
 
-    private readonly Dictionary<string, float> atmosphericGasses;
+    public float Pressure { get { return atmosphericGasses.Keys.Sum(n => atmosphericGasses[n]); } }
+    public string[] GasNames { get { return atmosphericGasses.Keys.ToArray(); } }
+
+    private readonly Dictionary<string, float> atmosphericGasses; 
+    private readonly Dictionary<string, string> deltaGas;
+
     private List<Tile> tiles;
-
+ 
     public Room()
     {
         tiles = new List<Tile>();
         atmosphericGasses = new Dictionary<string, float>();
+        deltaGas = new Dictionary<string, string>();
     }
 
-	public void AssignTile(Tile tile)
+    public void AssignTile(Tile tile)
     {
-		if(tiles.Contains(tile))
+        if (tiles.Contains(tile))
         {
-			return;
-		}
+            return;
+        }
 
-		if(tile.Room != null)
+        if (tile.Room != null)
         {
-			tile.Room.tiles.Remove(tile);
-		}
-			
-		tile.Room = this;
-		tiles.Add(tile);
-	}
+            tile.Room.tiles.Remove(tile);
+        }
+        	
+        tile.Room = this;
+        tiles.Add(tile);
+    }
 
-	public void ClearTiles()
-	{
-	    foreach (Tile tile in tiles)
-	    {
-	        tile.Room = World.Current.RoomManager.OutsideRoom;	
-	    }
-	    tiles = new List<Tile>();
-	}
-
-	public static void CalculateRooms(Tile tile, bool ifOutside = false)
+    public void ClearTiles()
     {
-		Room oldRoom = tile.Room;
-
-        if (oldRoom != null)
+        foreach (Tile tile in tiles)
         {
-            foreach (Tile neighbour in tile.GetNeighbours())
+            tile.Room = World.Current.OutsideRoom;	
+        }
+
+        tiles = new List<Tile>();
+    }
+
+    public bool IsOutsideRoom()
+    {
+        return this == World.Current.OutsideRoom;
+    }
+
+    public void ModifyGasValue(string name, float amount)
+    {
+        if (IsOutsideRoom())
+        {
+            return;
+        }
+
+        if (atmosphericGasses.ContainsKey(name))
+        {
+            atmosphericGasses[name] += amount;
+            if (Mathf.Sign(amount) == 1)
             {
-                if (neighbour.Room != null && (ifOutside == false || neighbour.Room.IsOutsideRoom()))
-                {
-                    FloodFill(neighbour, oldRoom);
-                }
+                deltaGas[name] = "+";
             }
-
-            tile.Room = null;
-            oldRoom.tiles.Remove(tile);
-
-            if (oldRoom.IsOutsideRoom()) return;
-            if (oldRoom.tiles.Count > 0)
+            else
             {
-                Debug.LogError("Room::CreateRooms: Room 'oldRoom' still has tiles assigned to it!");
+                deltaGas[name] = "-";
             }
-
-            World.Current.RoomManager.DeleteRoom(oldRoom);
         }
         else
         {
-            FloodFill(tile, null);
+            atmosphericGasses[name] = amount;
+            deltaGas[name] = "=";
+        }
+
+        if (atmosphericGasses[name] < 0)
+        {
+            atmosphericGasses[name] = 0;
         }
     }
 
-	private static void FloodFill(Tile tile, Room oldRoom)
+    public float GetGasValue(string name)
     {
-		if(tile == null)
-        {
-			return;
-		}
+        return atmosphericGasses.ContainsKey(name) ? atmosphericGasses[name] : 0;
+    }
 
-		if(tile.Room != oldRoom)
+    public float GetGasPressure(string name)
+    {
+        if (atmosphericGasses.ContainsKey(name))
         {
-			return;
-		}
+            return atmosphericGasses[name] / Size;
+        }
 
-		if(tile.Furniture != null && tile.Furniture.RoomEnclosure)
+        return 0;
+    }
+
+    public float GetGasFraction(string name)
+    {
+        if (atmosphericGasses.ContainsKey(name) == false)
         {
-			return;
-		}
+            return 0;
+        }
 
-		if(tile.Type == TileType.Empty)
+        float t = atmosphericGasses.Keys.Sum(n => atmosphericGasses[n]);
+
+        return atmosphericGasses[name] / t;
+    }
+
+    public string GetModifiedGases(string name)
+    {
+        return deltaGas.ContainsKey(name) ? deltaGas[name] : "=";
+    }
+
+    public void EqualizeGas(Room room, float leakRate)
+    {
+        if (room == null)
         {
-			return;
-		}	
+            return;
+        }
 
-		Room newRoom = new Room();
-		Queue<Tile> tileQueue = new Queue<Tile>();
-		tileQueue.Enqueue(tile);
+        List<string> gasses = GasNames.ToList();
+        gasses = gasses.Union(room.GasNames.ToList()).ToList();
+        foreach (string gas in gasses)
+        {
+            float pressureDifference = GetGasPressure(gas) - room.GetGasPressure(gas);
+            ModifyGasValue(gas, (-1) * pressureDifference * leakRate);
+            room.ModifyGasValue(gas, pressureDifference * leakRate);
+        }
+    }
+
+    public static void EqualizeGas(Tile tile, float leakRate)
+    {
+        List<Room> roomsDone = new List<Room>();
+        foreach (Tile neighbour in tile.GetNeighbours())
+        {
+            // TODO: Verify that gas still leaks to the outside
+            if (neighbour.Room == null)
+            {
+                continue;
+            }
+
+            if (roomsDone.Contains(neighbour.Room) != false) continue;
+            foreach (Room r in roomsDone) 
+            {
+                neighbour.Room.EqualizeGas(r, leakRate);
+            }
+
+            roomsDone.Add(neighbour.Room);
+        }
+    }
+
+
+    public static void CalculateRooms(Tile sourceTile, bool onlyIfOutside = false)
+    {
+        Room oldRoom = sourceTile.Room;
+        if (oldRoom != null)
+        {
+            int oldRoomSize = oldRoom.Size;
+            foreach (Tile neighbour in sourceTile.GetNeighbours())
+            {
+                if (neighbour.Room != null && (onlyIfOutside == false || neighbour.Room.IsOutsideRoom()))
+                {
+                    FloodFill(neighbour, oldRoom, oldRoomSize);
+                }
+            }
+
+            sourceTile.Room = null;
+            oldRoom.tiles.Remove(sourceTile);
+
+            if (oldRoom.IsOutsideRoom()) return;
+            World.Current.DeleteRoom(oldRoom);
+        }
+        else
+        {
+            FloodFill(sourceTile, null, 0);
+        }
+    }
+
+    private static void FloodFill(Tile tile, Room oldRoom, int sizeOfOldRoom)
+    {
+        if (tile == null)
+        {
+            return;
+        }
+
+        if (tile.Room != oldRoom)
+        {
+            return;
+        }
+
+        if (tile.Furniture != null && tile.Furniture.RoomEnclosure)
+        {
+            return;
+        }
+
+        if (tile.Type == TileType.Empty)
+        {
+            return;
+        }
+
+        List<Room> oldRooms = new List<Room>();
+        Room newRoom = new Room();
+        Queue<Tile> tileQueue = new Queue<Tile>();
+        tileQueue.Enqueue(tile);
 
         bool isConnectedToOutside = false;
 
-		while(tileQueue.Count > 0)
+        while (tileQueue.Count > 0)
         {
-			Tile currentTile = tileQueue.Dequeue();
+            Tile currentTile = tileQueue.Dequeue();
 
-            if (currentTile.Room != newRoom)
+            if (currentTile.Room == newRoom) continue;
+            if (currentTile.Room != null && oldRooms.Contains(currentTile.Room) == false)
             {
-                newRoom.AssignTile(currentTile);
+                oldRooms.Add(currentTile.Room);
+                newRoom.MoveGas(currentTile.Room);
+            }
 
-                Tile[] neighbours = currentTile.GetNeighbours();
-                foreach (Tile neighbour in neighbours)
+            newRoom.AssignTile(currentTile);
+
+            foreach (Tile neighbour in currentTile.GetNeighbours())
+            {
+                if (neighbour == null || neighbour.Type == TileType.Empty)
                 {
-                    if (neighbour == null || neighbour.Type == TileType.Empty)
+                    isConnectedToOutside = true;
+                }
+                else
+                {
+                    if (
+                        neighbour.Room != newRoom && (neighbour.Furniture == null || neighbour.Furniture.RoomEnclosure == false))
                     {
-                        isConnectedToOutside = true;
-                    }
-                    else if (neighbour.Room != newRoom && (neighbour.Furniture == null || neighbour.Furniture.RoomEnclosure == false))
-                    { 
                         tileQueue.Enqueue(neighbour);
                     }
                 }
@@ -136,67 +253,26 @@ public class Room : IXmlSerializable
 
         if (oldRoom != null)
         {
-            newRoom.CloneAtmosphericGasses(oldRoom);
-        }
-        else
-        {
-            // TODO: Distribute and merge gas.   
+            newRoom.CloneGasData(oldRoom, sizeOfOldRoom);
         }
 
-        World.Current.RoomManager.AddRoom(newRoom);
-	}
-
-    public void ModifyGasValue(string name, float amount)
-    {
-        if (IsOutsideRoom()) return;
-
-        if (atmosphericGasses.ContainsKey(name))
-        {
-            atmosphericGasses[name] += amount;
-        }
-        else
-        {
-            atmosphericGasses[name] = amount;
-        }
-
-        if (atmosphericGasses[name] < 0)
-        {
-            atmosphericGasses[name] = 0;
-        }
+        World.Current.AddRoom(newRoom);
     }
 
-    public float GetGasValue(string name)
-    {
-        return atmosphericGasses.ContainsKey(name) ? atmosphericGasses[name] : 0;
-    }
-
-    public float GetGasPercentage(string name)
-    {
-        if (atmosphericGasses.ContainsKey(name) == false)
-        {
-            return 0;
-        }
-
-        float gasTotal = atmosphericGasses.Keys.Sum(gas => atmosphericGasses[gas]);
-        return atmosphericGasses[name] / gasTotal;
-    }
-
-    public string[] GetAllGasses()
-    {
-        return atmosphericGasses.Keys.ToArray();
-    }
-
-    private void CloneAtmosphericGasses(Room room)
+    private void MoveGas(Room room)
     {
         foreach (string gas in room.atmosphericGasses.Keys)
         {
-            atmosphericGasses[gas] = room.atmosphericGasses[gas];
+            ModifyGasValue(gas, room.atmosphericGasses[gas]);
         }
     }
 
-    public bool IsOutsideRoom()
+    private void CloneGasData(Room other, int sizeOfOtherRoom)
     {
-        return this == World.Current.RoomManager.OutsideRoom;
+        foreach (string gas in other.atmosphericGasses.Keys)
+        {
+            atmosphericGasses[gas] = other.atmosphericGasses[gas] / sizeOfOtherRoom * Size;
+        }
     }
 
     public XmlSchema GetSchema()
@@ -206,26 +282,25 @@ public class Room : IXmlSerializable
 
     public void WriteXml(XmlWriter writer)
     {
-        // Write atmospheric gas info
+        // Write out gas info
         foreach (string gas in atmosphericGasses.Keys)
         {
-            writer.WriteStartElement("AtmosphericGas");
-            writer.WriteAttributeString("Name", gas);
-            writer.WriteAttributeString("Value", atmosphericGasses[gas].ToString());
+            writer.WriteStartElement("Param");
+            writer.WriteAttributeString("name", gas);
+            writer.WriteAttributeString("value", atmosphericGasses[gas].ToString());
             writer.WriteEndElement();
         }
     }
 
     public void ReadXml(XmlReader reader)
     {
-        // Read atmospheric gas info
-        if (!reader.ReadToDescendant("AtmosphericGas")) return;
+        if (!reader.ReadToDescendant("Param")) return;
         do
         {
-            string gas = reader.GetAttribute("Name");
-            float value = float.Parse(reader.GetAttribute("Value"));
-            atmosphericGasses[gas] = value;
-        }
-        while (reader.ReadToNextSibling("AtmosphericGas"));
+            string name = reader.GetAttribute("name");
+            float value = float.Parse(reader.GetAttribute("value"));
+            atmosphericGasses[name] = value;
+        } 
+        while (reader.ReadToNextSibling("Param"));
     }
 }

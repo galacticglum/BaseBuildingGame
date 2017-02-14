@@ -1,31 +1,37 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 
-[RequireComponent(typeof(Text))]
 public class FurnitureTypeInspector : MonoBehaviour
 {
-    private Text textComponent;
+    private Text text;
     private MouseController mouseController;
 
+    // Use this for initialization
     private void Start()
     {
-        mouseController = FindObjectOfType<MouseController>();
-        if (mouseController == null)
+        text = GetComponent<Text>();
+        if (text == null)
         {
-            Debug.LogError("FurnitureTypeInspector::Start: No instance of class: 'MouseController' found!");
             enabled = false;
             return;
         }
 
-        textComponent = GetComponent<Text>();
+        mouseController = WorldController.Instance.MouseController;
     }
-
+	
+    // Update is called once per frame
     private void Update()
     {
-        Tile tile = mouseController.GetMouseOverTile();
-        if (tile == null) return;
+        Tile mouseOverTile = mouseController.MouseOverTile;
 
-        textComponent.text = "Furniture Type: " + (tile.Furniture != null ? tile.Furniture.Name : "NULL");
+        if (mouseOverTile != null && mouseOverTile.Furniture != null)
+        {
+            string result = mouseOverTile.Furniture.Name;
+            text.text = LocalizationTable.GetLocalization("furniture") + ": " + result;
+        }
+        else
+        {
+            text.text = "";
+        }
     }
 }

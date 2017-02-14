@@ -1,23 +1,25 @@
 ﻿using System.Xml;
 
-public class InventoryPrototype : IPrototypable
+public class InventoryPrototype
 {
     public string Type { get; private set; }
     public int MaxStackSize { get; private set; }
 
-    public void ReadXmlPrototype(XmlReader reader)
+    public void ReadXmlPrototype(XmlReader parentReader)
     {
-        Type = reader.GetAttribute("Type");
-        XmlReader subReader = reader.ReadSubtree();
-        while (subReader.Read())
+        Type = parentReader.GetAttribute("objectType");
+        XmlReader reader = parentReader.ReadSubtree();
+
+        while (reader.Read())
         {
-            switch (subReader.Name)
+            switch (reader.Name)
             {
-                case "MaxStackSize":
-                    subReader.Read();
-                    MaxStackSize = subReader.ReadContentAsInt();
+                case "maxStackSize":
+                    reader.Read();
+                    MaxStackSize = reader.ReadContentAsInt();
                     break;
             }
         }
     }
 }
+
