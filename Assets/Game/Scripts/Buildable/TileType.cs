@@ -173,7 +173,7 @@ public class TileType : IXmlSerializable
                         }
                     }
 
-                    Job job = new Job(null, Type, Tile.OnJobComplete, jobTime, inventories.ToArray(), priority, repeatingJob)
+                    Job job = new Job(null, this, Tile.OnJobComplete, jobTime, inventories.ToArray(), priority, repeatingJob)
                     {
                         Description = "job_build_" + Type + "_desc",
                         WorkAdjacent = workAdjacent

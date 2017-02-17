@@ -575,7 +575,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 204015334}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a8b743f4c773ed7438998c97e3bb272a, type: 3}
+  m_Script: {fileID: 11500000, guid: c3eb3905e3c075649aace2781d24d7cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &204015337
@@ -1367,7 +1367,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 445866539}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ca672b23098968489e5aa072f43a6d0, type: 3}
+  m_Script: {fileID: 11500000, guid: 0d03ba0bc70466e45823191ebe334f69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &465520515
@@ -1414,7 +1414,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 465520515}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 239f5f125e58b4e40903e6bb86ca25ba, type: 3}
+  m_Script: {fileID: 11500000, guid: aeab36eb4544e924ebc0e62f3d427bd0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   canvasGroup: {fileID: 283097498}
@@ -2887,7 +2887,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 701192490}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2908d107a9146841833dc74102ec2e2, type: 3}
+  m_Script: {fileID: 11500000, guid: be065b1939196fc44a866fcadd3b902f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &706729009
@@ -3630,7 +3630,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 969546490}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94cd51db7cc9c8846982a0e4e23bf5d1, type: 3}
+  m_Script: {fileID: 11500000, guid: 3e4f3ddc9f938414983471573565c709, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &992743483
@@ -4650,6 +4650,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   leftBottomCorner: {x: -0.5, y: -0.5, z: 1}
+  parentPanel: {fileID: 847403563}
   transparency: 0.8
   updateInterval: 5
   xPixelsPerTile: 20
@@ -4659,7 +4660,6 @@ MonoBehaviour:
   currentOverlay: 
   xmlFileName: overlay_prototypes.xml
   LUAFileName: overlay_functions.lua
-  parentPanel: {fileID: 847403563}
 --- !u!33 &1495659351
 MeshFilter:
   m_ObjectHideFlags: 0

@@ -572,8 +572,8 @@ end
 -- This function gets called once, when the funriture is unisntalled
 function Heater_UninstallAction( furniture, deltaTime)
     -- TODO: find elegant way to unregister previous register
-	furniture.eventActions.Deregister("OnUpdateTemperature", "Heater_UpdateTemperature")
-	World.current.temperature.DeregisterSinkOrSource(furniture)
+	furniture.eventActions.Unregister("OnUpdateTemperature", "Heater_UpdateTemperature")
+	World.current.temperature.UnregisterSinkOrSource(furniture)
 end
 
 -- Dummy heater uninstall function

@@ -275,7 +275,7 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
             {
                 if (World.Current.InventoryManager.QuickCheck(inventory.Type) == false)
                 {
-                    return null;
+                    return new List<string>();
                 }
 
                 desiredInventories.Add(inventory.Type);

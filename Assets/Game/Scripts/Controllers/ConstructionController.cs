@@ -106,7 +106,7 @@ public class ConstructionController
                     tile.PendingBuildJob == null &&
                     CanBuild(tile, tileType))
                 {
-                    Job job = tileType.JobPrototype;   
+                    Job job = tileType.JobPrototype;  
                     job.Tile = tile;
 
                     tile.PendingBuildJob = job;

@@ -12,7 +12,10 @@ public static class FurnitureActions
 
         foreach (string functionName in functionNames)
         {
-            if (functionName == null) { return; }
+            if (string.IsNullOrEmpty(functionName))
+            {
+                return;
+            }
            
             DynValue result = LuaUtilities.CallFunction(functionName, target, deltaTime);
             if (result.Type == DataType.String)
