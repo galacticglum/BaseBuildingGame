@@ -48,7 +48,7 @@ function OnUpdate_Door( furniture, deltaTime )
 	end
 
 	furniture.Parameters["openness"].SetValue( ModUtils.Clamp01(furniture.Parameters["openness"].Float()) )
-	furniture.OnChanged(furniture);
+	furniture.OnFurnitureChanged(FurnitureEventArgs.new(furniture));
 end
 
 function OnUpdate_Leak_Door( furniture, deltaTime )
@@ -243,9 +243,9 @@ function Stockpile_JobWorked(j)
 
     -- TODO: Change this when we figure out what we're doing for the all/any pickup job.
     --values = j.GetInventoryRequirementValues();
-    for k, inv in pairs(j.inventoryRequirements) do
-        if(inv.stackSize > 0) then
-            World.current.inventoryManager.Place(j.tile, inv)
+    for k, inv in pairs(j.InventoryRequirements) do
+        if(inv.StackSize > 0) then
+            World.Current.InventoryManager.Place(j.Tile, inv)
             return -- There should be no way that we ever end up with more than on inventory requirement with stackSize > 0
         end
     end
@@ -281,7 +281,7 @@ function MiningDroneStation_UpdateAction( furniture, deltaTime )
 		nil,
 		1,
 		nil,
-		Job.JobPriority.Medium,
+		JobPriority.Medium,
 		true	-- This job repeats until the destination tile is full.
 	)
 

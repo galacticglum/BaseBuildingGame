@@ -15,7 +15,7 @@ public class Temperature
 
     public float UpdateInterval { get; set; }
 
-    private readonly Dictionary<Furniture, Action<float>> sinksAndSources;
+    private readonly Dictionary<Furniture, TemperatureUpdateEventHandler> sinksAndSources;
     private readonly float[][] temperature;
     private readonly float[] thermalDiffusivity;
 
@@ -49,7 +49,7 @@ public class Temperature
             }
         }
 
-        sinksAndSources = new Dictionary<Furniture, Action<float>>();     
+        sinksAndSources = new Dictionary<Furniture, TemperatureUpdateEventHandler>();     
     }
 
     public void Update()
@@ -65,9 +65,12 @@ public class Temperature
     {
         if (sinksAndSources != null)
         {
-            foreach (Action<float> action in sinksAndSources.Values)
+            foreach (TemperatureUpdateEventHandler eventHandler in sinksAndSources.Values)
             {
-                action(deltaTime);
+                if (eventHandler != null)
+                {
+                    eventHandler(this, new UpdateEventArgs(deltaTime));
+                }
             }
         }
 
@@ -97,7 +100,6 @@ public class Temperature
 
                 currentTemperature[index] = oldTemperature[index];
 
-                // TODO: if empty space, set temperature to 0
                 if (WorldController.Instance.GetTileAtWorldCoordinate(new Vector3(x, y, 0)).Room == null)
                 {
                     currentTemperature[index] = 0f;
@@ -131,11 +133,10 @@ public class Temperature
     public void RegisterSinkOrSource(Furniture provider)
     {
         // TODO: This need to be implemented
-        sinksAndSources[provider] = deltaTime => 
+        sinksAndSources[provider] = (sender, args) => 
         {
-            provider.EventActions.Trigger("OnUpdateTemperature", provider, deltaTime);
-        };
-        
+            provider.FurnitureEventActions.Trigger("OnUpdateTemperature", provider, args.DeltaTime);
+        };     
     }
 
     public void UnregisterSinkOrSource(Furniture provider)

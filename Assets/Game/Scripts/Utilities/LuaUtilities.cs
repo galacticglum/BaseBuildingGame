@@ -20,6 +20,8 @@ public static class LuaUtilities
         ExposeType(typeof(ModUtils));
         ExposeType<World>(luaScript);
 
+        ExposeType<FurnitureEventArgs>(luaScript);
+
         ExposeType<JobPriority>(luaScript);
     }
 

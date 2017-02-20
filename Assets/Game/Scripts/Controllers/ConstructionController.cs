@@ -82,7 +82,7 @@ public class ConstructionController
                             Tile tileAt = WorldController.Instance.World.GetTileAt(xOffset, yOffset);
                             tileAt.PendingBuildJob = job;
 
-                            job.cbJobStopped += arg =>
+                            job.JobStopped += (sender, arg) =>
                             {
                                 tileAt.PendingBuildJob = null;
                             };
@@ -110,9 +110,9 @@ public class ConstructionController
                     job.Tile = tile;
 
                     tile.PendingBuildJob = job;
-                    job.cbJobStopped += arg =>
+                    job.JobStopped += (sender, args) =>
                     {
-                        arg.Tile.PendingBuildJob = null;
+                        args.Job.Tile.PendingBuildJob = null;
                     };
 
                     if (WorldController.Instance.DevelopmentMode)

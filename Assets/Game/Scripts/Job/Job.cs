@@ -9,9 +9,9 @@ public class Job
 {
     public string Description { get; set; }
     public string Type { get; private set; }
-    public TileType TileType { get; private set; }
 
     public Tile Tile { get; set; }
+    public TileType TileType { get; private set; }
     public Furniture FurniturePrototype { get; set; }
     public Furniture Furniture { get; set; }
 
@@ -27,23 +27,49 @@ public class Job
     public bool IsNeed { get; private set; }
     public bool Critical { get; private set; }
 
-    public event Action<Job> cbJobCompleted;
-    public event Action<Job> cbJobStopped;
-    public event Action<Job> cbJobWorked;
+    public event JobCompletedEventHandler JobCompleted;
+    public void OnJobCompleted(JobEventArgs args)
+    {
+        JobCompletedEventHandler jobCompleted = JobCompleted;
+        if (jobCompleted != null)
+        {
+            jobCompleted(this, args);
+        }
+    }
 
-    protected float requiredWorkTime;
-    protected bool repeatingJob;
+    public event JobStoppedEventHandler JobStopped;
+    public void OnJobStopped(JobEventArgs args)
+    {
+        JobStoppedEventHandler jobStopped = JobStopped;
+        if (jobStopped != null)
+        {
+            jobStopped(this, args);
+        }
+    }
+
+    public event JobWorkedEventHandler JobWorked;
+    public void OnJobWorked(JobEventArgs args)
+    {
+        JobWorkedEventHandler jobWorked = JobWorked;
+        if (jobWorked != null)
+        {
+            jobWorked(this, args);
+        }
+    }
+
+    private readonly float requiredWorkTime;
+    private readonly bool repeatingJob;
 
     private readonly List<string> cbJobCompletedLua;
     private readonly List<string> cbJobWorkedLua;
 
-    public Job(Tile tile, string type, Action<Job> cbJobComplete, float workTime, Inventory[] inventoryRequirements, JobPriority priority, bool repeatingJob = false, bool isNeed = false, bool critical = false)
+    public Job(Tile tile, string type, JobCompletedEventHandler jobCompleted, float workTime, Inventory[] inventoryRequirements, JobPriority priority, bool repeatingJob = false, bool isNeed = false, bool critical = false)
     {
         this.repeatingJob = repeatingJob;
 
         Tile = tile;
         Type = type;
-        cbJobCompleted += cbJobComplete;
+        JobCompleted = jobCompleted;
         requiredWorkTime = WorkTime = workTime;
         IsNeed = isNeed;
         Critical = critical;
@@ -61,12 +87,12 @@ public class Job
         }
     }
 
-    public Job(Tile tile, TileType tileType, Action<Job> cbJobComplete, float workTime, Inventory[] inventoryRequirements, JobPriority priority, bool repeatingJob = false, bool workAdjacent = false)
+    public Job(Tile tile, TileType tileType, JobCompletedEventHandler jobCompleted, float workTime, Inventory[] inventoryRequirements, JobPriority priority, bool repeatingJob = false, bool workAdjacent = false)
     {
         this.repeatingJob = repeatingJob;
         Tile = tile;
         TileType = tileType;
-        cbJobCompleted += cbJobComplete;
+        JobCompleted = jobCompleted;
         requiredWorkTime = WorkTime = workTime;
         Priority = priority;
         WorkAdjacent = workAdjacent;
@@ -88,7 +114,7 @@ public class Job
         Tile = other.Tile;
         Type = other.Type;
         TileType = other.TileType;
-        cbJobCompleted = other.cbJobCompleted;
+        JobCompleted = other.JobCompleted;
         WorkTime = other.WorkTime;
         Priority = other.Priority;
         WorkAdjacent = other.WorkAdjacent;
@@ -113,11 +139,7 @@ public class Job
 
     public void DoWork(float workTime)
     {
-        if (cbJobWorked != null)
-        {
-            cbJobWorked(this);
-        }
-
+        OnJobWorked(new JobEventArgs(this));
         if (cbJobWorkedLua != null)
         {
             foreach (string function in cbJobWorkedLua)
@@ -134,10 +156,7 @@ public class Job
         WorkTime -= workTime;
         if (!(WorkTime <= 0)) return;
 
-        if (cbJobCompleted != null)
-        {
-            cbJobCompleted(this);
-        }
+        OnJobCompleted(new JobEventArgs(this));
 
         foreach (string function in cbJobCompletedLua)
         {
@@ -146,10 +165,7 @@ public class Job
 
         if (repeatingJob == false)
         {
-            if (cbJobStopped != null)
-            {
-                cbJobStopped(this);
-            }
+            OnJobStopped(new JobEventArgs(this));
         }
         else
         {
@@ -159,10 +175,7 @@ public class Job
 
     public void CancelJob()
     {
-        if (cbJobStopped != null)
-        {
-            cbJobStopped(this);
-        }
+        OnJobStopped(new JobEventArgs(this));
 
         World.Current.JobWaitingQueue.Remove(this);
         World.Current.JobQueue.Remove(this);

@@ -15,47 +15,40 @@ public class TileGraphicController
         {
             for (int y = 0; y < World.Current.Height; y++)
             {
-                // Get the tile data
-                Tile tile_data = World.Current.GetTileAt(x, y);
+                Tile tileAt = World.Current.GetTileAt(x, y);
+                GameObject tileGameObject = new GameObject();
 
-                // This creates a new GameObject and adds it to our scene.
-                GameObject tile_go = new GameObject();
+                tileGameObjectMap.Add(tileAt, tileGameObject);
+                tileGameObject.name = "Tile_" + x + "_" + y;
+                tileGameObject.transform.position = new Vector3(tileAt.X, tileAt.Y, 0);
+                tileGameObject.transform.SetParent(tileParent.transform, true);
 
-                // Add our tile/GO pair to the dictionary.
-                tileGameObjectMap.Add(tile_data, tile_go);
+                SpriteRenderer spriteRenderer = tileGameObject.AddComponent<SpriteRenderer>();
+                spriteRenderer.sprite = SpriteManager.Current.GetSprite("Tile", "Empty");
+                spriteRenderer.sortingLayerName = "Tiles";
 
-                tile_go.name = "Tile_" + x + "_" + y;
-                tile_go.transform.position = new Vector3(tile_data.X, tile_data.Y, 0);
-                tile_go.transform.SetParent(tileParent.transform, true);
-
-                // Add a Sprite Renderer
-                // Add a default sprite for empty tiles.
-                SpriteRenderer sr = tile_go.AddComponent<SpriteRenderer>();
-                sr.sprite = SpriteManager.Current.GetSprite("Tile", "Empty");
-                sr.sortingLayerName = "Tiles";
-
-                OnTileChanged(tile_data);
+                OnTileChanged(this, new TileEventArgs(tileAt));
             }
         }
 
-        World.Current.cbTileChanged += OnTileChanged;
+        World.Current.TileChanged += OnTileChanged;
     }
 
-    private void OnTileChanged(Tile tile)
+    private void OnTileChanged(object sender, TileEventArgs args)
     {
-        if (tileGameObjectMap.ContainsKey(tile) == false)
+        if (tileGameObjectMap.ContainsKey(args.Tile) == false)
         {
             Debug.LogError("TileGraphicController::OnTileChanged: tileGameObjectMap doesn't contain the tile -- did you forget to add the tile to the dictionary? Or maybe forget to unregister a callback?");
             return;
         }
 
-        GameObject tileGameObject = tileGameObjectMap[tile];
+        GameObject tileGameObject = tileGameObjectMap[args.Tile];
         if (tileGameObject == null)
         {
             Debug.LogError("TileGraphicController::OnTileChanged: tileGameObjectMap's returned GameObject is null -- did you forget to add the tile to the dictionary? Or maybe forget to unregister a callback?");
             return;
         }
         
-        tileGameObject.GetComponent<SpriteRenderer>().sprite = SpriteManager.Current.GetSprite("Tile", tile.Type.Name);
+        tileGameObject.GetComponent<SpriteRenderer>().sprite = SpriteManager.Current.GetSprite("Tile", args.Tile.Type.Name);
     }
 }

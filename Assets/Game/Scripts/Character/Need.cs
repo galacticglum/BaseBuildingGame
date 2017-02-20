@@ -109,11 +109,11 @@ public class Need
         }
     }
 
-    public void CompleteJob(Job job)
+    public void CompleteJob(object sender, JobEventArgs args)
     {
         Amount -= restorationAmount;
     }
-    public void CompleteJobCritical(Job job)
+    public void CompleteJobCritical(object sender, JobEventArgs args)
     {
         Amount -= restorationAmount / 4;
     }

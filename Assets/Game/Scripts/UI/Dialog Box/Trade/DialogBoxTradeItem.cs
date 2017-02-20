@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,17 +10,26 @@ public class DialogBoxTradeItem : MonoBehaviour
     public Text TraderSellItemPriceText;
     public InputField TradeAmountText;
 
-    public event Action<TradeItem> OnTradeAmountChangedEvent;
+    public event TradeChangedEventHandler TradeAmountChangedEvent;
+    public void OnTradeAmountChanged()
+    {
+        GenerateInterface();
+        TradeChangedEventHandler tradeChanged = TradeAmountChangedEvent;
+        if (tradeChanged != null)
+        {
+            tradeChanged(this, new TradeEventArgs(item));
+        }
+    }
 
     private TradeItem item;
 
-    public void SetupTradeItem(TradeItem item)
+    public void SetupTradeItem(TradeItem tradeItem)
     {
-        this.item = item;
-        BindInterface();
+        item = tradeItem;
+        GenerateInterface();
     }
 
-    private void BindInterface()
+    private void GenerateInterface()
     {
         ItemNameText.text = item.Type;
         PlayerStockText.text = item.PlayerStock.ToString();
@@ -29,15 +37,6 @@ public class DialogBoxTradeItem : MonoBehaviour
         TraderStockText.text = item.TraderStock.ToString();
         TraderSellItemPriceText.text = item.TraderSellItemPrice.ToString();
         TradeAmountText.text = item.TradeAmount.ToString();
-    }
-
-    public void OnTradeAmountChanged()
-    {
-        BindInterface();
-        if (OnTradeAmountChangedEvent != null)
-        {
-            OnTradeAmountChangedEvent(this.item);
-        }
     }
 
     public void PlayerBuyOneMore()

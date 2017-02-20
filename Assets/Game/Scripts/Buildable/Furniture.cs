@@ -44,7 +44,7 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
         {
             if (powerValue.AreEqual(value)) return;
             powerValue = value;
-            InvokePowerValueChanged(this);
+            OnPowerValueChanged(new PowerEventArgs(this));
         }
     }
 
@@ -54,11 +54,37 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
     public string DragMode { get; private set; }
 
     public ParameterContainer Parameters { get; private set; }
-    public EventAction EventActions { set; get; }
+    public FurnitureEventAction FurnitureEventActions { set; get; }
 
-    public event Action<IPowerRelated> PowerValueChanged;
-    public event Action<Furniture> cbOnChanged;
-    public event Action<Furniture> cbOnRemoved;
+    public event PowerChangedEventHandler PowerValueChanged;
+    public void OnPowerValueChanged(PowerEventArgs args)
+    {
+        PowerChangedEventHandler powerChanged = PowerValueChanged;
+        if (powerChanged != null)
+        {
+            powerChanged(this, args);
+        }
+    }
+
+    public event FurnitureChangedEventHandler FurnitureChanged;
+    public void OnFurnitureChanged(FurnitureEventArgs args)
+    {
+        FurnitureChangedEventHandler furnitureChanged = FurnitureChanged;
+        if (furnitureChanged != null)
+        {
+            furnitureChanged(this, args);
+        }
+    }
+
+    public event FurnitureRemovedEventHandler FurnitureRemoved;
+    public void OnFurnitureRemoved(FurnitureEventArgs args)
+    {
+        FurnitureRemovedEventHandler furnitureRemoved = FurnitureRemoved;
+        if (furnitureRemoved != null)
+        {
+            furnitureRemoved(this, args);
+        }
+    }
 
     public bool IsSelected { get; set; }
     public bool VerticalDoor = false;
@@ -79,7 +105,7 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
         Height = 1;
         Width = 1;
 
-        EventActions = new EventAction();
+        FurnitureEventActions = new FurnitureEventAction();
         ReplaceableFurniture = new List<string>();
         Parameters = new ParameterContainer("furnParameters");
         Tint = Color.white;
@@ -109,9 +135,9 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
         typeTags = new HashSet<string>(other.typeTags);
         description = other.description;
 
-        if (other.EventActions != null)
+        if (other.FurnitureEventActions != null)
         {
-            EventActions = other.EventActions.Clone();
+            FurnitureEventActions = other.FurnitureEventActions.Clone();
         }
 
         if (other.contextMenuLuaActions != null)
@@ -139,9 +165,9 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
 
     public void Update(float deltaTime)
     {
-        if (EventActions != null)
+        if (FurnitureEventActions != null)
         {
-            EventActions.Trigger("OnUpdate", this, deltaTime);
+            FurnitureEventActions.Trigger("OnUpdate", this, deltaTime);
         }
     }
 
@@ -165,7 +191,7 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
             UpdateNeighbouringFurnitures(prototype, tile);
         }
 
-        furnitureInstance.EventActions.Trigger("OnInstall", furnitureInstance);
+        furnitureInstance.FurnitureEventActions.Trigger("OnInstall", furnitureInstance);
         UpdateThermalDiffusitivity(furnitureInstance, tile);
 
         return furnitureInstance;
@@ -174,14 +200,11 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
        public void Deconstruct()
     {
         CancelJobs();
-        EventActions.Trigger("OnUninstall", this);
+        FurnitureEventActions.Trigger("OnUninstall", this);
         World.Current.Temperature.SetThermalDiffusivity(Tile.X, Tile.Y, Temperature.DefaultThermalDiffusivity);
         Tile.RemoveFurniture();
 
-        if (cbOnRemoved != null)
-        {
-            cbOnRemoved(this);
-        }
+        OnFurnitureRemoved(new FurnitureEventArgs(this));
 
         if (RoomEnclosure)
         {
@@ -209,9 +232,9 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
             for (int yOffset = y - 1; yOffset < y + furniture.Height + 1; yOffset++)
             {
                 Tile tileAt = World.Current.GetTileAt(xOffset, yOffset);
-                if (tileAt != null && tileAt.Furniture != null && tileAt.Furniture.cbOnChanged != null)
+                if (tileAt != null && tileAt.Furniture != null)
                 {
-                    tileAt.Furniture.cbOnChanged(tileAt.Furniture);
+                    tileAt.Furniture.OnFurnitureChanged(new FurnitureEventArgs(tileAt.Furniture));
                 }
             }
         }
@@ -289,13 +312,13 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
     {
         job.Furniture = this;
         jobs.Add(job);
-        job.cbJobStopped += OnJobStopped;
+        job.JobStopped += OnJobStopped;
         World.Current.JobQueue.Enqueue(job);
     }
 
     private void RemoveJob(Job job)
     {
-        job.cbJobStopped -= OnJobStopped;
+        job.JobStopped -= OnJobStopped;
         jobs.Remove(job);
         job.Furniture = null;
     }
@@ -318,15 +341,6 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
         }
     }
 
-    private void InvokePowerValueChanged(IPowerRelated powerRelated)
-    {
-        Action<IPowerRelated> handler = PowerValueChanged;
-        if (handler != null)
-        {
-            handler(powerRelated);
-        }
-    }
-
     public bool HasPower()
     {
         return World.Current.PowerSystem.RequestPower(this) || World.Current.PowerSystem.AddToPowerGrid(this);
@@ -337,18 +351,9 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
         return string.IsNullOrEmpty(getSpriteNameFunction) ? Type : LuaUtilities.CallFunction(getSpriteNameFunction, this).String;
     }
 
-    [MoonSharpVisible(true)]
-    private void OnChanged(Furniture furniture)
+    private void OnJobStopped(object sender, JobEventArgs args)
     {
-        if (cbOnChanged != null)
-        {
-            cbOnChanged(furniture);
-        }
-    }
-
-    private void OnJobStopped(Job job)
-    {
-        RemoveJob(job);
+        RemoveJob(args.Job);
     }
 
     public TileEnterability TryEnter()
@@ -391,21 +396,28 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
 
     public IEnumerable<ContextMenuAction> GetContextMenuActions(ContextMenu contextMenu)
     {
-        yield return new ContextMenuAction
+        ContextMenuAction action = new ContextMenuAction
         {
             Text = "Deconstruct " + Name,
             RequiresCharacterSelection = false,
-            Action = (ca, c) => Deconstruct()
         };
+
+        action.Action += (sender, args) => Deconstruct();
+
+        yield return action;
 
         foreach (var contextMenuLuaAction in contextMenuLuaActions)
         {
-            yield return new ContextMenuAction
+            action = new ContextMenuAction
             {
                 Text = contextMenuLuaAction.Text,
                 RequiresCharacterSelection = contextMenuLuaAction.RequiresCharacterSelection,
-                Action = (cma, c) => InvokeContextMenuLuaAction(contextMenuLuaAction.LuaFunction, c)
             };
+
+            ContextMenuLuaAction luaAction = contextMenuLuaAction;
+            action.Action += (sender, args) => InvokeContextMenuLuaAction(luaAction.LuaFunction, args.Character);
+
+            yield return action;
         }
     }
 
@@ -548,7 +560,7 @@ public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, 
 
                 case "Action":
                     XmlReader subtree = reader.ReadSubtree();
-                    EventActions.ReadXml(subtree);
+                    FurnitureEventActions.ReadXml(subtree);
                     subtree.Close();
                     break;
                 case "ContextMenuAction":

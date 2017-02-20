@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 public class JobQueue
@@ -6,7 +5,16 @@ public class JobQueue
     public bool Empty { get { return jobQueue == null || jobQueue.Count == 0; } }
     public int Count { get { return jobQueue == null ? 0 : jobQueue.Count; } }
 
-    public event Action<Job> cbJobCreated;
+    public event JobCreatedEventHandler JobCreated;
+    public void OnJobCreated(JobEventArgs args)
+    {
+        JobCreatedEventHandler jobCreated = JobCreated;
+        if (jobCreated != null)
+        {
+            jobCreated(this, args);
+        }
+    }
+
     private readonly SortedList<JobPriority, Job> jobQueue;
 
     public JobQueue()
@@ -23,10 +31,7 @@ public class JobQueue
         }
 
         jobQueue.Add(job.Priority,job);
-        if (cbJobCreated != null)
-        {
-            cbJobCreated(job);
-        }
+        OnJobCreated(new JobEventArgs(job));
     }
 
     public Job Dequeue()

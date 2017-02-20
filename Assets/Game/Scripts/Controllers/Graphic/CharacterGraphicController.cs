@@ -26,27 +26,27 @@ public class CharacterGraphicController
         colorSwapTex.Apply();
         swapSpriteColors = new Color[colorSwapTex.width];
 
-        World.Current.cbCharacterCreated += OnCharacterCreated;
+        World.Current.CharacterCreated += OnCharacterCreated;
         foreach (Character character in World.Current.Characters)
         {
-            OnCharacterCreated(character);
+            OnCharacterCreated(this, new CharacterEventArgs(character));
         }
     }
 
-    public void OnCharacterCreated(Character character)
+    public void OnCharacterCreated(object sender, CharacterEventArgs args)
     {
         GameObject characterGameObject = new GameObject();
 
-        characterGameObjectMap.Add(character, characterGameObject);
+        characterGameObjectMap.Add(args.Character, characterGameObject);
         characterGameObject.name = "Character";
-        characterGameObject.transform.position = new Vector3(character.X, character.Y, 0);
+        characterGameObject.transform.position = new Vector3(args.Character.X, args.Character.Y, 0);
         characterGameObject.transform.SetParent(parent.transform, true);
 
         SpriteRenderer spriteRenderer = characterGameObject.AddComponent<SpriteRenderer>();        
         spriteRenderer.sortingLayerName = "Characters";
         
-        spriteRenderer.material = GetMaterial(character);
-        character.Animator = new CharacterAnimator(character, spriteRenderer)
+        spriteRenderer.material = GetMaterial(args.Character);
+        args.Character.Animator = new CharacterAnimator(args.Character, spriteRenderer)
         {
             Frames = new[]
             {
@@ -70,22 +70,22 @@ public class CharacterGraphicController
         inventoryGameObject.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f); 
         inventoryGameObject.transform.localPosition = new Vector3(0, -0.37f, 0); 
 
-        character.cbCharacterChanged += OnCharacterChanged;        
+        args.Character.CharacterChanged += OnCharacterChanged;        
     }
 
-    private void OnCharacterChanged(Character character)
+    private void OnCharacterChanged(object sender, CharacterEventArgs args)
     {
-        if (characterGameObjectMap.ContainsKey(character) == false)
+        if (characterGameObjectMap.ContainsKey(args.Character) == false)
         {
             Debug.LogError("CharacterGraphicController::OnCharacterChanged: Trying to change visuals for character not in our map.");
             return;
         }
 
-        SpriteRenderer inventorySpriteRenderer = characterGameObjectMap[character].transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>();
-        inventorySpriteRenderer.sprite = character.Inventory != null ? SpriteManager.Current.GetSprite("Inventory", character.Inventory.GetName()) : null;
+        SpriteRenderer inventorySpriteRenderer = characterGameObjectMap[args.Character].transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>();
+        inventorySpriteRenderer.sprite = args.Character.Inventory != null ? SpriteManager.Current.GetSprite("Inventory", args.Character.Inventory.GetName()) : null;
 
-        GameObject characterGameObject = characterGameObjectMap[character];
-        characterGameObject.transform.position = new Vector3(character.X, character.Y, 0);
+        GameObject characterGameObject = characterGameObjectMap[args.Character];
+        characterGameObject.transform.position = new Vector3(args.Character.X, args.Character.Y, 0);
     }
 
     private Material GetMaterial(Character character)

@@ -5,8 +5,8 @@ public class AudioController
     private float audioCooldown;
     public AudioController()
     {
-        World.Current.cbFurnitureCreated += OnFurnitureCreated;
-        World.Current.cbTileChanged += OnTileChanged;
+        World.Current.FurnitureCreated += OnFurnitureCreated;
+        World.Current.TileChanged += OnTileChanged;
     }
 	
     public void Update(float deltaTime)
@@ -14,7 +14,7 @@ public class AudioController
         audioCooldown -= deltaTime;
     }
 
-    private void OnTileChanged(Tile tile_data)
+    private void OnTileChanged(object sender, TileEventArgs args)
     {
         if (audioCooldown > 0)
         {
@@ -25,14 +25,14 @@ public class AudioController
         audioCooldown = 0.1f;
     }
 
-    public void OnFurnitureCreated(Furniture furn)
+    public void OnFurnitureCreated(object sender, FurnitureEventArgs args)
     {
         if (audioCooldown > 0)
         {
             return;
         }
 		
-        AudioClip audioClip = Resources.Load<AudioClip>("Sounds/" + furn.Type + "_OnCreated") ?? Resources.Load<AudioClip>("Sounds/Wall_OnCreated");
+        AudioClip audioClip = Resources.Load<AudioClip>("Sounds/" + args.Furniture.Type + "_OnCreated") ?? Resources.Load<AudioClip>("Sounds/Wall_OnCreated");
         AudioSource.PlayClipAtPoint(audioClip, Camera.main.transform.position);
         audioCooldown = 0.1f;
     }

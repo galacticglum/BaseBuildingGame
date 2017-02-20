@@ -87,8 +87,15 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
 
     private Color colour;
 
-    // TODO: Remove me!
-    public event Action<Character> cbCharacterChanged;
+    public event CharacterChangedEventHandler CharacterChanged;
+    public void OnCharacterChanged(CharacterEventArgs args)
+    {
+        CharacterChangedEventHandler characterChanged = CharacterChanged;
+        if (characterChanged != null)
+        {
+            characterChanged(this, args);
+        }
+    }
 
     public Character()
     {
@@ -128,11 +135,7 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
         UpdateNeeds(deltaTime);
         DoMovement(deltaTime);
 
-        if (cbCharacterChanged != null)
-        {
-            cbCharacterChanged(this);
-        }
-
+        OnCharacterChanged(new CharacterEventArgs(this));
         Animator.Update(deltaTime);
     }
 
@@ -341,7 +344,7 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
             return;
         }
 
-        Job.cbJobStopped += OnJobStopped;
+        Job.JobStopped += OnJobStopped;
         pathfinder = Job.IsNeed && currentNeed != null ? new Pathfinder(World.Current, CurrentTile, DestinationTile, currentNeed.RestorationFurniture.Type, 0, false, true) :
             new Pathfinder(World.Current, CurrentTile, DestinationTile);
 
@@ -374,7 +377,7 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
 
         if (Job.IsNeed)
         {
-            Job.cbJobStopped -= OnJobStopped;
+            Job.JobStopped -= OnJobStopped;
             Job = null;
             return;
         }
@@ -385,14 +388,14 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
         if (popIntoWaitingQueue)
         {
             World.Current.JobWaitingQueue.Enqueue(Job);
-            World.Current.cbInventoryCreated += OnInventoryCreated;
-            Job.cbJobStopped -= OnJobStopped;
+            World.Current.InventoryCreated += OnInventoryCreated;
+            Job.JobStopped -= OnJobStopped;
             Job = null;
         }
         else
         {
             World.Current.JobQueue.Enqueue(Job);
-            Job.cbJobStopped -= OnJobStopped;
+            Job.JobStopped -= OnJobStopped;
             Job = null;
         }
     }
@@ -487,29 +490,29 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
         }
     }
 
-    private static void OnInventoryCreated(Inventory inventory)
+    private static void OnInventoryCreated(object sender, InventoryEventArgs args)
     {
-        World.Current.cbInventoryCreated -= OnInventoryCreated;
+        World.Current.InventoryCreated -= OnInventoryCreated;
         Job job = World.Current.JobWaitingQueue.Dequeue();
 
         if (job == null) return;
 
         List<string> desiredInventories = GetDesiredInventories(job);
-        if (desiredInventories.Contains(inventory.Type))
+        if (desiredInventories.Contains(args.Inventory.Type))
         {
             World.Current.JobQueue.Enqueue(job);
         }
         else
         {
             World.Current.JobWaitingQueue.Enqueue(job);
-            World.Current.cbInventoryCreated += OnInventoryCreated;
+            World.Current.InventoryCreated += OnInventoryCreated;
         }
     }
 
-    private void OnJobStopped(Job job)
+    private void OnJobStopped(object sender, JobEventArgs args)
     {
-        job.cbJobStopped -= OnJobStopped;
-        if (job != Job)
+        args.Job.JobStopped -= OnJobStopped;
+        if (args.Job != Job)
         {
             return;
         }
@@ -519,12 +522,14 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
 
     public IEnumerable<ContextMenuAction> GetContextMenuActions(ContextMenu contextMenu)
     {
-        yield return new ContextMenuAction
+        ContextMenuAction action = new ContextMenuAction
         {
             Text = "Poke " + GetName(),
             RequiresCharacterSelection = false,
-            Action = (contextMenuAction, character) => Debug.Log(string.Format("Character: {0}", GetDescription()))
         };
+
+        action.Action += (contextMenuAction, character) => Debug.Log(string.Format("Character: {0}", GetDescription()));
+        yield return action;
     }
 
     public string GetName()

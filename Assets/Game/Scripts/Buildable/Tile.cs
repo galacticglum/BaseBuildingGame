@@ -28,10 +28,7 @@ public class Tile :IXmlSerializable, ISelectable
             if (type == value) return;
             type = value;
 
-            if (cbTileChanged != null)
-            {
-                cbTileChanged(this);
-            }
+            OnTileChanged(new TileEventArgs(this));
         }
     }
 
@@ -43,7 +40,16 @@ public class Tile :IXmlSerializable, ISelectable
     public List<Character> Characters { get; private set; }
 
     public bool IsSelected { get; set; }
-    public event Action<Tile> cbTileChanged;
+
+    public event TileChangedEventHandler TileChanged;
+    public void OnTileChanged(TileEventArgs args)
+    {
+        TileChangedEventHandler tileChanged = TileChanged;
+        if (tileChanged != null)
+        {
+            tileChanged(this, args);
+        }
+    }
 
     public Tile(int x, int y)
     {
@@ -185,10 +191,10 @@ public class Tile :IXmlSerializable, ISelectable
         Room.EqualizeGas(this, leakFactor);
     }
 
-    public static void OnJobComplete(Job job)
+    public static void OnJobComplete(object sender, JobEventArgs args)
     {
-        job.Tile.Type = job.TileType;
-        job.Tile.PendingBuildJob = null;
+        args.Job.Tile.Type = args.Job.TileType;
+        args.Job.Tile.PendingBuildJob = null;
     }
 
     public string GetName()

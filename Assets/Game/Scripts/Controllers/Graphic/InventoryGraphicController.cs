@@ -15,64 +15,64 @@ public class InventoryGraphicController
         inventoryParent = new GameObject("Inventory");
         inventoryGameObjectMap = new Dictionary<Inventory, GameObject>();
 
-        World.Current.cbInventoryCreated += OnInventoryCreated;
+        World.Current.InventoryCreated += OnInventoryCreated;
         foreach (string type in World.Current.InventoryManager.Inventories.Keys)
         {
             foreach (Inventory inventory in World.Current.InventoryManager.Inventories[type])
             {
-                OnInventoryCreated(inventory);
+                OnInventoryCreated(this, new InventoryEventArgs(inventory));
             }
         }
     }
 
-    public void OnInventoryCreated(Inventory inv)
+    public void OnInventoryCreated(object sender, InventoryEventArgs args)
     {
         // FIXME: Does not consider multi-tile objects nor rotated objects
         GameObject inventoryGameObject = new GameObject();
-        inventoryGameObjectMap.Add(inv, inventoryGameObject);
+        inventoryGameObjectMap.Add(args.Inventory, inventoryGameObject);
 
-        inventoryGameObject.name = inv.Type;
-        inventoryGameObject.transform.position = new Vector3(inv.Tile.X, inv.Tile.Y, 0);
+        inventoryGameObject.name = args.Inventory.Type;
+        inventoryGameObject.transform.position = new Vector3(args.Inventory.Tile.X, args.Inventory.Tile.Y, 0);
         inventoryGameObject.transform.SetParent(inventoryParent.transform, true);
 
         SpriteRenderer spriteRenderer = inventoryGameObject.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = SpriteManager.Current.GetSprite("Inventory", inv.Type);
+        spriteRenderer.sprite = SpriteManager.Current.GetSprite("Inventory", args.Inventory.Type);
         spriteRenderer.sortingLayerName = "Inventory";
 
-        if (inv.MaxStackSize > 1)
+        if (args.Inventory.MaxStackSize > 1)
         {
             // This is a stackable object, so let's add a InventoryUI component
             GameObject uiGameObject = Object.Instantiate(inventoryUIPrefab);
             uiGameObject.transform.SetParent(inventoryGameObject.transform);
             uiGameObject.transform.localPosition = Vector3.zero;
-            uiGameObject.GetComponentInChildren<Text>().text = inv.StackSize.ToString();
+            uiGameObject.GetComponentInChildren<Text>().text = args.Inventory.StackSize.ToString();
         }
 
-        inv.cbInventoryChanged += OnInventoryChanged;
+        args.Inventory.InventoryChanged += OnInventoryChanged;
     }
 
-    private void OnInventoryChanged(Inventory inventory)
+    private void OnInventoryChanged(object sender, InventoryEventArgs args)
     {
-        if (inventoryGameObjectMap.ContainsKey(inventory) == false)
+        if (inventoryGameObjectMap.ContainsKey(args.Inventory) == false)
         {
             return;
         }
 
-        GameObject inventoryGameObject = inventoryGameObjectMap[inventory];
-        if (inventory.StackSize > 0)
+        GameObject inventoryGameObject = inventoryGameObjectMap[args.Inventory];
+        if (args.Inventory.StackSize > 0)
         {
             Text text = inventoryGameObject.GetComponentInChildren<Text>();
             if (text != null)
             {
-                text.text = inventory.StackSize.ToString();
+                text.text = args.Inventory.StackSize.ToString();
             }
         }
         else
         {
             // This stack has gone to zero, so remove the sprite!
             Object.Destroy(inventoryGameObject);
-            inventoryGameObjectMap.Remove(inventory);
-            inventory.cbInventoryChanged -= OnInventoryChanged;
+            inventoryGameObjectMap.Remove(args.Inventory);
+            args.Inventory.InventoryChanged -= OnInventoryChanged;
         }
     }
 }

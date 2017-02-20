@@ -1,12 +1,9 @@
-using System;
-
 public class ContextMenuAction
 {
     public bool RequiresCharacterSelection { get; set; }
     public string Text { get; set; }
-    
-    public Action<ContextMenuAction, Character> Action;
 
+    public event ContextMenuEventHandler Action;
     public void OnClick(MouseController mouseController)
     {
         if (Action == null) return;
@@ -15,11 +12,11 @@ public class ContextMenuAction
             if (!mouseController.IsCharacterSelected) return;
 
             ISelectable actualSelection = mouseController.CurrentSelectionInfo.Selection;
-            Action(this, actualSelection as Character);
+            Action(this, new ContextMenuEventArgs(this, (Character)actualSelection));
         }
         else
         {
-            Action(this, null);
+            Action(this, new ContextMenuEventArgs(this, null));
         }
     }
 }

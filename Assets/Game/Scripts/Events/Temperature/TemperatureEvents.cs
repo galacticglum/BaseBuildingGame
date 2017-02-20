@@ -1,0 +1,1 @@
+﻿public delegate void TemperatureUpdateEventHandler(object sender, UpdateEventArgs args);

@@ -23,17 +23,22 @@ public class Inventory : IXmlSerializable, ISelectable, IContextActionProvider
             if (stackSize == value) return;
             stackSize = value;
 
-            if (cbInventoryChanged != null)
-            {
-                cbInventoryChanged(this);
-            }
+            OnInventoryChanged(new InventoryEventArgs(this));
         }
     }
 
     public Tile Tile { get; set; }
     public Character Character { get; set; }
 
-    public event Action<Inventory> cbInventoryChanged;
+    public event InventoryChangedEventHandler InventoryChanged;
+    public void OnInventoryChanged(InventoryEventArgs args)
+    {
+        InventoryChangedEventHandler inventoryChanged = InventoryChanged;
+        if (inventoryChanged != null)
+        {
+            inventoryChanged(this, args);
+        }
+    }
     public bool IsSelected { get; set; }
 
     public Inventory()
@@ -91,12 +96,14 @@ public class Inventory : IXmlSerializable, ISelectable, IContextActionProvider
 
     public IEnumerable<ContextMenuAction> GetContextMenuActions(ContextMenu contextMenu)
     {
-        yield return new ContextMenuAction
+        ContextMenuAction action = new ContextMenuAction
         {
             Text = "Sample Item Context action",
             RequiresCharacterSelection = true,
-            Action = (contextMenuAction, character) => Debug.Log("Sample menu action")
         };
+
+        action.Action += (contextMenuAction, character) => Debug.Log("Sample menu action");
+        yield return action;
     }
 
     public XmlSchema GetSchema()

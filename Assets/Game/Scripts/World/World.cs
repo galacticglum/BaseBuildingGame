@@ -41,10 +41,47 @@ public class World : IXmlSerializable
     public JobQueue JobQueue { get; private set; }
     public JobQueue JobWaitingQueue { get; private set; }
 
-    public event Action<Furniture> cbFurnitureCreated;
-    public event Action<Character> cbCharacterCreated;
-    public event Action<Inventory> cbInventoryCreated;
-    public event Action<Tile> cbTileChanged;
+    public event FurnitureCreatedEventHandler FurnitureCreated;
+    public void OnFurnitureCreated(FurnitureEventArgs args)
+    {
+        FurnitureCreatedEventHandler furnitureCreated = FurnitureCreated;
+        if (furnitureCreated != null)
+        {
+            furnitureCreated(this, args);
+        }
+    }
+
+    public event CharacterCreatedEventHandler CharacterCreated;
+    public void OnCharacterCreated(CharacterEventArgs args)
+    {
+        CharacterCreatedEventHandler characterCreated = CharacterCreated;
+        if (characterCreated != null)
+        {
+            characterCreated(this, args);
+        }
+    }
+
+
+    public event InventoryCreatedEventHandler InventoryCreated;
+    public void OnInventoryCreated(InventoryEventArgs args)
+    {
+        InventoryCreatedEventHandler inventoryCreated = InventoryCreated;
+        if (inventoryCreated != null)
+        {
+            inventoryCreated(this, args);
+        }
+    }
+
+
+    public event TileChangedEventHandler TileChanged;
+    public void OnTileChanged(TileEventArgs args)
+    {
+        TileChangedEventHandler tileChanged = TileChanged;
+        if (tileChanged != null)
+        {
+            tileChanged(this, args);
+        }
+    }
 
     private Tile[,] tiles;
 
@@ -80,7 +117,7 @@ public class World : IXmlSerializable
             for (int y = 0; y < Height; y++)
             {
                 tiles[x, y] = new Tile(x, y);
-                tiles[x, y].cbTileChanged += OnTileChanged;
+                tiles[x, y].TileChanged += OnTileChangedEvent;
                 tiles[x, y].Room = OutsideRoom; // Rooms 0 is always going to be outside, and that is our default room
             }
         }
@@ -187,10 +224,7 @@ public class World : IXmlSerializable
         character.Name = names[UnityEngine.Random.Range(0, names.Length - 1)];
         Characters.Add(character);
 
-        if (cbCharacterCreated != null)
-        {
-            cbCharacterCreated(character);
-        }
+        OnCharacterCreated(new CharacterEventArgs(character));
     }
 
     public Tile GetTileAt(int x, int y)
@@ -263,7 +297,7 @@ public class World : IXmlSerializable
             return null;
         }
 
-        furnitureInstance.cbOnRemoved += OnFurnitureRemoved;
+        furnitureInstance.FurnitureRemoved += OnFurnitureRemoved;
         Furnitures.Add(furnitureInstance);
 
         // Do we need to recalculate our rooms?
@@ -272,8 +306,7 @@ public class World : IXmlSerializable
             Room.CalculateRooms(furnitureInstance.Tile);
         }
 
-        if (cbFurnitureCreated == null) return furnitureInstance;
-        cbFurnitureCreated(furnitureInstance);
+        OnFurnitureCreated(new FurnitureEventArgs(furnitureInstance));
 
         if (furnitureInstance.MovementCost == 1) return furnitureInstance;
         if (TileGraph != null)
@@ -284,14 +317,12 @@ public class World : IXmlSerializable
         return furnitureInstance;
     }
 
-    private void OnTileChanged(Tile tile)
+    private void OnTileChangedEvent(object sender, TileEventArgs args)
     {
-        if (cbTileChanged == null) return;
-
-        cbTileChanged(tile);
+        OnTileChanged(args);
         if (TileGraph != null)
         {
-            TileGraph.Regenerate(tile);
+            TileGraph.Regenerate(args.Tile);
         }
     }
 
@@ -615,17 +646,9 @@ public class World : IXmlSerializable
         }
     }
 
-    public void OnInventoryCreated(Inventory inv)
+    public void OnFurnitureRemoved(object sender, FurnitureEventArgs args)
     {
-        if (cbInventoryCreated != null)
-        {
-            cbInventoryCreated(inv);
-        }
-    }
-
-    public void OnFurnitureRemoved(Furniture furn)
-    {
-        Furnitures.Remove(furn);
+        Furnitures.Remove(args.Furniture);
     }
 
     public XmlSchema GetSchema()
@@ -737,25 +760,25 @@ public class World : IXmlSerializable
         Inventory inventory = new Inventory("Steel Plate", 50, 50);
         Tile tileAt = GetTileAt(Width / 2, Height / 2);
         InventoryManager.Place(tileAt, inventory);
-        if (cbInventoryCreated != null)
+        if (InventoryCreated != null)
         {
-            cbInventoryCreated(tileAt.Inventory);
+            OnInventoryCreated(new InventoryEventArgs(tileAt.Inventory));
         }
 
         inventory = new Inventory("Steel Plate", 50, 4);
         tileAt = GetTileAt(Width / 2 + 2, Height / 2);
         InventoryManager.Place(tileAt, inventory);
-        if (cbInventoryCreated != null)
+        if (InventoryCreated != null)
         {
-            cbInventoryCreated(tileAt.Inventory);
+            OnInventoryCreated(new InventoryEventArgs(tileAt.Inventory));
         }
 
         inventory = new Inventory("Copper Wire", 50, 3);
         tileAt = GetTileAt(Width / 2 + 1, Height / 2 + 2);
         InventoryManager.Place(tileAt, inventory);
-        if (cbInventoryCreated != null)
+        if (InventoryCreated != null)
         {
-            cbInventoryCreated(tileAt.Inventory);
+            OnInventoryCreated(new InventoryEventArgs(tileAt.Inventory));
         }
     }
 

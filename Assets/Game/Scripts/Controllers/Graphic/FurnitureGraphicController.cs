@@ -14,43 +14,43 @@ public class FurnitureGraphicController
         powerStatusGameObjectMap = new Dictionary<Furniture, GameObject>();
         furnitureParent = new GameObject("Furniture");
 
-        World.Current.cbFurnitureCreated += OnFurnitureCreated;
+        World.Current.FurnitureCreated += OnFurnitureCreated;
         foreach (Furniture furniture in World.Current.Furnitures)
         {
-            OnFurnitureCreated(furniture);
+            OnFurnitureCreated(this, new FurnitureEventArgs(furniture));
         }            
     }
 
-    public void OnFurnitureCreated(Furniture furniture)
+    public void OnFurnitureCreated(object sender, FurnitureEventArgs args)
     {
         GameObject furnitureGameObject = new GameObject();
-        furnitureGameObjectMap.Add(furniture, furnitureGameObject);
-        furnitureGameObject.name = furniture.Type + "_" + furniture.Tile.X + "_" + furniture.Tile.Y;
-        furnitureGameObject.transform.position = new Vector3(furniture.Tile.X + ((furniture.Width - 1) / 2f), furniture.Tile.Y + ((furniture.Height - 1) / 2f), 0);
+        furnitureGameObjectMap.Add(args.Furniture, furnitureGameObject);
+        furnitureGameObject.name = args.Furniture.Type + "_" + args.Furniture.Tile.X + "_" + args.Furniture.Tile.Y;
+        furnitureGameObject.transform.position = new Vector3(args.Furniture.Tile.X + ((args.Furniture.Width - 1) / 2f), args.Furniture.Tile.Y + ((args.Furniture.Height - 1) / 2f), 0);
         furnitureGameObject.transform.SetParent(furnitureParent.transform, true);
 
         // FIXME: Don't hardcode orientation: make it a parameter of furniture instead.
-        if (furniture.HasTypeTag("Door"))
+        if (args.Furniture.HasTypeTag("Door"))
         {
-            Tile northTile = World.Current.GetTileAt(furniture.Tile.X, furniture.Tile.Y + 1);
-            Tile southTile = World.Current.GetTileAt(furniture.Tile.X, furniture.Tile.Y - 1);
+            Tile northTile = World.Current.GetTileAt(args.Furniture.Tile.X, args.Furniture.Tile.Y + 1);
+            Tile southTile = World.Current.GetTileAt(args.Furniture.Tile.X, args.Furniture.Tile.Y - 1);
 
             if (northTile != null && southTile != null && northTile.Furniture != null && southTile.Furniture != null &&
                 northTile.Furniture.HasTypeTag("Wall") && southTile.Furniture.HasTypeTag("Wall"))
             {
-                furniture.VerticalDoor = true;
+                args.Furniture.VerticalDoor = true;
             }      
         }
 
         SpriteRenderer spriteRenderer = furnitureGameObject.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = GetSpriteForFurniture(furniture);
+        spriteRenderer.sprite = GetSpriteForFurniture(args.Furniture);
         spriteRenderer.sortingLayerName = "Furniture";
-        spriteRenderer.color = furniture.Tint;
+        spriteRenderer.color = args.Furniture.Tint;
 
-        if (furniture.PowerValue < 0)
+        if (args.Furniture.PowerValue < 0)
         {
             GameObject powerGameObject = new GameObject();
-            powerStatusGameObjectMap.Add(furniture, powerGameObject);
+            powerStatusGameObjectMap.Add(args.Furniture, powerGameObject);
             powerGameObject.transform.parent = furnitureGameObject.transform;
             powerGameObject.transform.position = furnitureGameObject.transform.position;
 
@@ -62,47 +62,47 @@ public class FurnitureGraphicController
             powerGameObject.SetActive(!(World.Current.PowerSystem.PowerLevel > 0));
         }
 
-        furniture.cbOnChanged += OnFurnitureChanged;
+        args.Furniture.FurnitureChanged += OnFurnitureChanged;
         World.Current.PowerSystem.PowerLevelChanged += OnPowerStatusChange;
-        furniture.cbOnRemoved += OnFurnitureRemoved;
+        args.Furniture.FurnitureRemoved += OnFurnitureRemoved;
 
     }
 
-    private void OnFurnitureChanged(Furniture furniture)
+    private void OnFurnitureChanged(object sender, FurnitureEventArgs args)
     {
-        if (furnitureGameObjectMap.ContainsKey(furniture) == false)
+        if (furnitureGameObjectMap.ContainsKey(args.Furniture) == false)
         {
             Debug.LogError("FurnitureGraphicController::FurnitureChanged: Trying to change visuals for furniture not in our map.");
             return;
         }
 
-        GameObject furnitureGameObject = furnitureGameObjectMap[furniture];
-        if (furniture.HasTypeTag("Door"))
+        GameObject furnitureGameObject = furnitureGameObjectMap[args.Furniture];
+        if (args.Furniture.HasTypeTag("Door"))
         {
-            Tile northTile = World.Current.GetTileAt(furniture.Tile.X, furniture.Tile.Y + 1);
-            Tile southTile = World.Current.GetTileAt(furniture.Tile.X, furniture.Tile.Y - 1);
-            Tile eastTile = World.Current.GetTileAt(furniture.Tile.X + 1, furniture.Tile.Y);
-            Tile westTile = World.Current.GetTileAt(furniture.Tile.X - 1, furniture.Tile.Y);
+            Tile northTile = World.Current.GetTileAt(args.Furniture.Tile.X, args.Furniture.Tile.Y + 1);
+            Tile southTile = World.Current.GetTileAt(args.Furniture.Tile.X, args.Furniture.Tile.Y - 1);
+            Tile eastTile = World.Current.GetTileAt(args.Furniture.Tile.X + 1, args.Furniture.Tile.Y);
+            Tile westTile = World.Current.GetTileAt(args.Furniture.Tile.X - 1, args.Furniture.Tile.Y);
 
             if (northTile != null && southTile != null && northTile.Furniture != null && southTile.Furniture != null &&
                 northTile.Furniture.HasTypeTag("Wall") && southTile.Furniture.HasTypeTag("Wall"))
             {
-                furniture.VerticalDoor = true;
+                args.Furniture.VerticalDoor = true;
             }
             else if (eastTile != null && westTile != null && eastTile.Furniture != null && westTile.Furniture != null &&
                 eastTile.Furniture.HasTypeTag("Wall") && westTile.Furniture.HasTypeTag("Wall"))
             {
-                furniture.VerticalDoor = false;
+                args.Furniture.VerticalDoor = false;
             }
         }
 
-        furnitureGameObject.GetComponent<SpriteRenderer>().sprite = GetSpriteForFurniture(furniture);
-        furnitureGameObject.GetComponent<SpriteRenderer>().color = furniture.Tint;
+        furnitureGameObject.GetComponent<SpriteRenderer>().sprite = GetSpriteForFurniture(args.Furniture);
+        furnitureGameObject.GetComponent<SpriteRenderer>().color = args.Furniture.Tint;
     }
 
-    private void OnPowerStatusChange(IPowerRelated powerRelated)
+    private void OnPowerStatusChange(object sender, PowerEventArgs args)
     {
-        Furniture furniture = (Furniture)powerRelated;
+        Furniture furniture = (Furniture)args.PowerRelated;
         if (furniture == null) return;
         if (powerStatusGameObjectMap.ContainsKey(furniture) == false) return;
 
@@ -111,21 +111,21 @@ public class FurnitureGraphicController
         powerStatusGameObject.GetComponent<SpriteRenderer>().color = PowerStatusColor();
     }
 
-    private void OnFurnitureRemoved(Furniture furniture)
+    private void OnFurnitureRemoved(object sender, FurnitureEventArgs args)
     {
-        if (furnitureGameObjectMap.ContainsKey(furniture) == false)
+        if (furnitureGameObjectMap.ContainsKey(args.Furniture) == false)
         {
             Debug.LogError("FurnitureGraphicController::OnFurnitureRemoved: Trying to change visuals for furniture not in our map.");
             return;
         }
 
-        GameObject furnitureGameObject = furnitureGameObjectMap[furniture];
+        GameObject furnitureGameObject = furnitureGameObjectMap[args.Furniture];
         Object.Destroy(furnitureGameObject);
 
-        furnitureGameObjectMap.Remove(furniture);
+        furnitureGameObjectMap.Remove(args.Furniture);
 
-        if (powerStatusGameObjectMap.ContainsKey(furniture) == false) return;
-        powerStatusGameObjectMap.Remove(furniture);
+        if (powerStatusGameObjectMap.ContainsKey(args.Furniture) == false) return;
+        powerStatusGameObjectMap.Remove(args.Furniture);
     }
 
     public Sprite GetSpriteForFurniture(string type)

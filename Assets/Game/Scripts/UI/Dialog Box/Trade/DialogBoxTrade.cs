@@ -72,7 +72,7 @@ public class DialogBoxTrade : DialogBox
             instance.transform.SetParent(TradeItemListPanel);
 
             DialogBoxTradeItem tradeItemBehaviour = instance.GetComponent<DialogBoxTradeItem>();
-            tradeItemBehaviour.OnTradeAmountChangedEvent += item => GenerateHeader();
+            tradeItemBehaviour.TradeAmountChangedEvent += (sender, args) => GenerateHeader();
             tradeItemBehaviour.SetupTradeItem(tradeItem);
         }
     }

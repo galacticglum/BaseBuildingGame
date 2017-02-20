@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityUtilities.ObjectPool;
 
 public class MouseController
 {
@@ -266,9 +267,9 @@ public class MouseController
     {
         while (dragPreviewGameObjects.Count > 0)
         {
-            GameObject go = dragPreviewGameObjects[0];
+            GameObject gameObject = dragPreviewGameObjects[0];
             dragPreviewGameObjects.RemoveAt(0);
-            SimplePool.Despawn(go);
+            ObjectPool.Destroy(gameObject);
         }
     }
 
@@ -320,7 +321,7 @@ public class MouseController
 
     private void ShowVisuals(int x, int y)
     {
-        GameObject gameObject = SimplePool.Spawn(circleCursorPrefab, new Vector3(x, y, 0), Quaternion.identity);
+        GameObject gameObject = ObjectPool.Spawn(circleCursorPrefab, new Vector3(x, y, 0), Quaternion.identity);
         gameObject.transform.SetParent(cursorParent.transform, true);
         gameObject.GetComponent<SpriteRenderer>().sprite = SpriteManager.Current.GetSprite("UI", "CursorCircle");
 

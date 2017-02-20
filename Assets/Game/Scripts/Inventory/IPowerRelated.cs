@@ -6,5 +6,5 @@ public interface IPowerRelated
     bool IsConsumingPower { get; }
     bool HasPower();
 
-    event Action<IPowerRelated> PowerValueChanged;
+    event PowerChangedEventHandler PowerValueChanged;
 }

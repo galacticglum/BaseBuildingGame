@@ -18,7 +18,16 @@ public class PowerSystem
         }
     }
 
-    public event Action<IPowerRelated> PowerLevelChanged;
+    public event PowerChangedEventHandler PowerLevelChanged;
+    public void OnPowerLevelChanged(PowerEventArgs args)
+    {
+        PowerChangedEventHandler powerChanged = PowerLevelChanged;
+        if (powerChanged != null)
+        {
+            powerChanged(this, args);
+        }
+    }
+
     private readonly HashSet<IPowerRelated> powerGrid;
 
     public PowerSystem()
@@ -38,7 +47,7 @@ public class PowerSystem
         powerRelated.PowerValueChanged += OnPowerValueChanged;
 
         Furniture furniture = (Furniture)powerRelated;
-        furniture.cbOnRemoved += RemoveFromPowerGrid;
+        furniture.FurnitureRemoved += (sender, args) => RemoveFromPowerGrid(args.Furniture);
 
         return true;
     }
@@ -78,22 +87,13 @@ public class PowerSystem
     {
         foreach (IPowerRelated powerRelated in powerGrid.Where(powerRelated => powerRelated.IsConsumingPower))
         {
-            InvokePowerLevelChanged(powerRelated);
+            OnPowerLevelChanged(new PowerEventArgs(powerRelated));
         }
     }
 
-    private void OnPowerValueChanged(IPowerRelated powerRelated)
+    private void OnPowerValueChanged(object sender, PowerEventArgs args)
     {
-        RemoveFromPowerGrid(powerRelated);
-        AddToPowerGrid(powerRelated);
-    }
-
-    private void InvokePowerLevelChanged(IPowerRelated powerRelated)
-    {
-        Action<IPowerRelated> handler = PowerLevelChanged;
-        if (handler != null)
-        {
-            handler(powerRelated);
-        }
+        RemoveFromPowerGrid(args.PowerRelated);
+        AddToPowerGrid(args.PowerRelated);
     }
 }
