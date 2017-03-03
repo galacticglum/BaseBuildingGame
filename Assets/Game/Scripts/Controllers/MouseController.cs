@@ -458,7 +458,7 @@ public class MouseController
         spriteRenderer.sortingLayerName = "Jobs";
         spriteRenderer.sprite = furnitureGraphicController.GetSpriteForFurniture(furnitureType);
 
-        if (WorldController.Instance.World.IsFurniturePlacementValid(furnitureType, tile) &&
+        if (WorldController.Instance.World.FurnitureManager.IsPlacementValid(furnitureType, tile) &&
             constructionController.IsBuildJobOverlap(tile, furnitureType) == false)
         {
             spriteRenderer.color = new Color(0.5f, 1f, 0.5f, 0.25f);

@@ -27,7 +27,7 @@ public static class FurnitureActions
     
     public static void BuildFurniture(object sender, JobEventArgs args)
     {
-        WorldController.Instance.World.PlaceFurniture(args.Job.Type, args.Job.Tile);
+        WorldController.Instance.World.FurnitureManager.Place(args.Job.Type, args.Job.Tile);
         args.Job.Tile.PendingBuildJob = null;
     }
 }

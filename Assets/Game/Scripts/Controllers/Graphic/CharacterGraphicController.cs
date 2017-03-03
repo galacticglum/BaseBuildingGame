@@ -26,8 +26,8 @@ public class CharacterGraphicController
         colorSwapTex.Apply();
         swapSpriteColors = new Color[colorSwapTex.width];
 
-        World.Current.CharacterCreated += OnCharacterCreated;
-        foreach (Character character in World.Current.Characters)
+        World.Current.CharacterManager.CharacterCreated += OnCharacterCreated;
+        foreach (Character character in World.Current.CharacterManager)
         {
             OnCharacterCreated(this, new CharacterEventArgs(character));
         }

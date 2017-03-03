@@ -51,7 +51,7 @@ public class ConstructionController
             case ConstructionMode.Furniture:
                 string furnitureType = ConstructionType;
 
-                if (WorldController.Instance.World.IsFurniturePlacementValid(furnitureType, tile) && 
+                if (WorldController.Instance.World.FurnitureManager.IsPlacementValid(furnitureType, tile) && 
                     IsBuildJobOverlap(tile, furnitureType) == false)
                 {
                     if (tile.Furniture != null)
@@ -91,7 +91,7 @@ public class ConstructionController
 
                     if (WorldController.Instance.DevelopmentMode)
                     {
-                        WorldController.Instance.World.PlaceFurniture(job.Type, job.Tile);
+                        WorldController.Instance.World.FurnitureManager.Place(job.Type, job.Tile);
                     }
                     else
                     {

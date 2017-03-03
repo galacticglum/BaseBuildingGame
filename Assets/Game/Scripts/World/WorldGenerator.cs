@@ -61,7 +61,7 @@ public class WorldGenerator
                 Tile tile = world.GetTileAt(worldX, worldY);
                 if (startAreaFurnitures[x, y] != null && startAreaFurnitures[x, y] != string.Empty)
                 {
-                    world.PlaceFurniture(startAreaFurnitures[x, y], tile, true);
+                    world.FurnitureManager.Place(startAreaFurnitures[x, y], tile, true);
                 }
             }
         }

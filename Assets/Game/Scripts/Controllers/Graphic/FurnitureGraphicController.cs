@@ -14,8 +14,8 @@ public class FurnitureGraphicController
         powerStatusGameObjectMap = new Dictionary<Furniture, GameObject>();
         furnitureParent = new GameObject("Furniture");
 
-        World.Current.FurnitureCreated += OnFurnitureCreated;
-        foreach (Furniture furniture in World.Current.Furnitures)
+        World.Current.FurnitureManager.FurnitureCreated += OnFurnitureCreated;
+        foreach (Furniture furniture in World.Current.FurnitureManager)
         {
             OnFurnitureCreated(this, new FurnitureEventArgs(furniture));
         }            

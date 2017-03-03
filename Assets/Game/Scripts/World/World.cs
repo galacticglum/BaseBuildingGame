@@ -17,13 +17,15 @@ public class World : IXmlSerializable
     public readonly string gameVersion = "Someone_will_come_up_with_a_proper_naming_scheme_later";
 
     public TileGraph TileGraph { get; set; }
-    public int Width { get; protected set; }
-    public int Height { get; protected set; }
+    public int Width { get; private set; }
+    public int Height { get; private set; }
 
-    public List<Character> Characters { get; private set; }
-    public List<Furniture> Furnitures { get; private set; }
+    //public List<Character> Characters { get; private set; }
     public List<Room> Rooms { get; private set; }
+
     public InventoryManager InventoryManager { get; private set; }
+    public FurnitureManager FurnitureManager { get; private set; }
+    public CharacterManager CharacterManager { get; private set; }
     public PowerSystem PowerSystem { get; private set; }
     public Temperature Temperature { get; private set; }
     public Material Skybox { get; private set; } // TODO: Move me to somewhere more appropriate. World Controller??
@@ -40,27 +42,6 @@ public class World : IXmlSerializable
 
     public JobQueue JobQueue { get; private set; }
     public JobQueue JobWaitingQueue { get; private set; }
-
-    public event FurnitureCreatedEventHandler FurnitureCreated;
-    public void OnFurnitureCreated(FurnitureEventArgs args)
-    {
-        FurnitureCreatedEventHandler furnitureCreated = FurnitureCreated;
-        if (furnitureCreated != null)
-        {
-            furnitureCreated(this, args);
-        }
-    }
-
-    public event CharacterCreatedEventHandler CharacterCreated;
-    public void OnCharacterCreated(CharacterEventArgs args)
-    {
-        CharacterCreatedEventHandler characterCreated = CharacterCreated;
-        if (characterCreated != null)
-        {
-            characterCreated(this, args);
-        }
-    }
-
 
     public event InventoryCreatedEventHandler InventoryCreated;
     public void OnInventoryCreated(InventoryEventArgs args)
@@ -91,7 +72,7 @@ public class World : IXmlSerializable
         Initialize(width, height);
 
         WorldGenerator.Generate(this, UnityEngine.Random.Range(0, int.MaxValue));
-        CreateCharacter(GetTileAt(Width / 2, Height / 2));
+        CharacterManager.Create(GetTileAt(Width / 2, Height / 2));
     }
 
     private void Initialize(int width, int height)
@@ -101,7 +82,7 @@ public class World : IXmlSerializable
 
         Width = width;
         Height = height;
-        
+
         TileType.Load();
         tiles = new Tile[Width, Height];
         JobQueue = new JobQueue();
@@ -123,14 +104,15 @@ public class World : IXmlSerializable
         }
 
         CreateFurniturePrototypes();
-        CreateNeedPrototypes ();
+        CreateNeedPrototypes();
         CreateInventoryPrototypes();
         CreateTraderPrototypes();
         CreateQuests();
-
-        Characters = new List<Character>();
-        Furnitures = new List<Furniture>();
+ 
+        FurnitureManager = new FurnitureManager();
+        CharacterManager = new CharacterManager();
         InventoryManager = new InventoryManager();
+
         PowerSystem = new PowerSystem();
         Temperature = new Temperature(Width, Height);
         LoadSkybox();
@@ -184,47 +166,10 @@ public class World : IXmlSerializable
 
     public void Update(float deltaTime)
     {
-        // ReSharper disable once ForCanBeConvertedToForeach;
-        // we can't use a foreach loop since the collection is 
-        // modified whilst iterating. 
-        for (int i = 0; i < Characters.Count; i++)
-        {
-            Characters[i].Update(deltaTime);
-        }
-
-        foreach (Furniture furniture in Furnitures)
-        {
-            furniture.Update(deltaTime);
-        }
+        FurnitureManager.Update(deltaTime);
+        CharacterManager.Update(deltaTime);
 
         Temperature.Update();
-    }
-
-    public Character CreateCharacter(Tile tile)
-    {
-        Character character = new Character(tile);
-        InitializeCharacter(character);
-        return character;
-    }
-
-    public Character CreateCharacter(Tile tile, Color colour)
-    {
-        Character character = new Character(tile, colour);
-        InitializeCharacter(character);
-        return character;
-    }
-
-    private void InitializeCharacter(Character character)
-    {
-        // TODO: Make character names Xml
-        string filePath = Path.Combine(Application.streamingAssetsPath, "Data");
-        filePath = Path.Combine(filePath, "CharacterNames.txt");
-
-        string[] names = File.ReadAllLines(filePath);
-        character.Name = names[UnityEngine.Random.Range(0, names.Length - 1)];
-        Characters.Add(character);
-
-        OnCharacterCreated(new CharacterEventArgs(character));
     }
 
     public Tile GetTileAt(int x, int y)
@@ -283,40 +228,6 @@ public class World : IXmlSerializable
         return null;
     }
 
-    public Furniture PlaceFurniture(string type, Tile tile, bool floodFill = true)
-    {
-        if (FurniturePrototypes.ContainsKey(type) == false)
-        {
-            Debug.LogError("furniturePrototypes doesn't contain a proto for key: " + type);
-            return null;
-        }
-
-        Furniture furnitureInstance = Furniture.Place(FurniturePrototypes[type], tile);
-        if (furnitureInstance == null)
-        {
-            return null;
-        }
-
-        furnitureInstance.FurnitureRemoved += OnFurnitureRemoved;
-        Furnitures.Add(furnitureInstance);
-
-        // Do we need to recalculate our rooms?
-        if (floodFill && furnitureInstance.RoomEnclosure)
-        {
-            Room.CalculateRooms(furnitureInstance.Tile);
-        }
-
-        OnFurnitureCreated(new FurnitureEventArgs(furnitureInstance));
-
-        if (furnitureInstance.MovementCost == 1) return furnitureInstance;
-        if (TileGraph != null)
-        {
-            TileGraph.Regenerate(tile);
-        }
-
-        return furnitureInstance;
-    }
-
     private void OnTileChangedEvent(object sender, TileEventArgs args)
     {
         OnTileChanged(args);
@@ -324,11 +235,6 @@ public class World : IXmlSerializable
         {
             TileGraph.Regenerate(args.Tile);
         }
-    }
-
-    public bool IsFurniturePlacementValid(string type, Tile tile)
-    {
-        return FurniturePrototypes[type].IsValidPosition(tile);
     }
 
     public Furniture GetFurniturePrototype(string type)
@@ -365,12 +271,6 @@ public class World : IXmlSerializable
         return Rooms[index];
     }
 
-    public int FurnituresWithTypeCount(string type)
-    {
-        int count = Furnitures.Count(furniture => furniture.Type == type);
-        return count;
-    }
-
     private void CreateFurniturePrototypes()
     {
         LuaUtilities.LoadScriptFromFile(Path.Combine(Path.Combine(Application.streamingAssetsPath, "LUA"), "Furniture.lua"));
@@ -398,7 +298,7 @@ public class World : IXmlSerializable
         }
     }
 
-    private void LoadFurniturePrototypesFromFile(string furnitureXmlText) 
+    private void LoadFurniturePrototypesFromFile(string furnitureXmlText)
     {
         XmlTextReader reader = new XmlTextReader(new StringReader(furnitureXmlText));
         if (reader.ReadToDescendant("Furnitures"))
@@ -443,7 +343,7 @@ public class World : IXmlSerializable
         NeedPrototypes = new Dictionary<string, Need>();
 
         string needXmlSource = File.ReadAllText(Path.Combine(Path.Combine(Application.streamingAssetsPath, "Data"), "Need.xml"));
-        LoadNeedPrototypesFromFile (needXmlSource);
+        LoadNeedPrototypesFromFile(needXmlSource);
 
         DirectoryInfo[] mods = WorldController.Instance.ModManager.ModDirectories;
         foreach (DirectoryInfo mod in mods)
@@ -545,7 +445,7 @@ public class World : IXmlSerializable
                         Debug.LogError("Error reading trader prototype for: " + trader.Type + Environment.NewLine + "Exception: " + e.Message + Environment.NewLine + "StackTrace: " + e.StackTrace);
                     }
 
-                    TraderPrototypes[trader.Type] = trader;      
+                    TraderPrototypes[trader.Type] = trader;
                 }
                 while (reader.ReadToNextSibling("Trader"));
             }
@@ -566,7 +466,7 @@ public class World : IXmlSerializable
 
         string filePath = Path.Combine(Path.Combine(Application.streamingAssetsPath, "Data"), "Quest.xml");
         LoadQuestsFromFile(File.ReadAllText(filePath));
-        
+
         DirectoryInfo[] mods = WorldController.Instance.ModManager.ModDirectories;
         foreach (DirectoryInfo mod in mods)
         {
@@ -646,11 +546,6 @@ public class World : IXmlSerializable
         }
     }
 
-    public void OnFurnitureRemoved(object sender, FurnitureEventArgs args)
-    {
-        Furnitures.Remove(args.Furniture);
-    }
-
     public XmlSchema GetSchema()
     {
         return null;
@@ -667,7 +562,7 @@ public class World : IXmlSerializable
             if (OutsideRoom == room)
             {
                 continue;
-            }  
+            }
 
             writer.WriteStartElement("Room");
             room.WriteXml(writer);
@@ -701,25 +596,9 @@ public class World : IXmlSerializable
         }
         writer.WriteEndElement();
 
-        writer.WriteStartElement("Furnitures");
-        foreach (Furniture furniture in Furnitures)
-        {
-            writer.WriteStartElement("Furniture");
-            furniture.WriteXml(writer);
-            writer.WriteEndElement();
+        FurnitureManager.WriteXml(writer);
+        CharacterManager.WriteXml(writer);
 
-        }
-        writer.WriteEndElement();
-
-        writer.WriteStartElement("Characters");
-        foreach (Character character in Characters)
-        {
-            writer.WriteStartElement("Character");
-            character.WriteXml(writer);
-            writer.WriteEndElement();
-
-        }
-        writer.WriteEndElement();
         writer.WriteElementString("Skybox", Skybox.name);
     }
 
@@ -744,41 +623,15 @@ public class World : IXmlSerializable
                     ReadXmlInventories(reader);
                     break;
                 case "Furnitures":
-                    ReadXmlFurnitures(reader);
+                    FurnitureManager.ReadXml(reader);
                     break;
                 case "Characters":
-                    ReadXmlCharacters(reader);
+                    CharacterManager.ReadXml(reader);
                     break;
                 case "Skybox":
                     LoadSkybox(reader.ReadElementString("Skybox"));
                     break;
             }
-        }
-
-        // DEBUGGING ONLY!  REMOVE ME LATER!
-        // Create an Inventory Item
-        Inventory inventory = new Inventory("Steel Plate", 50, 50);
-        Tile tileAt = GetTileAt(Width / 2, Height / 2);
-        InventoryManager.Place(tileAt, inventory);
-        if (InventoryCreated != null)
-        {
-            OnInventoryCreated(new InventoryEventArgs(tileAt.Inventory));
-        }
-
-        inventory = new Inventory("Steel Plate", 50, 4);
-        tileAt = GetTileAt(Width / 2 + 2, Height / 2);
-        InventoryManager.Place(tileAt, inventory);
-        if (InventoryCreated != null)
-        {
-            OnInventoryCreated(new InventoryEventArgs(tileAt.Inventory));
-        }
-
-        inventory = new Inventory("Copper Wire", 50, 3);
-        tileAt = GetTileAt(Width / 2 + 1, Height / 2 + 2);
-        InventoryManager.Place(tileAt, inventory);
-        if (InventoryCreated != null)
-        {
-            OnInventoryCreated(new InventoryEventArgs(tileAt.Inventory));
         }
     }
 
@@ -803,25 +656,11 @@ public class World : IXmlSerializable
             int x = int.Parse(reader.GetAttribute("X"));
             int y = int.Parse(reader.GetAttribute("Y"));
 
-            Inventory inventory = new Inventory(reader.GetAttribute("objectType"), int.Parse(reader.GetAttribute("maxStackSize")), int.Parse(reader.GetAttribute("stackSize")));           
-            InventoryManager.Place(tiles[x,y],inventory);
+            Inventory inventory = new Inventory(reader.GetAttribute("objectType"), int.Parse(reader.GetAttribute("maxStackSize")), int.Parse(reader.GetAttribute("stackSize")));
+            InventoryManager.Place(tiles[x, y], inventory);
 
         }
         while (reader.ReadToNextSibling("Inventory"));
-    }
-
-    private void ReadXmlFurnitures(XmlReader reader)
-    {
-        if (!reader.ReadToDescendant("Furniture")) return;
-        do
-        {
-            int x = int.Parse(reader.GetAttribute("X"));
-            int y = int.Parse(reader.GetAttribute("Y"));
-
-            Furniture furniture = PlaceFurniture(reader.GetAttribute("objectType"), tiles[x, y], false);
-            furniture.ReadXml(reader);
-        }
-        while (reader.ReadToNextSibling("Furniture"));
     }
 
     private void ReadXmlRooms(XmlReader reader)
@@ -834,33 +673,5 @@ public class World : IXmlSerializable
             room.ReadXml(reader);
         }
         while (reader.ReadToNextSibling("Room"));
-    }
-
-    private void ReadXmlCharacters(XmlReader reader)
-    {
-        if (!reader.ReadToDescendant("Character")) return;
-        do
-        {
-            int x = int.Parse(reader.GetAttribute("X"));
-            int y = int.Parse(reader.GetAttribute("Y"));
-
-            if(reader.GetAttribute("r") != null)
-            {
-                float r = float.Parse(reader.GetAttribute("r"));
-                float b = float.Parse(reader.GetAttribute("b"));;
-                float g = float.Parse(reader.GetAttribute("g"));;
-                Color colour = new Color(r, g, b, 1.0f);
-                Character character = CreateCharacter(tiles[x, y], colour);
-                character.ReadXml(reader);
-            }
-
-            else
-            {
-                Character character = CreateCharacter(tiles[x, y]);
-                character.ReadXml(reader);
-            }
-                
-        }
-        while (reader.ReadToNextSibling("Character"));
     }
 }

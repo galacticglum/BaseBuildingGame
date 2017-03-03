@@ -30,7 +30,7 @@ public class CursorDisplay
         foreach (GameObject dragGameObject in mouseController.DragObjects)
         {
             Tile tileUnderDrag = GetTileUnderDrag(dragGameObject.transform.position);
-            if (WorldController.Instance.World.IsFurniturePlacementValid(constructionController.ConstructionType, tileUnderDrag) && tileUnderDrag.PendingBuildJob == null)
+            if (WorldController.Instance.World.FurnitureManager.IsPlacementValid(constructionController.ConstructionType, tileUnderDrag) && tileUnderDrag.PendingBuildJob == null)
             {
                 validPostionCount++;
             }

@@ -5,7 +5,7 @@ public class AudioController
     private float audioCooldown;
     public AudioController()
     {
-        World.Current.FurnitureCreated += OnFurnitureCreated;
+        World.Current.FurnitureManager.FurnitureCreated += OnFurnitureCreated;
         World.Current.TileChanged += OnTileChanged;
     }
 	
