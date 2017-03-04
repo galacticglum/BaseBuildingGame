@@ -43,7 +43,7 @@ public class InventoryDebugController
 
     private void GenerateInventoryButtons()
     {
-        foreach(string iName in World.Current.InventoryPrototypes.Keys)
+        foreach(string iName in PrototypeManager.Inventories.Keys)
         {
             GameObject inventoryButton = new GameObject
             {

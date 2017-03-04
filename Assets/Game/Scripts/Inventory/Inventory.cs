@@ -57,7 +57,7 @@ public class Inventory : IXmlSerializable, ISelectable, IContextActionProvider
     public Inventory(string type, int stackSize) : this()
     {
         Type = type;
-        MaxStackSize = World.Current.InventoryPrototypes.ContainsKey(type) ? World.Current.InventoryPrototypes[type].MaxStackSize : 50;
+        MaxStackSize = PrototypeManager.Inventories.Contains(type) ? PrototypeManager.Inventories[type].MaxStackSize : 50;
         StackSize = stackSize;
     }
 

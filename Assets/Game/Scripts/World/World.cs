@@ -32,7 +32,6 @@ public class World : IXmlSerializable
 
     public Dictionary<string, Job> FurnitureJobPrototypes { get; private set; }
     public Dictionary<string, Need> NeedPrototypes { get; private set; }
-    public Dictionary<string, InventoryPrototype> InventoryPrototypes { get; private set; }
     public Dictionary<string, TraderPrototype> TraderPrototypes { get; private set; }
 
     public Tile CentreTile { get { return GetTileAt(Width / 2, Height / 2); } }
@@ -257,7 +256,7 @@ public class World : IXmlSerializable
             if (!File.Exists(furnitureXmlModFile)) continue;
 
             string furnitureXmlModText = File.ReadAllText(furnitureXmlModFile);
-            PrototypeManager.Furnitures.Load(File.ReadAllText(furnitureXmlModText));
+            PrototypeManager.Furnitures.Load(furnitureXmlModText);
         }
     }
 
@@ -319,12 +318,10 @@ public class World : IXmlSerializable
         }
     }
 
-    private void CreateInventoryPrototypes()
+    private static void CreateInventoryPrototypes()
     {
-        InventoryPrototypes = new Dictionary<string, InventoryPrototype>();
-
         string filePath = Path.Combine(Path.Combine(Application.streamingAssetsPath, "Data"), "Inventory.xml");
-        LoadInventoryPrototypesFromFile(File.ReadAllText(filePath));
+        PrototypeManager.Inventories.Load(File.ReadAllText(filePath));
 
         DirectoryInfo[] mods = WorldController.Instance.ModManager.ModDirectories;
         foreach (DirectoryInfo mod in mods)
@@ -333,7 +330,7 @@ public class World : IXmlSerializable
             if (!File.Exists(inventoryXmlModFile)) continue;
 
             string inventoryXmlModText = File.ReadAllText(inventoryXmlModFile);
-            LoadInventoryPrototypesFromFile(inventoryXmlModText);
+            PrototypeManager.Inventories.Load(inventoryXmlModText);
         }
     }
 
@@ -386,40 +383,6 @@ public class World : IXmlSerializable
         else
         {
             Debug.LogError("Did not find a 'Traders' element in the prototype definition file.");
-        }
-    }
-
-    private void LoadInventoryPrototypesFromFile(string inventoryXmlText)
-    {
-        XmlTextReader reader = new XmlTextReader(new StringReader(inventoryXmlText));
-        if (reader.ReadToDescendant("Inventories"))
-        {
-            if (reader.ReadToDescendant("Inventory"))
-            {
-                do
-                {
-                    InventoryPrototype inventoryPrototype = new InventoryPrototype();
-                    try
-                    {
-                        inventoryPrototype.ReadXmlPrototype(reader);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError("Error reading inventory prototype for: " + inventoryPrototype.Type + Environment.NewLine + "Exception: " + e.Message + Environment.NewLine + "StackTrace: " + e.StackTrace);
-                    }
-
-                    InventoryPrototypes[inventoryPrototype.Type] = inventoryPrototype;
-                }
-                while (reader.ReadToNextSibling("Inventory"));
-            }
-            else
-            {
-                Debug.LogError("The inventory prototype definition file doesn't have any 'Inventory' elements.");
-            }
-        }
-        else
-        {
-            Debug.LogError("Did not find a 'Inventories' element in the prototype definition file.");
         }
     }
 

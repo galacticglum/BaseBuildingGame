@@ -383,9 +383,9 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
         }
 
         Dictionary<string, Inventory> inventories = new Dictionary<string, Inventory>();
-        foreach (string objectType in World.Current.InventoryPrototypes.Keys)
+        foreach (string objectType in PrototypeManager.Inventories.Keys)
         {
-            inventories[objectType] = new Inventory(objectType, World.Current.InventoryPrototypes[objectType].MaxStackSize, 0);
+            inventories[objectType] = new Inventory(objectType, PrototypeManager.Inventories[objectType].MaxStackSize, 0);
         }
 
         Inventory[] inventoryFilter = new Inventory[inventories.Count];
