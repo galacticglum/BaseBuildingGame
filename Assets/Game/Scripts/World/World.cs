@@ -31,8 +31,6 @@ public class World : IXmlSerializable
     public Material Skybox { get; private set; } // TODO: Move me to somewhere more appropriate. World Controller??
 
     public Dictionary<string, Job> FurnitureJobPrototypes { get; private set; }
-    public Dictionary<string, Need> NeedPrototypes { get; private set; }
-    public Dictionary<string, TraderPrototype> TraderPrototypes { get; private set; }
 
     public Tile CentreTile { get { return GetTileAt(Width / 2, Height / 2); } }
 
@@ -237,7 +235,6 @@ public class World : IXmlSerializable
     private void CreateFurniturePrototypes()
     {
         LuaUtilities.LoadScriptFromFile(Path.Combine(Path.Combine(Application.streamingAssetsPath, "LUA"), "Furniture.lua"));
-
         FurnitureJobPrototypes = new Dictionary<string, Job>();
 
         string filePath = Path.Combine(Path.Combine(Application.streamingAssetsPath, "Data"), "Furniture.xml");
@@ -260,18 +257,10 @@ public class World : IXmlSerializable
         }
     }
 
-    private static void LoadNeedLua(string filePath)
+    private static void CreateNeedPrototypes()
     {
-        string myLuaCode = File.ReadAllText(filePath);
-        NeedActions.AddScript(myLuaCode);
-    }
-
-    private void CreateNeedPrototypes()
-    {
-        NeedPrototypes = new Dictionary<string, Need>();
-
         string needXmlSource = File.ReadAllText(Path.Combine(Path.Combine(Application.streamingAssetsPath, "Data"), "Need.xml"));
-        LoadNeedPrototypesFromFile(needXmlSource);
+        PrototypeManager.Needs.Load(needXmlSource);
 
         DirectoryInfo[] mods = WorldController.Instance.ModManager.ModDirectories;
         foreach (DirectoryInfo mod in mods)
@@ -279,42 +268,15 @@ public class World : IXmlSerializable
             string needLuaModFile = Path.Combine(mod.FullName, "Need.lua");
             if (File.Exists(needLuaModFile))
             {
-                LoadNeedLua(needLuaModFile);
+                string myLuaCode = File.ReadAllText(needLuaModFile);
+                NeedActions.AddScript(myLuaCode);
             }
 
             string needXmlModFile = Path.Combine(mod.FullName, "Need.xml");
             if (!File.Exists(needXmlModFile)) continue;
 
             string needXmlModText = File.ReadAllText(needXmlModFile);
-            LoadNeedPrototypesFromFile(needXmlModText);
-        }
-    }
-
-    private void LoadNeedPrototypesFromFile(string needXmlText)
-    {
-        XmlTextReader reader = new XmlTextReader(new StringReader(needXmlText));
-
-        if (!reader.ReadToDescendant("Needs")) return;
-        if (reader.ReadToDescendant("Need"))
-        {
-            do
-            {
-                Need need = new Need();
-                try
-                {
-                    need.ReadXmlPrototype(reader);
-                }
-                catch
-                {
-                    Debug.LogError("Error reading need prototype for: " + need.Type);
-                }
-                NeedPrototypes[need.Type] = need;
-            }
-            while (reader.ReadToNextSibling("Need"));
-        }
-        else
-        {
-            Debug.LogError("The need prototype definition file doesn't have any 'Need' elements.");
+            PrototypeManager.Needs.Load(needXmlModText);
         }
     }
 
@@ -334,12 +296,10 @@ public class World : IXmlSerializable
         }
     }
 
-    private void CreateTraderPrototypes()
+    private static void CreateTraderPrototypes()
     {
-        TraderPrototypes = new Dictionary<string, TraderPrototype>();
-
         string filePath = Path.Combine(Path.Combine(Application.streamingAssetsPath, "Data"), "Trader.xml");
-        LoadTraderPrototypesFromFile(File.ReadAllText(filePath));
+        PrototypeManager.Traders.Load(File.ReadAllText(filePath));
 
         DirectoryInfo[] mods = WorldController.Instance.ModManager.ModDirectories;
         foreach (DirectoryInfo mod in mods)
@@ -348,43 +308,9 @@ public class World : IXmlSerializable
             if (!File.Exists(traderXmlModFile)) continue;
 
             string traderXmlModText = File.ReadAllText(traderXmlModFile);
-            LoadTraderPrototypesFromFile(traderXmlModText);
+            PrototypeManager.Inventories.Load(traderXmlModText);
         }
-    }
-
-    private void LoadTraderPrototypesFromFile(string traderXmlText)
-    {
-        XmlTextReader reader = new XmlTextReader(new StringReader(traderXmlText));
-        if (reader.ReadToDescendant("Traders"))
-        {
-            if (reader.ReadToDescendant("Trader"))
-            {
-                do
-                {
-                    TraderPrototype trader = new TraderPrototype();
-                    try
-                    {
-                        trader.ReadXmlPrototype(reader);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError("Error reading trader prototype for: " + trader.Type + Environment.NewLine + "Exception: " + e.Message + Environment.NewLine + "StackTrace: " + e.StackTrace);
-                    }
-
-                    TraderPrototypes[trader.Type] = trader;
-                }
-                while (reader.ReadToNextSibling("Trader"));
-            }
-            else
-            {
-                Debug.LogError("The trader prototype definition file doesn't have any 'Trader' elements.");
-            }
-        }
-        else
-        {
-            Debug.LogError("Did not find a 'Traders' element in the prototype definition file.");
-        }
-    }
+    }   
 
     public XmlSchema GetSchema()
     {

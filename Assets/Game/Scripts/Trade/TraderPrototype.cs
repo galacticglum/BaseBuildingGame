@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Xml;
 using UnityEngine;
 
-public class TraderPrototype
+public class TraderPrototype : IPrototypable
 {
     public string Type { get; private set; }
     public float MinimumCurrencyBalance { get; private set; }

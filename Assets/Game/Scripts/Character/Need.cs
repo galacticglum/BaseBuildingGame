@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Xml;
 
-public class Need
+public class Need : IPrototypable
 {
     public string Name { get; private set; }
     public string Type { get; private set; }

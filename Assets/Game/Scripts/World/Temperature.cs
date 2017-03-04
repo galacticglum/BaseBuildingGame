@@ -57,11 +57,11 @@ public class Temperature
         elapsed += Time.deltaTime;
         if (!(elapsed >= UpdateInterval)) return;
 
-        UpdateTemperature(Time.deltaTime);
+        Process(Time.deltaTime);
         elapsed = 0;
     }
 
-    private void UpdateTemperature(float deltaTime)
+    private void Process(float deltaTime)
     {
         if (sinksAndSources != null)
         {

@@ -99,7 +99,7 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
 
     public Character()
     {
-        needs = new Need[World.Current.NeedPrototypes.Count];
+        needs = new Need[PrototypeManager.Needs.Count];
         InitializeNeeds();
     }
 
@@ -119,9 +119,9 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
 
     private void InitializeNeeds()
     {
-        needs = new Need[World.Current.NeedPrototypes.Count];
-        World.Current.NeedPrototypes.Values.CopyTo (needs, 0);
-        for (int i = 0; i < World.Current.NeedPrototypes.Count; i++)
+        needs = new Need[PrototypeManager.Needs.Count];
+        PrototypeManager.Needs.Values.CopyTo(needs, 0);
+        for (int i = 0; i < PrototypeManager.Needs.Count; i++)
         {
             Need need = needs[i];
             needs[i] = need.Clone();
