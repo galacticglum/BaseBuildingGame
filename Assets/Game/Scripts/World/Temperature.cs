@@ -135,7 +135,7 @@ public class Temperature
         // TODO: This need to be implemented
         sinksAndSources[provider] = (sender, args) => 
         {
-            provider.FurnitureEventActions.Trigger("OnUpdateTemperature", provider, args.DeltaTime);
+            provider.EventManager.Trigger("TemperatureUpdated", provider, args.DeltaTime);
         };     
     }
 

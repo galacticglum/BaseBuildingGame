@@ -144,7 +144,7 @@ public class Job
         {
             foreach (string function in cbJobWorkedLua)
             {
-                LuaUtilities.CallFunction(function, this);
+                Lua.Call(function, this);
             }
         }
 
@@ -160,7 +160,7 @@ public class Job
 
         foreach (string function in cbJobCompletedLua)
         {
-            LuaUtilities.CallFunction(function, this);
+            Lua.Call(function, this);
         }
 
         if (repeatingJob == false)

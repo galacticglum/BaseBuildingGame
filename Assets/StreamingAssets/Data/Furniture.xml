@@ -60,8 +60,8 @@
             <Param name="thermal_diffusivity" value="0.0001" />
         </Params>
 
-        <Action event="OnUpdate" functionName="OnUpdate_Door" />
-        <Action event="OnUpdate" functionName="OnUpdate_Leak_Door" />
+        <Action event="FurnitureUpdate" functionName="OnUpdate_Door" />
+        <Action event="FurnitureUpdate" functionName="OnUpdate_Leak_Door" />
 
         <IsEnterable FunctionName="IsEnterable_Door" />
         <GetSpriteName FunctionName="GetSpriteName_Door" />
@@ -98,8 +98,8 @@
             <Param name="thermal_diffusivity" value="0.00001" />
         </Params>
 
-        <Action event="OnUpdate" functionName="OnUpdate_Door" />
-        <Action event="OnUpdate" functionName="OnUpdate_Leak_Airlock" />
+        <Action event="FurnitureUpdate" functionName="OnUpdate_Door" />
+        <Action event="FurnitureUpdate" functionName="OnUpdate_Leak_Airlock" />
 
         <IsEnterable FunctionName="IsEnterable_Door" />
         <GetSpriteName FunctionName="GetSpriteName_Airlock" />
@@ -119,7 +119,7 @@
 
         <BuildingJob jobTime="0" />
 
-        <Action event="OnUpdate" functionName="Stockpile_UpdateAction" />
+        <Action event="FurnitureUpdate" functionName="Stockpile_UpdateAction" />
 
         <LocalizationCode>furn_stockpile</LocalizationCode>
         <UnlocalizedDescription>furn_stockpile_desc</UnlocalizedDescription>
@@ -152,7 +152,7 @@
             </Param>
         </Params>
 
-        <Action event="OnUpdate" functionName="OnUpdate_GasGenerator" />
+        <Action event="FurnitureUpdate" functionName="OnUpdate_GasGenerator" />
 
         <LocalizationCode>furn_oxygen_generator</LocalizationCode>
         <UnlocalizedDescription>furn_oxygen_generator_desc</UnlocalizedDescription>
@@ -177,7 +177,7 @@
         <JobSpotOffset X="1" Y="0" />
         <JobSpawnSpotOffset X="0" Y="0" />
 
-        <Action event="OnUpdate" functionName="MiningDroneStation_UpdateAction" />
+        <Action event="FurnitureUpdate" functionName="MiningDroneStation_UpdateAction" />
 
         <ContextMenuAction FunctionName="MiningDroneStation_Change_to_Raw_Iron" Text="change to raw iron" RequiereCharacterSelected="false"/>
         <ContextMenuAction FunctionName="MiningDroneStation_Change_to_Raw_Copper" Text="change to raw copper" RequiereCharacterSelected="false"/>
@@ -203,7 +203,7 @@
             <Param name="burnTimeRequired" value="50" />
         </Params>
 
-        <Action event="OnUpdate" functionName="PowerGenerator_UpdateAction" />
+        <Action event="FurnitureUpdate" functionName="PowerGenerator_UpdateAction" />
 
         <LocalizationCode>furn_power_generator</LocalizationCode>
         <UnlocalizedDescription>furn_power_generator_desc</UnlocalizedDescription>
@@ -229,7 +229,7 @@
         <JobSpotOffset X="0" Y="-1" />
         <JobSpawnSpotOffset X="1" Y="-1" />
 
-        <Action event="OnUpdate" functionName="CloningPod_UpdateAction" />
+        <Action event="FurnitureUpdate" functionName="CloningPod_UpdateAction" />
 
         <LocalizationCode>furn_cloning_pod</LocalizationCode>
         <UnlocalizedDescription>furn_cloning_pod_desc</UnlocalizedDescription>
@@ -254,7 +254,7 @@
             <Param name="smelttime_required" value="6" />
         </Params>
 
-        <Action event="OnUpdate" functionName="MetalSmelter_UpdateAction" />
+        <Action event="FurnitureUpdate" functionName="MetalSmelter_UpdateAction" />
 
         <LocalizationCode>furn_metal_smelter</LocalizationCode>
         <UnlocalizedDescription>furn_metal_smelter_desc</UnlocalizedDescription>
@@ -274,9 +274,9 @@
         <BuildingJob jobTime="0" />
 
         <!-- This method gets called on Install -->
-        <Action event="OnInstall" functionName="Heater_InstallAction"></Action>
+        <Action event="FurnitureInstalled" functionName="Heater_InstallAction"></Action>
         <!-- This method gets called on Uninstall -->
-        <Action event="OnUninstall" functionName="Heater_UninstallAction"></Action>
+        <Action event="FurnitureUninstalled" functionName="Heater_UninstallAction"></Action>
 
         <Params>
             <Param name="temperature" value="10" />
@@ -302,7 +302,7 @@
             <Param name="presstime_required" value="15" />
         </Params>
 
-        <Action event="OnUpdate" functionName="PowerCellPress_UpdateAction" />
+        <Action event="FurnitureUpdate" functionName="PowerCellPress_UpdateAction" />
 
         <LocalizationCode>furn_power_cell_press</LocalizationCode>
         <UnlocalizedDescription>furn_power_cell_press_desc</UnlocalizedDescription>
@@ -337,7 +337,7 @@
             <Param name="tradeoutamount" value="15" />
         </Params>
 
-        <Action event="OnUpdate" functionName="LandingPad_Temp_UpdateAction" />
+        <Action event="FurnitureUpdate" functionName="LandingPad_Temp_UpdateAction" />
 
         <ContextMenuAction FunctionName="LandingPad_Test_ContextMenuAction" Text="Lua Test Deconstruct 1" RequiereCharacterSelected="false"/>
         <ContextMenuAction FunctionName="LandingPad_Test_ContextMenuAction" Text="Lua Test Deconstruct 2" RequiereCharacterSelected="true" />
@@ -366,7 +366,7 @@
             <Param name="flow_rate" value="0.1" />
         </Params>
 
-        <Action event="OnUpdate" functionName="OxygenCompressor_OnUpdate" />
+        <Action event="FurnitureUpdate" functionName="OxygenCompressor_OnUpdate" />
         <GetSpriteName FunctionName="OxygenCompressor_GetSpriteName" />
 
         <LocalizationCode>furn_oxygen_compressor</LocalizationCode>

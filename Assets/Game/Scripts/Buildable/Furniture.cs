@@ -53,7 +53,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
     public string DragMode { get; private set; }
 
     public ParameterContainer Parameters { get; private set; }
-    public FurnitureEventAction FurnitureEventActions { set; get; }
+    public LuaEventManager EventManager { get; private set; }
 
     public event PowerChangedEventHandler PowerValueChanged;
     public void OnPowerValueChanged(PowerEventArgs args)
@@ -104,7 +104,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
         Height = 1;
         Width = 1;
 
-        FurnitureEventActions = new FurnitureEventAction();
+        EventManager = new LuaEventManager("FurnitureUpdate", "FurnitureInstalled", "FurnitureUninstalled", "TemperatureUpdated");
         ReplaceableFurniture = new List<string>();
         Parameters = new ParameterContainer("furnParameters");
         Tint = Color.white;
@@ -134,9 +134,10 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
         typeTags = new HashSet<string>(other.typeTags);
         description = other.description;
 
-        if (other.FurnitureEventActions != null)
+        EventManager = new LuaEventManager("FurnitureUpdate", "FurnitureInstalled", "FurnitureUninstalled", "TemperatureUpdated");
+        if (other.EventManager != null)
         {
-            FurnitureEventActions = other.FurnitureEventActions.Clone();
+            EventManager = other.EventManager.Clone();
         }
 
         if (other.contextMenuLuaActions != null)
@@ -164,10 +165,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
 
     public void Update(float deltaTime)
     {
-        if (FurnitureEventActions != null)
-        {
-            FurnitureEventActions.Trigger("OnUpdate", this, deltaTime);
-        }
+        EventManager.Trigger("FurnitureUpdate", this, deltaTime);
     }
 
     public static Furniture Place(Furniture prototype, Tile tile)
@@ -190,7 +188,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
             UpdateNeighbouringFurnitures(prototype, tile);
         }
 
-        furnitureInstance.FurnitureEventActions.Trigger("OnInstall", furnitureInstance);
+        furnitureInstance.EventManager.Trigger("FurnitureInstalled", furnitureInstance);
         UpdateThermalDiffusitivity(furnitureInstance, tile);
 
         return furnitureInstance;
@@ -199,7 +197,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
        public void Deconstruct()
     {
         CancelJobs();
-        FurnitureEventActions.Trigger("OnUninstall", this);
+        EventManager.Trigger("FurnitureUninstalled", this);
         World.Current.Temperature.SetThermalDiffusivity(Tile.X, Tile.Y, Temperature.DefaultThermalDiffusivity);
         Tile.RemoveFurniture();
 
@@ -347,7 +345,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
 
     public string GetSpriteName()
     {
-        return string.IsNullOrEmpty(getSpriteNameFunction) ? Type : LuaUtilities.CallFunction(getSpriteNameFunction, this).String;
+        return string.IsNullOrEmpty(getSpriteNameFunction) ? Type : Lua.Call(getSpriteNameFunction, this).String;
     }
 
     private void OnJobStopped(object sender, JobEventArgs args)
@@ -362,7 +360,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
             return TileEnterability.Immediate;
         }
 
-        return (TileEnterability)LuaUtilities.CallFunction(tryEnterFunction, this).Number;
+        return (TileEnterability)Lua.Call(tryEnterFunction, this).Number;
     }
 
     public bool HasTypeTag(string typeTag)
@@ -391,6 +389,12 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
         Inventory[] inventoryFilter = new Inventory[inventories.Count];
         inventories.Values.CopyTo(inventoryFilter, 0);
         return inventoryFilter;
+    }
+
+    public static void Build(object sender, JobEventArgs args)
+    {
+        World.Current.FurnitureManager.Place(args.Job.Type, args.Job.Tile);
+        args.Job.Tile.PendingBuildJob = null;
     }
 
     public IEnumerable<ContextMenuAction> GetContextMenuActions(ContextMenu contextMenu)
@@ -422,7 +426,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
 
     private void InvokeContextMenuLuaAction(string luaFunction, Character character)
     {
-        LuaUtilities.CallFunction(luaFunction, this, character);
+        Lua.Call(luaFunction, this, character);
     }
 
     public string GetName()
@@ -543,12 +547,12 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
                                 workAdjacent = reader.ReadContentAsBoolean();
                                 break;
                             case "Inventory":
-                                inventories.Add(new Inventory(readerSubtree.GetAttribute("objectType"), int.Parse(readerSubtree.GetAttribute("amount")), 0));
+                                inventories.Add(new Inventory(readerSubtree.GetAttribute("objectType"), Int32.Parse(readerSubtree.GetAttribute("amount")), 0));
                                 break;
                         }
                     }
 
-                    Job job = new Job(null, Type, FurnitureActions.BuildFurniture, jobTime, inventories.ToArray(), priority, repeatingJob)
+                    Job job = new Job(null, Type, Build, jobTime, inventories.ToArray(), priority, repeatingJob)
                     {
                         Description = "job_build_" + Type + "_desc",
                         WorkAdjacent = workAdjacent
@@ -559,7 +563,12 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
 
                 case "Action":
                     XmlReader subtree = reader.ReadSubtree();
-                    FurnitureEventActions.ReadXml(subtree);
+                    subtree.Read();
+
+                    string eventTag = reader.GetAttribute("event");
+                    string functionName = reader.GetAttribute("functionName");
+                    EventManager.AddHandler(eventTag, functionName);
+
                     subtree.Close();
                     break;
                 case "ContextMenuAction":
@@ -578,10 +587,10 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
                     break;
 
                 case "JobSpotOffset":
-                    WorkPositionOffset = new Vector2(int.Parse(reader.GetAttribute("X")), int.Parse(reader.GetAttribute("Y")));
+                    WorkPositionOffset = new Vector2(Int32.Parse(reader.GetAttribute("X")), Int32.Parse(reader.GetAttribute("Y")));
                     break;
                 case "JobSpawnSpotOffset":
-                    InventorySpawnPosition = new Vector2(int.Parse(reader.GetAttribute("X")), int.Parse(reader.GetAttribute("Y")));
+                    InventorySpawnPosition = new Vector2(Int32.Parse(reader.GetAttribute("X")), Int32.Parse(reader.GetAttribute("Y")));
                     break;
 
                 case "Power":

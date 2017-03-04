@@ -234,7 +234,7 @@ public class World : IXmlSerializable
 
     private void CreateFurniturePrototypes()
     {
-        LuaUtilities.LoadScriptFromFile(Path.Combine(Path.Combine(Application.streamingAssetsPath, "LUA"), "Furniture.lua"));
+        Lua.Parse(Path.Combine(Path.Combine(Application.streamingAssetsPath, "LUA"), "Furniture.lua"));
         FurnitureJobPrototypes = new Dictionary<string, Job>();
 
         string filePath = Path.Combine(Path.Combine(Application.streamingAssetsPath, "Data"), "Furniture.xml");
@@ -246,7 +246,7 @@ public class World : IXmlSerializable
             string furnitureLuaModFile = Path.Combine(mod.FullName, "Furniture.lua");
             if (File.Exists(furnitureLuaModFile))
             {
-                LuaUtilities.LoadScriptFromFile(furnitureLuaModFile);
+                Lua.Parse(furnitureLuaModFile);
             }
 
             string furnitureXmlModFile = Path.Combine(mod.FullName, "Furniture.xml");

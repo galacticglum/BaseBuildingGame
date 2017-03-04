@@ -68,7 +68,7 @@ public class ConstructionController
                     else
                     {
                         Debug.LogError("There is no furniture job prototype for '" + furnitureType + "'");
-                        job = new Job(tile, furnitureType, FurnitureActions.BuildFurniture, 0.1f, null, JobPriority.High)
+                        job = new Job(tile, furnitureType, Furniture.Build, 0.1f, null, JobPriority.High)
                         {
                             Description = "job_build_" + furnitureType + "_desc"
                         };
@@ -181,7 +181,7 @@ public class ConstructionController
 
     private static bool CanBuild(Tile tile, TileType type)
     {
-        DynValue value = LuaUtilities.CallFunction(type.CanBuildHereLua, tile);
+        DynValue value = Lua.Call(type.CanBuildHereLua, tile);
         if (value != null)
         {
             return value.Boolean;

@@ -63,14 +63,13 @@ public class TileType : IXmlSerializable
 
     public static void Load()
     {
-        LuaUtilities.LoadScriptFromFile(Path.Combine(Path.Combine(Application.streamingAssetsPath, "LUA"), "Tile.lua"));
+        Lua.Parse(Path.Combine(Path.Combine(Application.streamingAssetsPath, "LUA"), "Tile.lua"));
         foreach (DirectoryInfo mod in WorldController.Instance.ModManager.ModDirectories)
         {
             foreach (FileInfo file in mod.GetFiles("Tiles.lua"))
             {
                 Debug.Log("Loading mod " + mod.Name + " TileType definitions!");
-
-                LuaUtilities.LoadScriptFromFile(file.FullName);
+                Lua.Parse(file.FullName);
             }
         }
 

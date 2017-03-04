@@ -17,7 +17,7 @@ public class Tile :IXmlSerializable, ISelectable
 
     public int X { get; private set; }
     public int Y { get; private set; }
-    public float MovementCost { get { return (float)LuaUtilities.CallFunction(Type.MovementCostLua, this).Number; } }
+    public float MovementCost { get { return (float)Lua.Call(Type.MovementCostLua, this).Number; } }
 
     private TileType type = TileType.Empty;
     public TileType Type
