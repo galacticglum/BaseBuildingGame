@@ -20,12 +20,13 @@ public class World : IXmlSerializable
     public int Width { get; private set; }
     public int Height { get; private set; }
 
-    //public List<Character> Characters { get; private set; }
-    public List<Room> Rooms { get; private set; }
+    //public List<Room> Rooms { get; private set; }
 
+    public RoomManager RoomManager { get; private set; }
+    public CharacterManager CharacterManager { get; private set; }
     public InventoryManager InventoryManager { get; private set; }
     public FurnitureManager FurnitureManager { get; private set; }
-    public CharacterManager CharacterManager { get; private set; }
+
     public PowerSystem PowerSystem { get; private set; }
     public Temperature Temperature { get; private set; }
     public Material Skybox { get; private set; } // TODO: Move me to somewhere more appropriate. World Controller??
@@ -37,7 +38,6 @@ public class World : IXmlSerializable
     public Dictionary<string, TraderPrototype> TraderPrototypes { get; private set; }
     public List<Quest> Quests { get; private set; }
 
-    public Room OutsideRoom { get { return Rooms != null ? Rooms[0] : null; } }
     public Tile CentreTile { get { return GetTileAt(Width / 2, Height / 2); } }
 
     public JobQueue JobQueue { get; private set; }
@@ -88,10 +88,10 @@ public class World : IXmlSerializable
         JobQueue = new JobQueue();
         JobWaitingQueue = new JobQueue();
 
-        Rooms = new List<Room>
-        {
-            new Room()
-        };
+        FurnitureManager = new FurnitureManager();
+        RoomManager = new RoomManager();
+        CharacterManager = new CharacterManager();
+        InventoryManager = new InventoryManager();
 
         for (int x = 0; x < Width; x++)
         {
@@ -99,7 +99,7 @@ public class World : IXmlSerializable
             {
                 tiles[x, y] = new Tile(x, y);
                 tiles[x, y].TileChanged += OnTileChangedEvent;
-                tiles[x, y].Room = OutsideRoom; // Rooms 0 is always going to be outside, and that is our default room
+                tiles[x, y].Room = RoomManager.OutsideRoom; // Rooms 0 is always going to be outside, and that is our default room
             }
         }
 
@@ -108,10 +108,6 @@ public class World : IXmlSerializable
         CreateInventoryPrototypes();
         CreateTraderPrototypes();
         CreateQuests();
- 
-        FurnitureManager = new FurnitureManager();
-        CharacterManager = new CharacterManager();
-        InventoryManager = new InventoryManager();
 
         PowerSystem = new PowerSystem();
         Temperature = new Temperature(Width, Height);
@@ -240,35 +236,6 @@ public class World : IXmlSerializable
     public Furniture GetFurniturePrototype(string type)
     {
         return FurniturePrototypes.ContainsKey(type) ? FurniturePrototypes[type] : null;
-    }
-
-    public void AddRoom(Room room)
-    {
-        Rooms.Add(room);
-    }
-
-    public void DeleteRoom(Room room)
-    {
-        if (room == OutsideRoom)
-        {
-            Debug.LogError("Tried to delete the outside room.");
-            return;
-        }
-
-        Rooms.Remove(room);
-        room.ClearTiles();
-    }
-
-    public int GetRoomIndex(Room room)
-    {
-        return Rooms.IndexOf(room);
-    }
-
-    public Room GetRoom(int index)
-    {
-        if (index < 0 || index > Rooms.Count - 1)
-            return null;
-        return Rooms[index];
     }
 
     private void CreateFurniturePrototypes()
@@ -556,19 +523,7 @@ public class World : IXmlSerializable
         writer.WriteAttributeString("Width", Width.ToString());
         writer.WriteAttributeString("Height", Height.ToString());
 
-        writer.WriteStartElement("Rooms");
-        foreach (Room room in Rooms)
-        {
-            if (OutsideRoom == room)
-            {
-                continue;
-            }
-
-            writer.WriteStartElement("Room");
-            room.WriteXml(writer);
-            writer.WriteEndElement();
-        }
-        writer.WriteEndElement();
+        RoomManager.WriteXml(writer);
 
         writer.WriteStartElement("Tiles");
         for (int x = 0; x < Width; x++)
@@ -614,7 +569,7 @@ public class World : IXmlSerializable
             switch (reader.Name)
             {
                 case "Rooms":
-                    ReadXmlRooms(reader);
+                    RoomManager.ReadXml(reader);
                     break;
                 case "Tiles":
                     ReadXmlTiles(reader);
@@ -661,17 +616,5 @@ public class World : IXmlSerializable
 
         }
         while (reader.ReadToNextSibling("Inventory"));
-    }
-
-    private void ReadXmlRooms(XmlReader reader)
-    {
-        if (!reader.ReadToDescendant("Room")) return;
-        do
-        {
-            Room room = new Room();
-            Rooms.Add(room);
-            room.ReadXml(reader);
-        }
-        while (reader.ReadToNextSibling("Room"));
     }
 }

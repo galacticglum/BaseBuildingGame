@@ -9,7 +9,7 @@ using UnityEngine;
 [MoonSharpUserData]
 public class Room : IXmlSerializable
 {
-    public int Index { get { return World.Current.GetRoomIndex(this); } }
+    public int Index { get { return World.Current.RoomManager.GetRoomIndex(this); } }
     public int Size { get { return tiles.Count; } }
 
     public float Pressure { get { return atmosphericGasses.Keys.Sum(n => atmosphericGasses[n]); } }
@@ -47,7 +47,7 @@ public class Room : IXmlSerializable
     {
         foreach (Tile tile in tiles)
         {
-            tile.Room = World.Current.OutsideRoom;	
+            tile.Room = World.Current.RoomManager.OutsideRoom;	
         }
 
         tiles = new List<Tile>();
@@ -55,7 +55,7 @@ public class Room : IXmlSerializable
 
     public bool IsOutsideRoom()
     {
-        return this == World.Current.OutsideRoom;
+        return this == World.Current.RoomManager.OutsideRoom;
     }
 
     public void ModifyGasValue(string name, float amount)
@@ -178,7 +178,7 @@ public class Room : IXmlSerializable
             oldRoom.tiles.Remove(sourceTile);
 
             if (oldRoom.IsOutsideRoom()) return;
-            World.Current.DeleteRoom(oldRoom);
+            World.Current.RoomManager.Delete(oldRoom);
         }
         else
         {
@@ -256,7 +256,7 @@ public class Room : IXmlSerializable
             newRoom.CloneGasData(oldRoom, sizeOfOldRoom);
         }
 
-        World.Current.AddRoom(newRoom);
+        World.Current.RoomManager.Add(newRoom);
     }
 
     private void MoveGas(Room room)

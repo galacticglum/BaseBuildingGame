@@ -137,7 +137,7 @@ public class ConstructionController
                         {
                             if (neighbor == null || neighbor.Room == null) continue;
 
-                            if (neighbor.Room == World.Current.OutsideRoom || neighbor.Room.Pressure.IsZero())
+                            if (neighbor.Room == World.Current.RoomManager.OutsideRoom || neighbor.Room.Pressure.IsZero())
                             {
                                 vacuumNeighbors++;
                             }

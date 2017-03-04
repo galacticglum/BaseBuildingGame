@@ -232,7 +232,7 @@ public class Tile :IXmlSerializable, ISelectable
 
     public void ReadXml(XmlReader reader)
     {
-        Room = World.Current.GetRoom(int.Parse(reader.GetAttribute("RoomID")));
+        Room = World.Current.RoomManager.Get(int.Parse(reader.GetAttribute("RoomID")));
         if (Room != null)
         {
             Room.AssignTile(this);
