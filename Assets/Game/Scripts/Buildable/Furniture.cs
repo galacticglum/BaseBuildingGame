@@ -4,11 +4,10 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using MoonSharp.Interpreter;
-using MoonSharp.Interpreter.Interop;
 using UnityEngine;
 
 [MoonSharpUserData]
-public class Furniture : IXmlSerializable, ISelectable, IContextActionProvider, IPowerRelated
+public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextActionProvider, IPowerRelated
 {
     private string name;
     public string Name

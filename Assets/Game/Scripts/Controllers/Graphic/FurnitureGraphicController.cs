@@ -130,7 +130,7 @@ public class FurnitureGraphicController
 
     public Sprite GetSpriteForFurniture(string type)
     {
-        return SpriteManager.Current.GetSprite("Furniture", type + (World.Current.FurniturePrototypes[type].LinksToNeighbour ? "_" : ""));
+        return SpriteManager.Current.GetSprite("Furniture", type + (PrototypeManager.Furnitures[type].LinksToNeighbour ? "_" : ""));
     }
 
     public Sprite GetSpriteForFurniture(Furniture furniture)

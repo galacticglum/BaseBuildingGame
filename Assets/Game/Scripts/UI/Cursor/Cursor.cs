@@ -130,7 +130,7 @@ public class Cursor
             switch (constructionController.ConstructionMode)
             {
                 case ConstructionMode.Furniture:
-                    lowerRight.Text.text = World.Current.FurniturePrototypes[constructionController.ConstructionType].Name;
+                    lowerRight.Text.text = PrototypeManager.Furnitures[constructionController.ConstructionType].Name;
 
                     upperLeft.Text.color = Color.green;
                     upperRight.Text.color = Color.red;

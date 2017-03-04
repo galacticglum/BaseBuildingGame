@@ -18,7 +18,7 @@ public class ConstructionController
             return true;
         }
 
-        Furniture furniture = WorldController.Instance.World.FurniturePrototypes[ConstructionType];
+        Furniture furniture = PrototypeManager.Furnitures[ConstructionType];
         return furniture.Width == 1 && furniture.Height == 1;
     }
 
@@ -74,10 +74,10 @@ public class ConstructionController
                         };
                     }
 
-                    job.FurniturePrototype = WorldController.Instance.World.FurniturePrototypes[furnitureType];
-                    for (int xOffset = tile.X; xOffset < tile.X + WorldController.Instance.World.FurniturePrototypes[furnitureType].Width; xOffset++)
+                    job.FurniturePrototype = PrototypeManager.Furnitures[furnitureType];
+                    for (int xOffset = tile.X; xOffset < tile.X + PrototypeManager.Furnitures[furnitureType].Width; xOffset++)
                     {
-                        for (int yOffset = tile.Y; yOffset < tile.Y + WorldController.Instance.World.FurniturePrototypes[furnitureType].Height; yOffset++)
+                        for (int yOffset = tile.Y; yOffset < tile.Y + PrototypeManager.Furnitures[furnitureType].Height; yOffset++)
                         {
                             Tile tileAt = WorldController.Instance.World.GetTileAt(xOffset, yOffset);
                             tileAt.PendingBuildJob = job;
@@ -165,9 +165,9 @@ public class ConstructionController
 
     public bool IsBuildJobOverlap(Tile tile, string furnitureType)
     {
-        for (int xOffset = tile.X; xOffset < tile.X + WorldController.Instance.World.FurniturePrototypes[furnitureType].Width; xOffset++)
+        for (int xOffset = tile.X; xOffset < tile.X + PrototypeManager.Furnitures[furnitureType].Width; xOffset++)
         {
-            for (int yOffset = tile.Y; yOffset < tile.Y + WorldController.Instance.World.FurniturePrototypes[furnitureType].Height; yOffset++)
+            for (int yOffset = tile.Y; yOffset < tile.Y + PrototypeManager.Furnitures[furnitureType].Height; yOffset++)
             {
                 if (WorldController.Instance.World.GetTileAt(xOffset, yOffset).PendingBuildJob != null)
                 {

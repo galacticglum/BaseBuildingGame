@@ -138,25 +138,23 @@ public class MouseController
     {
         if (currentMouseMode == MouseMode.Build
             && constructionController.ConstructionMode == ConstructionMode.Furniture
-            && World.Current.FurniturePrototypes.ContainsKey(constructionController.ConstructionType)
-            && (World.Current.FurniturePrototypes[constructionController.ConstructionType].Width > 1 ||
-            World.Current.FurniturePrototypes[constructionController.ConstructionType].Height > 1))
+            && PrototypeManager.Furnitures.Contains(constructionController.ConstructionType)
+            && (PrototypeManager.Furnitures[constructionController.ConstructionType].Width > 1 ||
+                PrototypeManager.Furnitures[constructionController.ConstructionType].Height > 1))
         {
             // If the furniture has af jobSpot set we would like to use that.
-            if (World.Current.FurniturePrototypes[constructionController.ConstructionType].WorkPositionOffset.Equals(Vector2.zero) == false)
+            if (PrototypeManager.Furnitures[constructionController.ConstructionType].WorkPositionOffset.Equals(Vector2.zero) == false)
             {
                 PlacingPosition = new Vector3(
-                    currentFramePosition.x - World.Current.FurniturePrototypes[constructionController.ConstructionType].WorkPositionOffset.x,
-                    currentFramePosition.y - World.Current.FurniturePrototypes[constructionController.ConstructionType].WorkPositionOffset.y,
+                    currentFramePosition.x - PrototypeManager.Furnitures[constructionController.ConstructionType].WorkPositionOffset.x,
+                    currentFramePosition.y - PrototypeManager.Furnitures[constructionController.ConstructionType].WorkPositionOffset.y,
                     0);
             }
             else
             {   
                 // Otherwise we use the center.
-                PlacingPosition = new Vector3(
-                    currentFramePosition.x - ((World.Current.FurniturePrototypes[constructionController.ConstructionType].Width - 1f) / 2f),
-                    currentFramePosition.y - ((World.Current.FurniturePrototypes[constructionController.ConstructionType].Height - 1f) / 2f),
-                    0);
+                PlacingPosition = new Vector3(currentFramePosition.x - (PrototypeManager.Furnitures[constructionController.ConstructionType].Width - 1f) / 2f,
+                    currentFramePosition.y - (PrototypeManager.Furnitures[constructionController.ConstructionType].Height - 1f) / 2f, 0);
             }
         }
         else
@@ -305,8 +303,8 @@ public class MouseController
 
                 if (constructionController.ConstructionMode == ConstructionMode.Furniture)
                 {
-                    Furniture proto = World.Current.FurniturePrototypes[constructionController.ConstructionType];
-                    if (PartOfDrag(tileAt, mouseDragParams, proto.DragMode))
+                    Furniture furniture = PrototypeManager.Furnitures[constructionController.ConstructionType];
+                    if (PartOfDrag(tileAt, mouseDragParams, furniture.DragMode))
                     {
                         DrawFurniture(constructionController.ConstructionType, tileAt);
                     }
@@ -337,7 +335,7 @@ public class MouseController
                 Tile tileAt = WorldController.Instance.World.GetTileAt(x, y);
                 if (constructionController.ConstructionMode == ConstructionMode.Furniture)
                 {
-                    Furniture furniture = World.Current.FurniturePrototypes[constructionController.ConstructionType];
+                    Furniture furniture = PrototypeManager.Furnitures[constructionController.ConstructionType];
                     if (!PartOfDrag(tileAt, mouseDragParams, furniture.DragMode)) continue;
 
                     if (tileAt != null)
@@ -468,7 +466,7 @@ public class MouseController
             spriteRenderer.color = new Color(1f, 0.5f, 0.5f, 0.25f);
         }
 
-        Furniture furniture = World.Current.FurniturePrototypes[furnitureType];
+        Furniture furniture = PrototypeManager.Furnitures[furnitureType];
         gameObject.transform.position = new Vector3(tile.X + ((furniture.Width - 1) / 2f), tile.Y + ((furniture.Height - 1) / 2f), 0);
     }    
 }

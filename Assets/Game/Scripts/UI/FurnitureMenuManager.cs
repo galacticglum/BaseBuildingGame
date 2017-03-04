@@ -10,7 +10,7 @@ public class FurnitureMenuManager : MonoBehaviour
     private void Start()
     {
         ConstructionController constructionController = WorldController.Instance.ConstructionController;
-        foreach (string key in World.Current.FurniturePrototypes.Keys)
+        foreach (string key in PrototypeManager.Furnitures.Keys)
         {
             GameObject instance = Instantiate(buildFurnitureButtonPrefab);
             instance.transform.SetParent(transform);
@@ -18,7 +18,7 @@ public class FurnitureMenuManager : MonoBehaviour
             string id = key;
             instance.name = "Button - Build " + id;
 
-            instance.transform.GetComponentInChildren<TextLocalizer>().FormatValues = new[] { LocalizationTable.GetLocalization(World.Current.FurniturePrototypes[key].LocalizationCode) };
+            instance.transform.GetComponentInChildren<TextLocalizer>().FormatValues = new[] { LocalizationTable.GetLocalization(PrototypeManager.Furnitures[key].LocalizationCode) };
 
             Button b = instance.GetComponent<Button>();
 
@@ -31,7 +31,7 @@ public class FurnitureMenuManager : MonoBehaviour
             string furniture = key;
             LocalizationTable.CBLocalizationFilesChanged += () =>
             {
-                instance.transform.GetComponentInChildren<TextLocalizer>().FormatValues = new[] { LocalizationTable.GetLocalization(World.Current.FurniturePrototypes[furniture].LocalizationCode) };
+                instance.transform.GetComponentInChildren<TextLocalizer>().FormatValues = new[] { LocalizationTable.GetLocalization(PrototypeManager.Furnitures[furniture].LocalizationCode) };
             };
         }
 
@@ -48,7 +48,7 @@ public class FurnitureMenuManager : MonoBehaviour
         {
             localizers[i].UpdateText(new[]
             {
-                LocalizationTable.GetLocalization(World.Current.FurniturePrototypes.ElementAt(i).Value.GetName())
+                LocalizationTable.GetLocalization(PrototypeManager.Furnitures.ElementAt(i).GetName())
             });
         }
     }

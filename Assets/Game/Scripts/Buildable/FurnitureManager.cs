@@ -36,13 +36,13 @@ public class FurnitureManager : IEnumerable<Furniture>, IXmlSerializable
 
     public Furniture Place(string type, Tile tile, bool floodFill = true)
     {
-        if (World.Current.FurniturePrototypes.ContainsKey(type) == false)
+        if (PrototypeManager.Furnitures.Contains(type) == false)
         {
             Debug.LogError("furniturePrototypes doesn't contain a proto for key: " + type);
             return null;
         }
 
-        Furniture furnitureInstance = Furniture.Place(World.Current.FurniturePrototypes[type], tile);
+        Furniture furnitureInstance = Furniture.Place(PrototypeManager.Furnitures[type], tile);
         if (furnitureInstance == null)
         {
             return null;
@@ -70,7 +70,7 @@ public class FurnitureManager : IEnumerable<Furniture>, IXmlSerializable
 
     public bool IsPlacementValid(string type, Tile tile)
     {
-        return World.Current.FurniturePrototypes[type].IsValidPosition(tile);
+        return PrototypeManager.Furnitures[type].IsValidPosition(tile);
     }
 
     public int FurnituresWithTypeCount(string type)

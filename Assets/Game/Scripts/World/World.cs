@@ -30,7 +30,6 @@ public class World : IXmlSerializable
     public Temperature Temperature { get; private set; }
     public Material Skybox { get; private set; } // TODO: Move me to somewhere more appropriate. World Controller??
 
-    public Dictionary<string, Furniture> FurniturePrototypes { get; private set; }
     public Dictionary<string, Job> FurnitureJobPrototypes { get; private set; }
     public Dictionary<string, Need> NeedPrototypes { get; private set; }
     public Dictionary<string, InventoryPrototype> InventoryPrototypes { get; private set; }
@@ -233,18 +232,17 @@ public class World : IXmlSerializable
 
     public Furniture GetFurniturePrototype(string type)
     {
-        return FurniturePrototypes.ContainsKey(type) ? FurniturePrototypes[type] : null;
+        return PrototypeManager.Furnitures.Contains(type) ? PrototypeManager.Furnitures[type] : null;
     }
 
     private void CreateFurniturePrototypes()
     {
         LuaUtilities.LoadScriptFromFile(Path.Combine(Path.Combine(Application.streamingAssetsPath, "LUA"), "Furniture.lua"));
 
-        FurniturePrototypes = new Dictionary<string, Furniture>();
         FurnitureJobPrototypes = new Dictionary<string, Job>();
 
         string filePath = Path.Combine(Path.Combine(Application.streamingAssetsPath, "Data"), "Furniture.xml");
-        LoadFurniturePrototypesFromFile(File.ReadAllText(filePath));
+        PrototypeManager.Furnitures.Load(File.ReadAllText(filePath));
 
         DirectoryInfo[] mods = WorldController.Instance.ModManager.ModDirectories;
         foreach (DirectoryInfo mod in mods)
@@ -259,41 +257,7 @@ public class World : IXmlSerializable
             if (!File.Exists(furnitureXmlModFile)) continue;
 
             string furnitureXmlModText = File.ReadAllText(furnitureXmlModFile);
-            LoadFurniturePrototypesFromFile(furnitureXmlModText);
-        }
-    }
-
-    private void LoadFurniturePrototypesFromFile(string furnitureXmlText)
-    {
-        XmlTextReader reader = new XmlTextReader(new StringReader(furnitureXmlText));
-        if (reader.ReadToDescendant("Furnitures"))
-        {
-            if (reader.ReadToDescendant("Furniture"))
-            {
-                do
-                {
-                    Furniture furniture = new Furniture();
-                    try
-                    {
-                        furniture.ReadXmlPrototype(reader);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError("Error reading furniture prototype for: " + furniture.Type + Environment.NewLine + "Exception: " + e.Message + Environment.NewLine + "StackTrace: " + e.StackTrace);
-                    }
-
-                    FurniturePrototypes[furniture.Type] = furniture;
-                }
-                while (reader.ReadToNextSibling("Furniture"));
-            }
-            else
-            {
-                Debug.LogError("The furniture prototype definition file doesn't have any 'Furniture' elements.");
-            }
-        }
-        else
-        {
-            Debug.LogError("Did not find a 'Furnitures' element in the prototype definition file.");
+            PrototypeManager.Furnitures.Load(File.ReadAllText(furnitureXmlModText));
         }
     }
 

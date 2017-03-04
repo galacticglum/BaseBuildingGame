@@ -1,6 +1,6 @@
 ﻿using System.Xml;
 
-public class InventoryPrototype
+public class InventoryPrototype : IPrototypable
 {
     public string Type { get; private set; }
     public int MaxStackSize { get; private set; }
