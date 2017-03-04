@@ -26,7 +26,7 @@ public class DialogBoxQuests : DialogBox
 
     private void GenerateInterface()
     {
-        List<Quest> quests = World.Current.Quests.Where(IsQuestAvailable).ToList();
+        List<Quest> quests = World.Current.QuestManager.Where(IsQuestAvailable).ToList();
 
         foreach (Quest quest in quests)
         {
@@ -50,7 +50,7 @@ public class DialogBoxQuests : DialogBox
             return true;
         }
 
-        List<Quest> preQuests = World.Current.Quests.Where(q => quest.Requirements.Contains(q.Name)).ToList();
+        List<Quest> preQuests = World.Current.QuestManager.Where(q => quest.Requirements.Contains(q.Name)).ToList();
         return preQuests.All(q => q.IsCompleted);
     }
 }

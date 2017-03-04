@@ -24,7 +24,7 @@ public class QuestController
 
     private static void CheckAllAcceptedQuests()
     {
-        List<Quest> ongoingQuests = World.Current.Quests.Where(q => q.IsAccepted && !q.IsCompleted).ToList();
+        List<Quest> ongoingQuests = World.Current.QuestManager.Where(q => q.IsAccepted && !q.IsCompleted).ToList();
         foreach (Quest quest in ongoingQuests)
         {
             if (IsQuestCompleted(quest))
@@ -33,7 +33,7 @@ public class QuestController
             }
         }
 
-        List<Quest> completedQuestWithUnCollectedRewards = World.Current.Quests.Where(q => q.IsCompleted && q.Rewards.Any(r => !r.IsCollected)).ToList();
+        List<Quest> completedQuestWithUnCollectedRewards = World.Current.QuestManager.Where(q => q.IsCompleted && q.Rewards.Any(r => !r.IsCollected)).ToList();
         foreach (Quest quest in completedQuestWithUnCollectedRewards)
         {
             if (!ongoingQuests.Contains(quest))

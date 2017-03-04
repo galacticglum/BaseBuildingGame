@@ -20,12 +20,11 @@ public class World : IXmlSerializable
     public int Width { get; private set; }
     public int Height { get; private set; }
 
-    //public List<Room> Rooms { get; private set; }
-
     public RoomManager RoomManager { get; private set; }
     public CharacterManager CharacterManager { get; private set; }
     public InventoryManager InventoryManager { get; private set; }
     public FurnitureManager FurnitureManager { get; private set; }
+    public QuestManager QuestManager { get; private set; }
 
     public PowerSystem PowerSystem { get; private set; }
     public Temperature Temperature { get; private set; }
@@ -36,7 +35,6 @@ public class World : IXmlSerializable
     public Dictionary<string, Need> NeedPrototypes { get; private set; }
     public Dictionary<string, InventoryPrototype> InventoryPrototypes { get; private set; }
     public Dictionary<string, TraderPrototype> TraderPrototypes { get; private set; }
-    public List<Quest> Quests { get; private set; }
 
     public Tile CentreTile { get { return GetTileAt(Width / 2, Height / 2); } }
 
@@ -92,6 +90,7 @@ public class World : IXmlSerializable
         RoomManager = new RoomManager();
         CharacterManager = new CharacterManager();
         InventoryManager = new InventoryManager();
+        QuestManager = new QuestManager();
 
         for (int x = 0; x < Width; x++)
         {
@@ -106,8 +105,7 @@ public class World : IXmlSerializable
         CreateFurniturePrototypes();
         CreateNeedPrototypes();
         CreateInventoryPrototypes();
-        CreateTraderPrototypes();
-        CreateQuests();
+        CreateTraderPrototypes();    
 
         PowerSystem = new PowerSystem();
         Temperature = new Temperature(Width, Height);
@@ -424,58 +422,6 @@ public class World : IXmlSerializable
         else
         {
             Debug.LogError("Did not find a 'Traders' element in the prototype definition file.");
-        }
-    }
-
-    private void CreateQuests()
-    {
-        Quests = new List<Quest>();
-
-        string filePath = Path.Combine(Path.Combine(Application.streamingAssetsPath, "Data"), "Quest.xml");
-        LoadQuestsFromFile(File.ReadAllText(filePath));
-
-        DirectoryInfo[] mods = WorldController.Instance.ModManager.ModDirectories;
-        foreach (DirectoryInfo mod in mods)
-        {
-            string traderXmlModFile = Path.Combine(mod.FullName, "Quest.xml");
-            if (!File.Exists(traderXmlModFile)) continue;
-
-            string questXmlModText = File.ReadAllText(traderXmlModFile);
-            LoadQuestsFromFile(questXmlModText);
-        }
-    }
-
-    private void LoadQuestsFromFile(string questXmlText)
-    {
-        XmlTextReader reader = new XmlTextReader(new StringReader(questXmlText));
-        if (reader.ReadToDescendant("Quests"))
-        {
-            if (reader.ReadToDescendant("Quest"))
-            {
-                do
-                {
-                    Quest quest = new Quest();
-                    try
-                    {
-                        quest.ReadXmlPrototype(reader);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError("Error reading quest for: " + quest.Name + Environment.NewLine + "Exception: " + e.Message + Environment.NewLine + "StackTrace: " + e.StackTrace);
-                    }
-
-                    Quests.Add(quest);
-                }
-                while (reader.ReadToNextSibling("Quest"));
-            }
-            else
-            {
-                Debug.LogError("The quest prototype definition file doesn't have any 'Quest' elements.");
-            }
-        }
-        else
-        {
-            Debug.LogError("Did not find a 'Quests' element in the prototype definition file.");
         }
     }
 

@@ -36,7 +36,7 @@ public class MainScreenQuestList : MonoBehaviour
     
     private void ClearInterface()
     {
-        List<Quest> quests = World.Current.Quests.Where(q => q.IsAccepted && !q.IsCompleted).ToList();
+        List<Quest> quests = World.Current.QuestManager.Where(q => q.IsAccepted && !q.IsCompleted).ToList();
         List<Transform> childrens = questItemListPanel.Cast<Transform>().ToList();
         foreach (Transform child in childrens)
         {
@@ -50,7 +50,7 @@ public class MainScreenQuestList : MonoBehaviour
 
     private void BuildInterface()
     {
-        List<Quest> quests = World.Current.Quests.Where(q => q.IsAccepted && !q.IsCompleted).ToList();
+        List<Quest> quests = World.Current.QuestManager.Where(q => q.IsAccepted && !q.IsCompleted).ToList();
         foreach (Quest quest in quests)
         {
             if (visibleQuests.Contains(quest)) continue;

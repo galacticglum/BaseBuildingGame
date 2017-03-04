@@ -267,11 +267,11 @@ public class Room : IXmlSerializable
         }
     }
 
-    private void CloneGasData(Room other, int sizeOfOtherRoom)
+    private void CloneGasData(Room other, int roomArea)
     {
         foreach (string gas in other.atmosphericGasses.Keys)
         {
-            atmosphericGasses[gas] = other.atmosphericGasses[gas] / sizeOfOtherRoom * Size;
+            atmosphericGasses[gas] = other.atmosphericGasses[gas] / roomArea * Size;
         }
     }
 
