@@ -12,8 +12,10 @@ public class WorldEventController : MonoBehaviour
     {
         Current = this;
 
-        LoadLua();
-        LoadEvents();
+        string filePath = Path.Combine(Path.Combine(Application.streamingAssetsPath, "LUA"), "GameEvent.lua");
+        Lua.Parse(filePath);
+
+        Load();
     }
 
     private void Update()
@@ -24,24 +26,18 @@ public class WorldEventController : MonoBehaviour
         }
     }
 
-    private void LoadEvents()
+    private void Load()
     {
         worldEvents = new Dictionary<string, WorldEvent>();
-        LoadEventsFromDirectory(Path.Combine(Application.streamingAssetsPath, "GameEvents"));
+        LoadFromDirectory(Path.Combine(Application.streamingAssetsPath, "GameEvents"));
     }
 
-    private static void LoadLua()
-    {
-        string lua = File.ReadAllText(Path.Combine(Path.Combine(Application.streamingAssetsPath, "LUA"), "GameEvent.lua"));
-        WorldEventActions worldEventActions = new WorldEventActions(lua);
-    }
-
-    private void LoadEventsFromDirectory(string filePath)
+    private void LoadFromDirectory(string filePath)
     {
         string[] subDirs = Directory.GetDirectories(filePath);
-        foreach (string sd in subDirs)
+        foreach (string path in subDirs)
         {
-            LoadEventsFromDirectory(sd);
+            LoadFromDirectory(path);
         }
 
         string[] filesInDir = Directory.GetFiles(filePath);
@@ -49,7 +45,6 @@ public class WorldEventController : MonoBehaviour
         {
             LoadEvent(fn);
         }
-
     }
 
     private void LoadEvent(string filePath)
@@ -59,15 +54,16 @@ public class WorldEventController : MonoBehaviour
             return;
         }
 
-        string xmlText = System.IO.File.ReadAllText(filePath);
+        string xmlText = File.ReadAllText(filePath);
         XmlTextReader reader = new XmlTextReader(new StringReader(xmlText));
 
         if (reader.ReadToDescendant("Events") && reader.ReadToDescendant("Event"))
         {
             do
             {
-                ReadEventFromXml(reader);
-            } while(reader.ReadToNextSibling("Event"));
+                ReadXml(reader);
+            }
+            while (reader.ReadToNextSibling("Event"));
         }
         else
         {
@@ -75,7 +71,7 @@ public class WorldEventController : MonoBehaviour
         }
     }
 
-    private void ReadEventFromXml(XmlReader reader)
+    private void ReadXml(XmlReader reader)
     {
         string worldEventName = reader.GetAttribute("Name");
         bool repeat = false;
@@ -107,15 +103,17 @@ public class WorldEventController : MonoBehaviour
 
         if (!string.IsNullOrEmpty(worldEventName))
         {
-            CreateEvent(worldEventName, repeat, maxRepeats, preconditionNames.ToArray(), onExecuteNames.ToArray());
+            Create(worldEventName, repeat, maxRepeats, preconditionNames.ToArray(), onExecuteNames.ToArray());
         }
     }
 
-    private void CreateEvent(string eventName, bool repeat, int maxRepeats, string[] preconditionNames, string[] onExecuteNames)
+    private void Create(string eventName, bool repeat, int maxRepeats, string[] preconditionNames, string[] onExecuteNames)
     {
         WorldEvent worldEvent = new WorldEvent(eventName, repeat, maxRepeats);
+
         worldEvent.RegisterPreconditions(preconditionNames);
         worldEvent.RegisterExecutionActions(onExecuteNames);
+
         worldEvents[eventName] = worldEvent;
     }
 }

@@ -10,15 +10,12 @@ using MoonSharp.Interpreter;
 [MoonSharpUserData]
 public class QuestManager : IEnumerable<Quest>
 {
-    public LuaEventManager EventManager { get; private set; }
-
     private readonly List<Quest> quests;
     private float totalDeltaTime;
     private readonly float checkDelayInSeconds;
 
     public QuestManager()
     {
-        EventManager = new LuaEventManager();
         quests = new List<Quest>();
         checkDelayInSeconds = 5f;
     }
@@ -78,7 +75,7 @@ public class QuestManager : IEnumerable<Quest>
         quest.IsCompleted = true;
         foreach (QuestGoal goal in quest.Goals)
         {
-            EventManager.Trigger("IsQuestCompleted", goal);
+            quest.EventManager.Trigger("IsQuestCompleted", goal);
             quest.IsCompleted &= goal.IsCompleted;
         }
 
@@ -91,7 +88,7 @@ public class QuestManager : IEnumerable<Quest>
         {
             if (!reward.IsCollected)
             {
-                EventManager.Trigger("QuestRewarded", reward);
+                quest.EventManager.Trigger("QuestRewarded", reward);
             }
         }
     }

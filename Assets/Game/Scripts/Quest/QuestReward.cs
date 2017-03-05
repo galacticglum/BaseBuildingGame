@@ -8,6 +8,13 @@ public class QuestReward
     public bool IsCollected { get; set; }
     public ParameterContainer Parameters { get; private set; }
 
+    public Quest Quest { get; private set; }
+
+    public QuestReward(Quest quest)
+    {
+        Quest = quest;
+    }
+
     public void ReadXmlPrototype(XmlReader readerParent)
     {
         Description = readerParent.GetAttribute("Description");
@@ -26,7 +33,7 @@ public class QuestReward
 
                     string eventTag = reader.GetAttribute("Tag");
                     string functionName = reader.GetAttribute("FunctionName");
-                    World.Current.QuestManager.EventManager.AddHandler(eventTag, functionName);
+                    Quest.EventManager.AddHandler(eventTag, functionName);
 
                     subtree.Close();
                     break;

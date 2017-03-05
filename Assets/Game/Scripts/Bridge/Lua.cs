@@ -56,6 +56,14 @@ public static class Lua
         return result;
     }
 
+    public static void Call(string[] functions, params object[] args)
+    {
+        foreach (string function in functions)
+        {
+            Call(function, args);
+        }
+    }
+    
     public static DynValue Call(Closure function, params object[] args)
     {
         DynValue result = null;

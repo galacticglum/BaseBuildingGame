@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Security.Policy;
 using System.Xml;
 using MoonSharp.Interpreter;
 
@@ -12,8 +13,15 @@ public class Quest
     public List<QuestReward> Rewards { get; private set; }
     public List<QuestGoal> Goals { get; private set; }
 
+    public LuaEventManager EventManager { get; private set; }
+
     public bool IsAccepted { get; set; }
     public bool IsCompleted { get; set; }
+
+    public Quest()
+    {
+        EventManager = new LuaEventManager();
+    }
 
     public void ReadXmlPrototype(XmlTextReader parentReader)
     {
@@ -47,7 +55,7 @@ public class Quest
                     {
                         if (subReader.Name != "Goal") continue;
 
-                        QuestGoal goal = new QuestGoal();
+                        QuestGoal goal = new QuestGoal(this);
                         goal.ReadXmlPrototype(subReader);
                         Goals.Add(goal);
                     }
@@ -58,7 +66,7 @@ public class Quest
                     {
                         if (subReader.Name != "Reward") continue;
 
-                        QuestReward reward = new QuestReward();
+                        QuestReward reward = new QuestReward(this);
                         reward.ReadXmlPrototype(subReader);
                         Rewards.Add(reward);
                     }
