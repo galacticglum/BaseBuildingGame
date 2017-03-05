@@ -8,14 +8,10 @@ public class QuestReward
     public bool IsCollected { get; set; }
     public ParameterContainer Parameters { get; private set; }
 
-    public string OnRewardLuaFunction { get; set; }
-
-    public void ReadXmlPrototype(XmlReader reader_parent)
+    public void ReadXmlPrototype(XmlReader readerParent)
     {
-        Description = reader_parent.GetAttribute("Description");
-        OnRewardLuaFunction = reader_parent.GetAttribute("OnRewardLuaFunction");
-
-        XmlReader reader = reader_parent.ReadSubtree();
+        Description = readerParent.GetAttribute("Description");
+        XmlReader reader = readerParent.ReadSubtree();
 
         while (reader.Read())
         {
@@ -23,6 +19,16 @@ public class QuestReward
             {
                 case "Params":
                     Parameters = ParameterContainer.ReadXml(reader);
+                    break;
+                case "Event":
+                    XmlReader subtree = reader.ReadSubtree();
+                    subtree.Read();
+
+                    string eventTag = reader.GetAttribute("Tag");
+                    string functionName = reader.GetAttribute("FunctionName");
+                    World.Current.QuestManager.EventManager.AddHandler(eventTag, functionName);
+
+                    subtree.Close();
                     break;
             }
         }

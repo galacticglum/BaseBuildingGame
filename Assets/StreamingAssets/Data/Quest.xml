@@ -1,14 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Quests>
-
   <Quest Name="Mining Drone Beta Test Program">
     <Description>Participate in the Beta Program of brand new mining Drones!</Description>
     <Goals>
-      <Goal Description="Build 2 Mining Drone Station" IsCompletedLuaFunction="Quest_Have_Furniture_Built">
+      <Goal Description="Build 2 Mining Drone Station">
         <Params>
           <Param name="objectType" value="Mining Drone Station"/>
           <Param name="amount" value="2"/>
         </Params>
+
+        <Event Tag="IsQuestCompleted" FunctionName="Quest_Have_Furniture_Built" />
+
       </Goal>
     </Goals>
     <Rewards>
@@ -17,6 +19,9 @@
           <Param name="objectType" value="Raw Iron"/>
           <Param name="amount" value="50"/>
         </Params>
+
+        <Event Tag="QuestRewarded" FunctionName="Quest_Spawn_Inventory" />
+        
       </Reward>
     </Rewards>
   </Quest>
@@ -27,11 +32,14 @@
       <PreRequiredCompletedQuest Name="Mining Drone Beta Test Program"/>
     </PreRequiredCompletedQuests>
     <Goals>
-      <Goal Description="Build 1 Metal Smelter Station" IsCompletedLuaFunction="Quest_Have_Furniture_Built">
+      <Goal Description="Build 1 Metal Smelter Station">
         <Params>
           <Param name="objectType" value="Metal Smelter"/>
           <Param name="amount" value="1"/>
         </Params>
+
+        <Event Tag="IsQuestCompleted" FunctionName="Quest_Have_Furniture_Built" />
+
       </Goal>
     </Goals>
     <Rewards>
@@ -40,6 +48,9 @@
           <Param name="objectType" value="Steel Plate"/>
           <Param name="amount" value="15"/>
         </Params>
+
+        <Event Tag="QuestRewarded" FunctionName="Quest_Spawn_Inventory" />
+        
       </Reward>
     </Rewards>
   </Quest>
@@ -47,17 +58,23 @@
   <Quest Name="Survival basics - Fresh">
     <Description>Build 2 Oxygen Generator and the power for it</Description>
     <Goals>
-      <Goal Description="Build 2 Power Generator" IsCompletedLuaFunction="Quest_Have_Furniture_Built">
+      <Goal Description="Build 2 Power Generator">
         <Params>
           <Param name="type" value="Power Generator"/>
           <Param name="amount" value="2"/>
         </Params>
+
+        <Event Tag="IsQuestCompleted" FunctionName="Quest_Have_Furniture_Built" />
+
       </Goal>
-      <Goal Description="Build 2 Oxygen Generator" IsCompletedLuaFunction="Quest_Have_Furniture_Built">
+      <Goal Description="Build 2 Oxygen Generator">
         <Params>
           <Param name="objectType" value="Oxygen Generator"/>
           <Param name="amount" value="2"/>
         </Params>
+
+        <Event Tag="IsQuestCompleted" FunctionName="Quest_Have_Furniture_Built" />
+
       </Goal>
     </Goals>
     <Rewards>
@@ -66,6 +83,9 @@
           <Param name="objectType" value="Raw Iron"/>
           <Param name="amount" value="10"/>
         </Params>
+
+        <Event Tag="QuestRewarded" FunctionName="Quest_Spawn_Inventory" />
+        
       </Reward>
     </Rewards>
   </Quest>
@@ -76,11 +96,14 @@
       <PreRequiredCompletedQuest Name="Survival basics - Fresh"/>
     </PreRequiredCompletedQuests>
     <Goals>
-      <Goal Description="Build 1 Heater" IsCompletedLuaFunction="Quest_Have_Furniture_Built">
+      <Goal Description="Build 1 Heater">
         <Params>
           <Param name="objectType" value="Heater"/>
           <Param name="amount" value="1"/>
         </Params>
+
+        <Event Tag="IsQuestCompleted" FunctionName="Quest_Have_Furniture_Built" />
+
       </Goal>
     </Goals>
     <Rewards>
@@ -89,6 +112,9 @@
           <Param name="objectType" value="Ice"/>
           <Param name="amount" value="20"/>
         </Params>
+
+        <Event Tag="QuestRewarded" FunctionName="Quest_Spawn_Inventory" />
+        
       </Reward>
     </Rewards>
   </Quest>

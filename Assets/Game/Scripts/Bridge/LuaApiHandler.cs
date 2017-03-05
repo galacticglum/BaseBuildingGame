@@ -9,7 +9,6 @@ public static class LuaApiHandler
         ExposeType<EventArgs>(lua);
         ExposeType<CharacterEventArgs>(lua);
         ExposeType<FurnitureEventArgs>(lua);
-        ExposeType<FurnitureUpdateEventArgs>(lua);
         ExposeType<JobEventArgs>(lua);
         ExposeType<TileEventArgs>(lua);
 

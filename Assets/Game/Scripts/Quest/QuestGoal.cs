@@ -1,3 +1,4 @@
+using System.Net;
 using System.Xml;
 using MoonSharp.Interpreter;
 
@@ -8,13 +9,10 @@ public class QuestGoal
     public bool IsCompleted { get; set; }
 
     public ParameterContainer Parameters { get; private set; }
-    public string IsCompletedLuaFunction { get; set; }
 
     public void ReadXmlPrototype(XmlReader parentReader)
     {
         Description = parentReader.GetAttribute("Description");
-        IsCompletedLuaFunction = parentReader.GetAttribute("IsCompletedLuaFunction");
-
         XmlReader reader = parentReader.ReadSubtree();
         while (reader.Read())
         {
@@ -22,6 +20,17 @@ public class QuestGoal
             {
                 case "Params":
                     Parameters = ParameterContainer.ReadXml(reader);
+                    break;
+                case "Event":
+                    XmlReader subtree = reader.ReadSubtree();
+                    subtree.Read();
+
+                    string eventTag = reader.GetAttribute("Tag");
+                    string functionName = reader.GetAttribute("FunctionName");
+
+                    World.Current.QuestManager.EventManager.AddHandler(eventTag, functionName);
+
+                    subtree.Close();
                     break;
             }
         }

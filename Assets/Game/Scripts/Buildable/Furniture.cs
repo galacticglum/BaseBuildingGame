@@ -104,7 +104,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
         Height = 1;
         Width = 1;
 
-        EventManager = new LuaEventManager("FurnitureUpdate", "FurnitureInstalled", "FurnitureUninstalled", "TemperatureUpdated");
+        EventManager = new LuaEventManager();
         ReplaceableFurniture = new List<string>();
         Parameters = new ParameterContainer("furnParameters");
         Tint = Color.white;
@@ -134,7 +134,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
         typeTags = new HashSet<string>(other.typeTags);
         description = other.description;
 
-        EventManager = new LuaEventManager("FurnitureUpdate", "FurnitureInstalled", "FurnitureUninstalled", "TemperatureUpdated");
+        EventManager = new LuaEventManager();
         if (other.EventManager != null)
         {
             EventManager = other.EventManager.Clone();

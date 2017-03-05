@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using MoonSharp.Interpreter;
 using MoonSharp.Interpreter.Interop;
-using UnityEngine;
 
 public class LuaEventManager
 {
@@ -18,10 +17,9 @@ public class LuaEventManager
     }
 
     [MoonSharpVisible(false)]
-    public LuaEventManager(params string[] eventTags)
+    public LuaEventManager()
     {
         luaFunctions = new Dictionary<string, List<Closure>>();
-        RegisterEvents(eventTags);
     }
 
     [MoonSharpVisible(false)]
@@ -59,12 +57,7 @@ public class LuaEventManager
     [MoonSharpVisible(false)]
     public void Trigger(string eventTag, params object[] args)
     {
-        if (!luaFunctions.ContainsKey(eventTag))
-        {
-            Debug.LogError("LuaEventManager::Trigger: Tried to trigger unregistered event with tag '" + eventTag + "'!");
-            return;
-        }
-
+        if (!luaFunctions.ContainsKey(eventTag) || luaFunctions[eventTag] == null) return;
         foreach (Closure function in luaFunctions[eventTag])
         {
             Lua.Call(function, args);
@@ -73,28 +66,39 @@ public class LuaEventManager
 
     public void AddHandler(string eventTag, Closure function)
     {
-        if (!luaFunctions.ContainsKey(eventTag)) return;
+        if (!luaFunctions.ContainsKey(eventTag) || luaFunctions[eventTag] == null)
+        {
+            RegisterEvent(eventTag);
+        }
+
+        // ReSharper disable once PossibleNullReferenceException; RegisterEvent(string eventTag) takes care of this.
         luaFunctions[eventTag].Add(function);
     }
 
     public void AddHandler(string eventTag, string functionName)
     {
-        if (!luaFunctions.ContainsKey(eventTag) || string.IsNullOrEmpty(functionName)) return;
-        Closure function = Lua.GetFunction(functionName);
+        if (string.IsNullOrEmpty(functionName)) return;
+        if (!luaFunctions.ContainsKey(eventTag) || luaFunctions[eventTag] == null)
+        {
+            RegisterEvent(eventTag);
+        }
 
+        Closure function = Lua.GetFunction(functionName);
         if (function == null) return;
+
+        // ReSharper disable once PossibleNullReferenceException; RegisterEvent(string eventTag) takes care of this.
         luaFunctions[eventTag].Add(function);
     }
 
     public void RemoveHandler(string eventTag, Closure function)
     {
-        if (!luaFunctions.ContainsKey(eventTag)) return;
+        if (!luaFunctions.ContainsKey(eventTag) || luaFunctions[eventTag] == null) return;
         luaFunctions[eventTag].Remove(function);
     }
 
     public void RemoveHandler(string eventTag, string functionName)
     {
-        if (!luaFunctions.ContainsKey(eventTag) || string.IsNullOrEmpty(functionName)) return;
+        if (!luaFunctions.ContainsKey(eventTag) || luaFunctions[eventTag] == null  || string.IsNullOrEmpty(functionName)) return;
         Closure function = Lua.GetFunction(functionName);
 
         if (function == null) return;

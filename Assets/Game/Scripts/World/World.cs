@@ -87,6 +87,8 @@ public class World : IXmlSerializable
         CharacterManager = new CharacterManager();
         InventoryManager = new InventoryManager();
         QuestManager = new QuestManager();
+        // FIXME: Temporary fix for quest loading.
+        QuestManager.Initialize();
 
         for (int x = 0; x < Width; x++)
         {
@@ -158,6 +160,7 @@ public class World : IXmlSerializable
     {
         FurnitureManager.Update(deltaTime);
         CharacterManager.Update(deltaTime);
+        QuestManager.Update(deltaTime);
 
         Temperature.Update();
     }
@@ -268,8 +271,7 @@ public class World : IXmlSerializable
             string needLuaModFile = Path.Combine(mod.FullName, "Need.lua");
             if (File.Exists(needLuaModFile))
             {
-                string myLuaCode = File.ReadAllText(needLuaModFile);
-                NeedActions.AddScript(myLuaCode);
+                Lua.Parse(needLuaModFile);
             }
 
             string needXmlModFile = Path.Combine(mod.FullName, "Need.xml");

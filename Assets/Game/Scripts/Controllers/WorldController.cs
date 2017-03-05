@@ -31,7 +31,6 @@ public class WorldController : MonoBehaviour
     private JobGraphicController jobGraphicController;
     private InventoryGraphicController inventoryGraphicController;
     private FurnitureGraphicController furnitureGraphicController;
-    private QuestController questController;
 
     private float timeScale = 1f;
     public float TimeScale
@@ -97,7 +96,6 @@ public class WorldController : MonoBehaviour
 
         MouseController = new MouseController(ConstructionController, furnitureGraphicController, circleCursorPrefab);
         KeyboardController = new KeyboardController(ConstructionController, Instance);
-        questController = new QuestController();
         CameraController = new CameraController();
 
         GameObject controllers = GameObject.Find("Controllers");
@@ -122,7 +120,6 @@ public class WorldController : MonoBehaviour
             World.Update(Time.deltaTime * timeScale);
         }
 
-        questController.Update(Time.deltaTime);
         audioController.Update(Time.deltaTime);
     }
 
