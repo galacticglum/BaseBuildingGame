@@ -28,7 +28,7 @@ public static class GameSettings
         string value;
         if (settings.TryGetValue(key, out value)) return value;
 
-        Debug.LogWarning("GameSettings::Get: Attempted to access a setting that was not loaded from GameSettings.xml :\t" + key);
+        Debug.LogWarning("GameSettings::Get: Attempted to access a setting that was not loaded from Settings.xml :\t" + key);
         return null;
     }
 
