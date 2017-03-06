@@ -118,30 +118,30 @@ public class DialogBoxSettings : DialogBox
 
     public void SaveSetting()
     {
-        Settings.setSetting("DialogBoxSettings_musicVolume", musicVolume.normalizedValue);
+        GameSettings.Set("DialogBoxSettings_musicVolume", musicVolume.normalizedValue);
 
-        Settings.setSetting("DialogBoxSettings_langToggle", languageToggle.isOn);
-        Settings.setSetting("DialogBoxSettings_fpsToggle", fpsToggle.isOn);
-        Settings.setSetting("DialogBoxSettings_fullScreenToggle", fullScreenToggle.isOn);
+        GameSettings.Set("DialogBoxSettings_langToggle", languageToggle.isOn);
+        GameSettings.Set("DialogBoxSettings_fpsToggle", fpsToggle.isOn);
+        GameSettings.Set("DialogBoxSettings_fullScreenToggle", fullScreenToggle.isOn);
 
-        Settings.setSetting("DialogBoxSettings_qualityDropdown", qualityDropdown.value);
-        Settings.setSetting("DialogBoxSettings_vSyncDropdown", vSyncDropdown.value);
-        Settings.setSetting("DialogBoxSettings_resolutionDropdown", resolutionDropdown.value);
-        Settings.setSetting("DialogBoxSettings_aliasingDropdown", aliasingDropdown.value);
+        GameSettings.Set("DialogBoxSettings_qualityDropdown", qualityDropdown.value);
+        GameSettings.Set("DialogBoxSettings_vSyncDropdown", vSyncDropdown.value);
+        GameSettings.Set("DialogBoxSettings_resolutionDropdown", resolutionDropdown.value);
+        GameSettings.Set("DialogBoxSettings_aliasingDropdown", aliasingDropdown.value);
     }
 
     private void LoadSetting()
     {
-        musicVolume.normalizedValue = Settings.getSettingAsFloat("DialogBoxSettings_musicVolume", 0.5f);
+        musicVolume.normalizedValue = GameSettings.GetAsFloat("DialogBoxSettings_musicVolume", 0.5f);
 
-        languageToggle.isOn = Settings.getSettingAsBool("DialogBoxSettings_langToggle", true);
-        fpsToggle.isOn = Settings.getSettingAsBool("DialogBoxSettings_fpsToggle", true);
-        fullScreenToggle.isOn = Settings.getSettingAsBool("DialogBoxSettings_fullScreenToggle", true);
+        languageToggle.isOn = GameSettings.GetAsBoolean("DialogBoxSettings_langToggle", true);
+        fpsToggle.isOn = GameSettings.GetAsBoolean("DialogBoxSettings_fpsToggle", true);
+        fullScreenToggle.isOn = GameSettings.GetAsBoolean("DialogBoxSettings_fullScreenToggle", true);
 
-        qualityDropdown.value = Settings.getSettingAsInt("DialogBoxSettings_qualityDropdown", 0);
-        vSyncDropdown.value = Settings.getSettingAsInt("DialogBoxSettings_vSyncDropdown", 0);
-        resolutionDropdown.value = Settings.getSettingAsInt("DialogBoxSettings_resolutionDropdown", 0);
-        aliasingDropdown.value = Settings.getSettingAsInt("DialogBoxSettings_aliasingDropdown", 0);
+        qualityDropdown.value = GameSettings.GetAsInt("DialogBoxSettings_qualityDropdown", 0);
+        vSyncDropdown.value = GameSettings.GetAsInt("DialogBoxSettings_vSyncDropdown", 0);
+        resolutionDropdown.value = GameSettings.GetAsInt("DialogBoxSettings_resolutionDropdown", 0);
+        aliasingDropdown.value = GameSettings.GetAsInt("DialogBoxSettings_aliasingDropdown", 0);
     }
 
     private void CreateResolutionDropDown()

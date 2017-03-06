@@ -82,7 +82,7 @@ public class MouseController
         UpdateCameraMovement();
         UpdateSelection();
 
-        if (Settings.getSettingAsBool("DevTools_enabled", false))
+        if (GameSettings.GetAsBoolean("DevTools_enabled", false))
         {
             UpdateSpawnClicking();
         }

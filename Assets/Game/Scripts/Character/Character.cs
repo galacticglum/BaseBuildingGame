@@ -71,7 +71,7 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
         {
             if (value == false)
             {
-                VisualPath.Instance.RemoveVisualPoints(Name);
+                PathVisualizer.Current.RemovePath(Name);
             }
 
             isSelected = value;
@@ -414,7 +414,7 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
         {
             pathfinder = null;
             IsWalking = false;
-            VisualPath.Instance.RemoveVisualPoints(Name);
+            PathVisualizer.Current.RemovePath(Name);
             return; // We're already were we want to be.
         }
 
@@ -437,7 +437,7 @@ public class Character : IXmlSerializable, ISelectable, IContextActionProvider
 
             if (IsSelected)
             {
-                VisualPath.Instance.SetVisualPoints(Name, pathfinder.ToList());
+                PathVisualizer.Current.ModifyPath(Name, pathfinder.ToList());
             }
 
             IsWalking = true;

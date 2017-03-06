@@ -11,7 +11,7 @@ public class AutomaticVerticalSizeEditor : Editor {
 
 		if( GUILayout.Button("Recalc Size") ) {
 			AutomaticVerticalSize myScript = ((AutomaticVerticalSize)target);
-			myScript.AdjustSize();
+			myScript.CalculateSize();
 		}
 
 	}

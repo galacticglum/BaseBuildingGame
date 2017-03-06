@@ -5,6 +5,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using MoonSharp.Interpreter;
 using UnityEngine;
+using UnityUtilities;
 
 [MoonSharpUserData]
 public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextActionProvider, IPowerRelated

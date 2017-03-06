@@ -80,7 +80,7 @@ public class WorldController : MonoBehaviour
 
     private void Start()
     {
-        GameObject visualPath = new GameObject("VisualPath", typeof(VisualPath));
+        GameObject pathVisualizer = new GameObject("VisualPath", typeof(PathVisualizer));
 
         tileGraphicController = new TileGraphicController();
         characterGraphicController = new CharacterGraphicController();
@@ -89,7 +89,7 @@ public class WorldController : MonoBehaviour
         inventoryGraphicController = new InventoryGraphicController(inventoryUI);
         ConstructionController = new ConstructionController();
 
-        if(Settings.getSettingAsBool("DevTools_enabled", false))
+        if(GameSettings.GetAsBoolean("DevTools_enabled", false))
         {
             InventoryDebugController = new InventoryDebugController();
         }
@@ -145,8 +145,8 @@ public class WorldController : MonoBehaviour
     private void CreateEmptyWorld()
     {
         // get world size from settings
-        int width = Settings.getSettingAsInt("worldWidth", 100);
-        int height = Settings.getSettingAsInt("worldHeight", 100);
+        int width = GameSettings.GetAsInt("worldWidth", 100);
+        int height = GameSettings.GetAsInt("worldHeight", 100);
 
         World = new World(width, height);
         Camera.main.transform.position = new Vector3(World.Width / 2.0f, World.Height / 2.0f, Camera.main.transform.position.z);

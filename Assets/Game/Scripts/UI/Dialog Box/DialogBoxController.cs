@@ -30,7 +30,7 @@ public class DialogBoxController : MonoBehaviour
         dialogBoxOptions = instance.GetComponent<DialogBoxOptions>();
 
         instance = (GameObject)Instantiate(Resources.Load("UI/DB_Settings"), Controllers.transform.position, Controllers.transform.rotation,  Controllers.transform);
-        instance.name = "Settings";
+        instance.name = "GameSettings";
         dialogBoxSettings = instance.GetComponent<DialogBoxSettings>();
 
         instance = (GameObject)Instantiate(Resources.Load("UI/DB_Trade"), Controllers.transform.position, Controllers.transform.rotation,  Controllers.transform);

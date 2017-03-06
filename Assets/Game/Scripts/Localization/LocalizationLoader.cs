@@ -12,7 +12,7 @@ public class LocalizationLoader : MonoBehaviour
             Load(mod.FullName);
         }
 
-        string language = Settings.getSetting("localization", "en_US");
+        string language = GameSettings.Get("localization", "en_US");
         LocalizationTable.CurrentLanguage = language;
         LocalizationTable.LoadingLanguagesFinished();
     }

@@ -44,7 +44,7 @@ public class TextLocalizer : MonoBehaviour
         lastLanguage = LocalizationTable.CurrentLanguage;
         UpdateText(FormatValues);
 
-        TextScaling.ScaleAllTexts();
+        TextScaler.Scale();
     }
 
     public void UpdateText()

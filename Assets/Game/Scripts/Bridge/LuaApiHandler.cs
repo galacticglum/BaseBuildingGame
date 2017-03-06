@@ -23,8 +23,8 @@ public static class LuaApiHandler
         ExposeType<TileType>(lua);
         ExposeType<TileEnterability>(lua);
         
-        ExposeType(typeof(ModUtils), lua);
         ExposeType<Mathf>(lua);
+        ExposeType<Debug>(lua);
 
         UserData.RegisterAssembly();
     }

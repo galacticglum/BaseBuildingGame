@@ -14,7 +14,7 @@ public class LanguageDropdownUpdater : MonoBehaviour
         string[] languages = LocalizationTable.GetLanguages();
 
         LocalizationTable.CurrentLanguage = languages[language];
-        Settings.setSetting("localization", languages[language]);
+        GameSettings.Set("localization", languages[language]);
     }
 
     private void UpdateLanguageDropdown()

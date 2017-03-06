@@ -11,11 +11,6 @@ ENTERABILITY_YES = 0
 ENTERABILITY_NO = 1
 ENTERABILITY_SOON = 2
 
--- HOWTO Log:
--- ModUtils.ULog("Testing ModUtils.ULogChannel")
--- ModUtils.ULogWarning("Testing ModUtils.ULogWarningChannel")
--- ModUtils.ULogError("Testing ModUtils.ULogErrorChannel") -- Note: pauses the game
-
 -------------------------------- Furniture Actions --------------------------------
 function OnUpdate_GasGenerator( furniture, deltaTime )
     if (furniture.HasPower() == false) then
@@ -47,7 +42,7 @@ function OnUpdate_Door( furniture, deltaTime )
         furniture.Parameters["openness"].ModifyFloatValue(deltaTime * -4)
 	end
 
-	furniture.Parameters["openness"].SetValue( ModUtils.Clamp01(furniture.Parameters["openness"].Float()) )
+	furniture.Parameters["openness"].SetValue( Mathf.Clamp01(furniture.Parameters["openness"].Float()) )
 	furniture.OnFurnitureChanged(FurnitureEventArgs.new(furniture));
 end
 
@@ -207,10 +202,8 @@ function Stockpile_UpdateAction( furniture, deltaTime )
     local itemsDesired = {}
 
 	if( furniture.tile.Inventory == nil ) then
-		--ModUtils.ULog("Creating job for new stack.")
 		itemsDesired = Stockpile_GetItemsFromFilter( furniture )
 	else
-		--ModUtils.ULog("Creating job for existing stack.")
 		desInv = furniture.tile.Inventory.Clone()
 		desInv.maxStackSize = desInv.maxStackSize - desInv.stackSize
 		desInv.stackSize = 0
@@ -350,7 +343,7 @@ function MetalSmelter_UpdateAction(furniture, deltaTime)
         desiredStackSize = spawnSpot.Inventory.maxStackSize - spawnSpot.Inventory.stackSize
         itemsDesired.maxStackSize = desiredStackSize
     end
-    ModUtils.ULog("MetalSmelter: Creating job for " .. desiredStackSize .. " raw iron.")
+    print("MetalSmelter: Creating job for " .. desiredStackSize .. " raw iron.")
 
     local jobSpot = furniture.WorkTile
     local j = Job.new(
@@ -610,10 +603,8 @@ function OxygenCompressor_GetSpriteName(furniture)
     local suffix = 0
     if (furniture.Parameters["gas_content"].ToFloat() > 0) then
         idxAsFloat = 8 * (furniture.Parameters["gas_content"].ToFloat() / furniture.Parameters["max_gas_content"].ToFloat())
-        suffix = ModUtils.FloorToInt(idxAsFloat)
+        suffix = Mathf.FloorToInt(idxAsFloat)
     end
     return baseName .. "_" .. suffix
 end
 
-ModUtils.ULog("Furniture.lua loaded")
-return "LUA Script Parsed!"
