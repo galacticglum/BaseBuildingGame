@@ -1,7 +1,28 @@
-Bug Fixes/Polish:
-    ☐ Collect whole amount of inventory before dropping off items; this happens if a character 
-       picks up a stack with not enough items (it goes to job site and drops off items before
-       collecting more).
+** = preferred (this is most likely the solution/feature that will be implemented).
+
+Tasks:
+    ☐ Validate and refactor Lua code
+        Make sure all lua code actually functions.
+
+    ☐ Validate and refactor XML files.
+        Currently, the XMl files are not following a standard naming convention. Rather, the names are ambigious and in many ways ugly. Replace this naming
+        convention with something that is more suited and is consistent.
+
+    ☐ Replace hardcoded directories with something more elegant. 
+        One idea is to have a root indexer file which contains a description of all the game data.
+
+    ☐ Move vanilla game data from Unity/StreamingAssets to the Unity Resources folder so that the vanilla game data is not accessible.
+
+    ☐ Collect all required inventory in one run rather then collecting, then dropping and going back to collect; this happens if a character 
+       picks up a stack with not enough items (it goes to job site and drops off items before collecting more). 
+       
+       Possibly have one character collect for all jobs (like in RimWorld) or have the character assigned to the job do it.
+       Although this solution could be problematic when resource collection is involved, as not all characters can collect resources. 
+       A potential solution in this event could be that a new character who fits the criteria is assigned 
+       to the job or when characters are searching for jobs they could take this into consideration.
+
+       ** Another potential solution could be to seperate the resource hauling for a job into it's own job, which means that any character could
+       haul resources to that job and then once that is done another character can actually fulfill the job.
 
     ✔ Build adjacent from work tile (not on tile). @done (1/27/2017, 7:28:57 PM)
     ✔ Factor inventory (and other objects) when computing IsValidPlacement. @done (1/6/2017, 12:14:20 PM)
@@ -10,8 +31,7 @@ Bug Fixes/Polish:
     Furniture Deconstruction:
         ✔ Delete jobs when deconstructing furniture. @done (1/6/2017, 12:02:42 PM)
         ✔ Update neighbouring graphics to reflect changes (ex: walls). @done (1/6/2017, 12:06:17 PM)
-    
-Tasks:
+
     ✔ Project refactor. @done (1/27/2017, 4:04:57 PM)
     ✔ Lua event manager system. @done (1/27/2017, 4:04:59 PM)
     ☐ Redo job queue.
@@ -20,12 +40,12 @@ Tasks:
     
     ☐ Check validity of work site for job.
     ✔ Box selection. @done (1/27/2017, 4:05:57 PM)
-    ☐ Logging system.
+    ☐ Proper logging system.
     ☐ Redo quest/objective system.  
     ☐ Redo world event system. 
-    ☐ Finish localization.
+    ☐ Fix localization.
 
-    Character AI:
+    Character:
         ☐ State Machine
         Needs:
             - Basic: Hunger, Thrist, Sleep
