@@ -156,13 +156,17 @@ public class World : IXmlSerializable
         }
     }
 
-    public void Update(float deltaTime)
+    public void FixedFrequencyUpdate(float deltaTime)
     {
         FurnitureManager.Update(deltaTime);
-        CharacterManager.Update(deltaTime);
         QuestManager.Update(deltaTime);
 
         Temperature.Update();
+    }
+
+    public void EveryFrameUpdate(float deltaTime)
+    {
+        CharacterManager.Update(deltaTime);
     }
 
     public Tile GetTileAt(int x, int y)

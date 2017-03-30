@@ -19,6 +19,8 @@ public class WorldController : MonoBehaviour
         set { isPaused = value; }
     }
 
+    public TimeManager TimeManager { get; private set; }
+
     public ConstructionController ConstructionController { get; private set; }
     public MouseController MouseController { get; private set; }
     public KeyboardController KeyboardController { get; private set; }
@@ -32,13 +34,6 @@ public class WorldController : MonoBehaviour
     private JobGraphicController jobGraphicController;
     private InventoryGraphicController inventoryGraphicController;
     private FurnitureGraphicController furnitureGraphicController;
-
-    private float timeScale = 1f;
-    public float TimeScale
-    {
-        get { return timeScale; }
-        set { timeScale = value; }
-    }
 
     private static string loadWorldFromFile;
 
@@ -64,6 +59,7 @@ public class WorldController : MonoBehaviour
         }
 
         Instance = this;
+        TimeManager = new TimeManager();
         ModManager = new ModManager(Path.Combine(Application.streamingAssetsPath, "Data"));
 
         if (loadWorldFromFile != null)
@@ -116,9 +112,20 @@ public class WorldController : MonoBehaviour
         KeyboardController.Update(IsModal);
         CameraController.Update(IsModal);
 
+        TimeManager.Update();
         if (IsPaused == false)
         {
-            World.Update(Time.deltaTime * timeScale);
+            World.EveryFrameUpdate(TimeManager.DeltaTime);
+        }
+
+        if (TimeManager.ElapsedDeltaTime >= TimeManager.GameTickDelay)
+        {
+            if (IsPaused == false)
+            {
+                World.FixedFrequencyUpdate(TimeManager.DeltaTime);
+            }
+
+            TimeManager.ResetElapsedDeltaTime();
         }
 
         audioController.Update(Time.deltaTime);

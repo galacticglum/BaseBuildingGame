@@ -43,7 +43,7 @@ public class CameraController
             OnCameraMoved();
         }
 
-        previousCameraPosition = Camera.main.transform.position;
+        previousCameraPosition = Camera.main.transform.position; 
     }
 
     public void Zoom(float amount)

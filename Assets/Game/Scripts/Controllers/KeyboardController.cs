@@ -5,14 +5,6 @@ public class KeyboardController
     private ConstructionController constructionController;
     private readonly WorldController worldController;
 
-    // TODO: Move me to a suitable location (i.e: TimeController).
-    private readonly float[] timeScale = new float[6]
-    {
-        0.1f, 0.5f, 1f, 2f, 4f, 8f
-    };
-
-    private int currentTimeScale = 2;
-
     [SerializeField, Range(0, 3)]
     private float scrollSpeed = 0.1f;
 
@@ -56,38 +48,23 @@ public class KeyboardController
 
         if (Input.GetKeyDown(KeyCode.Plus) || Input.GetKeyDown(KeyCode.KeypadPlus))
         {
-            if (currentTimeScale == timeScale.Length - 1)
-            {
-                return;
-            }
-
-            currentTimeScale++;
-            worldController.TimeScale = timeScale[currentTimeScale];
+            worldController.TimeManager.IncreaseTimeScale();
         }
         else if (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))
         {
-            if (currentTimeScale == 0)
-            {
-                return;
-            }
-
-            currentTimeScale--;
-            worldController.TimeScale = timeScale[currentTimeScale];
+            worldController.TimeManager.DecreaseTimeScale();
         }
         else if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
         {
-            worldController.TimeScale = 1f;
-            currentTimeScale = 2;
+            worldController.TimeManager.TimeScaleIndex = 2;
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
         {
-            worldController.TimeScale = 2f;
-            currentTimeScale = 3;
+            worldController.TimeManager.TimeScaleIndex = 3;
         }
         else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
         {
-            worldController.TimeScale = 4f;
-            currentTimeScale = 4;
+            worldController.TimeManager.TimeScaleIndex = 4;
         }
     }
 }
