@@ -44,6 +44,8 @@ public class TileGraph
 
     public void Regenerate(Tile tile)
     {
+        if (tile == null) return;
+
         GenerateEdges(tile);
         foreach (Tile neighbour in tile.GetNeighbours(true))
         {

@@ -24,6 +24,7 @@ public class CharacterManager : IEnumerable<Character>, IXmlSerializable
 
     public CharacterManager()
     {
+        CharacterNameManager.Load(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, Path.Combine("Data", "CharacterNames.xml"))));
         characters = new List<Character>();
     }
 
@@ -51,12 +52,7 @@ public class CharacterManager : IEnumerable<Character>, IXmlSerializable
 
     private void InitializeCharacter(Character character)
     {
-        // TODO: Make character names Xml
-        string filePath = Path.Combine(Application.streamingAssetsPath, "Data");
-        filePath = Path.Combine(filePath, "CharacterNames.txt");
-
-        string[] names = File.ReadAllLines(filePath);
-        character.Name = names[Random.Range(0, names.Length - 1)];
+        character.Name = CharacterNameManager.Get();
         characters.Add(character);
 
         OnCharacterCreated(new CharacterEventArgs(character));
