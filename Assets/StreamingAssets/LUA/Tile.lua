@@ -1,15 +1,15 @@
-function MovementCost_Standard ( tile )
-	if (tile.furniture == nil) then
+function MovementCost_Standard (tile)
+	if tile.furniture == nil then
 		return tile.Type.BaseMovementCost
 	end
 
-	return tile.Type.BaseMovementCost * tile.furniture.movementCost
+	return tile.Type.BaseMovementCost * tile.Furniture.MovementCost
 end
 
-function CanBuildHere_Standard ( tile )
+function CanBuildHere_Standard (tile)
 	return true
 end
 
-function CanBuildHere_Ladder ( tile )
-	return tile.room.IsOutsideRoom()
+function CanBuildHere_Ladder (tile)
+	return tile.Room.IsOutsideRoom()
 end

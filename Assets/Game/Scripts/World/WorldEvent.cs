@@ -56,7 +56,7 @@ public class WorldEvent
     {
         Timer += time;
     }
-
+     
     public void ResetTimer()
     {
         Timer = 0;

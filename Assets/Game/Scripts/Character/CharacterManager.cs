@@ -56,7 +56,7 @@ public class CharacterManager : IEnumerable<Character>, IXmlSerializable
         filePath = Path.Combine(filePath, "CharacterNames.txt");
 
         string[] names = File.ReadAllLines(filePath);
-        character.Name = names[UnityEngine.Random.Range(0, names.Length - 1)];
+        character.Name = names[Random.Range(0, names.Length - 1)];
         characters.Add(character);
 
         OnCharacterCreated(new CharacterEventArgs(character));

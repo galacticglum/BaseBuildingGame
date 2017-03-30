@@ -18,7 +18,7 @@ public class MouseController
     public GameObject CursorParent { get { return cursorParent; } }
 
     private readonly GameObject cursorParent;    
-    private readonly GameObject circleCursorPrefab;    
+    private readonly GameObject circleCursorPrefab;     
     private readonly GameObject furnitureParent;
 
     private Vector3 lastFramePosition;
@@ -32,12 +32,12 @@ public class MouseController
     private readonly Cursor cursor;
     private MenuController menuController;
 
-    private bool isPanning ;
+    private bool isPanning;
 
     private const float panningThreshold = 0.015f;
     private Vector3 panningMouseStart = Vector3.zero;
 	
-    private MouseMode currentMouseMode = global::MouseMode.Selection;
+    private MouseMode currentMouseMode = MouseMode.Selection;
 
     public MouseController(ConstructionController constructionController, FurnitureGraphicController furnitureGraphicController, GameObject cursorObject)
     {

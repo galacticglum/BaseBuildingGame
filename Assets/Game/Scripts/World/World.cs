@@ -173,7 +173,7 @@ public class World : IXmlSerializable
         }
 
         return tiles[x, y];
-    }
+    } 
 
     public Tile GetCentreTileWithNoInventory(int maxOffset)
     {

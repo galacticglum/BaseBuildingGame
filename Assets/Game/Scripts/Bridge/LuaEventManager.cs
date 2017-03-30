@@ -2,9 +2,15 @@
 using MoonSharp.Interpreter;
 using MoonSharp.Interpreter.Interop;
 
-public class LuaEventManager
+public sealed class LuaEventManager
 {
     private Dictionary<string, List<Closure>> luaFunctions;
+
+    [MoonSharpVisible(false)]
+    public LuaEventManager()
+    {
+        luaFunctions = new Dictionary<string, List<Closure>>();
+    }
 
     public LuaEventManager Clone()
     {
@@ -14,12 +20,6 @@ public class LuaEventManager
         };
 
         return eventManager;
-    }
-
-    [MoonSharpVisible(false)]
-    public LuaEventManager()
-    {
-        luaFunctions = new Dictionary<string, List<Closure>>();
     }
 
     [MoonSharpVisible(false)]

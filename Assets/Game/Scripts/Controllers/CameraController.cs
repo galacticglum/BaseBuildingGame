@@ -33,3 +33,4 @@ public class CameraController
         zoomTarget = Camera.main.orthographicSize - GameSettings.GetAsInt("ZoomSensitivity", 3) * (Camera.main.orthographicSize * amount);
     }
 }
+

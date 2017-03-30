@@ -2,8 +2,8 @@
   <worldWidth>100</worldWidth>
   <worldHeight>100</worldHeight>
   <localization>en_US</localization>
-  <DevTools_enabled>False</DevTools_enabled>
-  <ZoomLerp>3</ZoomLerp>
+  <DevTools_enabled>True</DevTools_enabled>
+  <ZoomLerp>8</ZoomLerp>
   <ZoomSensitivity>3</ZoomSensitivity>
   <DialogBoxSettings_musicVolume>0.5</DialogBoxSettings_musicVolume>
   <DialogBoxSettings_langToggle>True</DialogBoxSettings_langToggle>

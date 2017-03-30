@@ -27,6 +27,7 @@ public class Job
     public bool IsNeed { get; private set; }
     public bool Critical { get; private set; }
 
+    public LuaEventManager EventManager { get; private set; }
     public event JobCompletedEventHandler JobCompleted;
     public void OnJobCompleted(JobEventArgs args)
     {
@@ -60,8 +61,8 @@ public class Job
     private readonly float requiredWorkTime;
     private readonly bool repeatingJob;
 
-    private readonly List<string> cbJobCompletedLua;
-    private readonly List<string> cbJobWorkedLua;
+    //private readonly List<string> cbJobCompletedLua;
+    //private readonly List<string> cbJobWorkedLua;
 
     public Job(Tile tile, string type, JobCompletedEventHandler jobCompleted, float workTime, Inventory[] inventoryRequirements, JobPriority priority, bool repeatingJob = false, bool isNeed = false, bool critical = false)
     {
@@ -75,9 +76,7 @@ public class Job
         Critical = critical;
         Priority = priority;
         Description = "job_error_missing_desc";
-
-        cbJobWorkedLua = new List<string>();
-        cbJobCompletedLua = new List<string>();
+        EventManager = new LuaEventManager();
 
         InventoryRequirements = new Dictionary<string, Inventory>();
         if (inventoryRequirements == null) return;
@@ -98,9 +97,7 @@ public class Job
         WorkAdjacent = workAdjacent;
         Description = "job_error_missing_desc";
 
-        cbJobWorkedLua = new List<string>();
-        cbJobCompletedLua = new List<string>();
-
+        EventManager = new LuaEventManager();
         InventoryRequirements = new Dictionary<string, Inventory>();
         if (inventoryRequirements == null) return;
         foreach (Inventory inventory in inventoryRequirements)
@@ -121,9 +118,7 @@ public class Job
         Description = other.Description;
         AcceptsAnyInventoryItem = other.AcceptsAnyInventoryItem;
 
-        cbJobWorkedLua = new List<string>(other.cbJobWorkedLua);
-        cbJobCompletedLua = new List<string>(other.cbJobWorkedLua);
-
+        EventManager = other.EventManager.Clone();
         InventoryRequirements = new Dictionary<string, Inventory>();
         if (InventoryRequirements == null) return;
         foreach (Inventory inventory in other.InventoryRequirements.Values)
@@ -140,14 +135,8 @@ public class Job
     public void DoWork(float workTime)
     {
         OnJobWorked(new JobEventArgs(this));
-        if (cbJobWorkedLua != null)
-        {
-            foreach (string function in cbJobWorkedLua)
-            {
-                Lua.Call(function, this);
-            }
-        }
 
+        EventManager.Trigger("JobWorked", this);
         if (NeedsMaterial() == false)
         {
             return;
@@ -158,11 +147,7 @@ public class Job
 
         OnJobCompleted(new JobEventArgs(this));
 
-        foreach (string function in cbJobCompletedLua)
-        {
-            Lua.Call(function, this);
-        }
-
+        EventManager.Trigger("JobCompleted", this);
         if (repeatingJob == false)
         {
             OnJobStopped(new JobEventArgs(this));
@@ -229,25 +214,5 @@ public class Job
     public Inventory GetFirstDesiredInventory()
     {
         return InventoryRequirements.Values.FirstOrDefault(inv => inv.MaxStackSize > inv.StackSize);
-    }
-
-    public void RegisterJobCompletedCallback(string cb)
-    {
-        cbJobCompletedLua.Add(cb);
-    }
-
-    public void UnregisterJobCompletedCallback(string cb)
-    {
-        cbJobCompletedLua.Remove(cb);
-    }
-    
-    public void RegisterJobWorkedCallback(string cb)
-    {
-        cbJobWorkedLua.Add(cb);
-    }
-
-    public void UnregisterJobWorkedCallback(string cb)
-    {
-        cbJobWorkedLua.Remove(cb);
     }
 }

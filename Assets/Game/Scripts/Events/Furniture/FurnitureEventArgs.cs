@@ -6,7 +6,7 @@ public class FurnitureEventArgs : EventArgs
 {
     public readonly Furniture Furniture;
 
-    public FurnitureEventArgs(Furniture furniture) : base()
+    public FurnitureEventArgs(Furniture furniture)
     {
         Furniture = furniture;
     }

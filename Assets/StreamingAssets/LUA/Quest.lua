@@ -1,22 +1,23 @@
 function Quest_Have_Furniture_Built(goal)
     goal.IsCompleted = false
-    objectType = goal.Parameters["objectType"].Value
-    amount = goal.Parameters["amount"].ToInt()
-    amountFound = World.current.CountFurnitureType(objectType)
-    if(amountFound >= amount) then
+    type = goal.Parameters["objectType"].Value
+    amount = goal.Parameters["amount"].Int()
+    amountFound = World.Current.FurnitureManager.FurnituresWithTypeCount(type)
+
+    if amountFound >= amount then
         goal.IsCompleted = true
     end
 end
 
 function Quest_Spawn_Inventory(reward)
- --tile = World.current.GetCenterTile()
- tile = World.current.GetFirstCenterTileWithNoInventory(6)
- if(tile == nil) then
+ tile = World.Current.GetCentreTileWithNoInventory(6)
+ if tile == nil then
   return
  end
- objectType = reward.Parameters["objectType"].Value
- amount = reward.Parameters["amount"].ToInt()
- inv = Inventory.new(objectType, amount, amount)
- World.current.inventoryManager.PlaceInventory( tile, inv)
- reward.IsCollected = true;
+
+ type = reward.Parameters["objectType"].Value
+ amount = reward.Parameters["amount"].Int()
+ inventory = Inventory.new(type, amount, amount)
+ World.Current.InventoryManager.Place(tile, inventory)
+ reward.IsCollected = true 
 end

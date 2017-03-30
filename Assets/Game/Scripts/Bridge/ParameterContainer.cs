@@ -13,6 +13,16 @@ public class ParameterContainer
     private readonly Dictionary<string, ParameterContainer> subParameters;
     private bool isValueUninitialized = true;
 
+    public string[] Keys
+    {
+        get
+        {
+            string[] keys = new string[subParameters.Keys.Count];
+            subParameters.Keys.CopyTo(keys, 0);
+            return keys;
+        }
+    }
+
     public ParameterContainer(string name, string value) 
     {
         Name = name;
@@ -139,13 +149,6 @@ public class ParameterContainer
         int returnValue;
         int.TryParse(Value, out returnValue);
         return returnValue;
-    }
-
-    public string[] Keys()
-    {
-        string[] keys = new string[subParameters.Keys.Count];
-        subParameters.Keys.CopyTo(keys, 0);
-        return keys;
     }
 
     public bool ContainsKey(string key)
