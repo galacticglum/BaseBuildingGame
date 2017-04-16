@@ -32,8 +32,11 @@ public class WorldEvent
 
     public void Update(float deltaTime)
     {
-        int conditionsMet = preconditions.Sum(precondition => (int)Lua.Call(precondition, this, deltaTime).Number);
-        if (conditionsMet < preconditions.Count || executed || MaxRepeats > 0 && repeatAmount >= MaxRepeats) return;
+        if (executed || MaxRepeats > 0 && repeatAmount >= MaxRepeats) return;
+        foreach (string precondition in preconditions)
+        {
+            if (!Lua.Call(precondition, this, deltaTime).Boolean) return;
+        }
 
         repeatAmount++;
         Trigger();
