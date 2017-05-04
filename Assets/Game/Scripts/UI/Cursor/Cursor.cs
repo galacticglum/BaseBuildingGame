@@ -64,7 +64,7 @@ public class Cursor
 
     private void LoadGraphics()
     {
-        cursorTexture = Resources.Load<Texture2D>("UI/Cursors/Ship");        
+        cursorTexture = Resources.Load<Texture2D>("UI/Cursors/Ship");      
     }
 
     private void GenerateCursor()

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+// FIXME: Currently the inventory debug menu messes up the dropdown ui.
 public class InventoryDebugController
 {
     public string PendingBuildInventory { get; private set; }
@@ -8,8 +9,8 @@ public class InventoryDebugController
 
     public InventoryDebugController()
     {
-        GenerateSpawnUI();
-        GenerateInventoryButtons();
+        //GenerateSpawnUI();
+        //GenerateInventoryButtons();
     }
 
     private void GenerateSpawnUI()
@@ -20,8 +21,7 @@ public class InventoryDebugController
             layer = LayerMask.NameToLayer("UI")
         };
 
-        Canvas canvas = GameObject.Find("Canvas").GetComponent<Canvas>();
-        spawnUI.transform.SetParent(canvas.transform, false);
+        spawnUI.transform.SetParent(GameObject.Find("Canvas").transform, false);
 
         RectTransform rectTransform = spawnUI.AddComponent<RectTransform>();
         rectTransform.pivot = new Vector2(0, 0.5f);
