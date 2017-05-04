@@ -48,7 +48,14 @@ public class TileGraphicController
             Debug.LogError("TileGraphicController::OnTileChanged: tileGameObjectMap's returned GameObject is null -- did you forget to add the tile to the dictionary? Or maybe forget to unregister a callback?");
             return;
         }
-        
+
+        if (args.Tile.Type == TileType.Empty)
+        {
+            tileGameObject.SetActive(false);
+            return;
+        }
+
+        tileGameObject.SetActive(true);
         tileGameObject.GetComponent<SpriteRenderer>().sprite = SpriteManager.Current.GetSprite("Tile", args.Tile.Type.Name);
     }
 }
