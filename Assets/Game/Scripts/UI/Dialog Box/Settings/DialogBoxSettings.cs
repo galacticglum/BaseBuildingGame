@@ -132,16 +132,16 @@ public class DialogBoxSettings : DialogBox
 
     private void LoadSetting()
     {
-        musicVolume.normalizedValue = GameSettings.GetAsFloat("DialogBoxSettings_musicVolume", 0.5f);
+        musicVolume.normalizedValue = GameSettings.Get("DialogBoxSettings_musicVolume", 0.5f);
 
-        languageToggle.isOn = GameSettings.GetAsBoolean("DialogBoxSettings_langToggle", true);
-        fpsToggle.isOn = GameSettings.GetAsBoolean("DialogBoxSettings_fpsToggle", true);
-        fullScreenToggle.isOn = GameSettings.GetAsBoolean("DialogBoxSettings_fullScreenToggle", true);
+        languageToggle.isOn = GameSettings.Get("DialogBoxSettings_langToggle", true);
+        fpsToggle.isOn = GameSettings.Get("DialogBoxSettings_fpsToggle", true);
+        fullScreenToggle.isOn = GameSettings.Get("DialogBoxSettings_fullScreenToggle", true);
 
-        qualityDropdown.value = GameSettings.GetAsInt("DialogBoxSettings_qualityDropdown", 0);
-        vSyncDropdown.value = GameSettings.GetAsInt("DialogBoxSettings_vSyncDropdown", 0);
-        resolutionDropdown.value = GameSettings.GetAsInt("DialogBoxSettings_resolutionDropdown", 0);
-        aliasingDropdown.value = GameSettings.GetAsInt("DialogBoxSettings_aliasingDropdown", 0);
+        qualityDropdown.value = GameSettings.Get("DialogBoxSettings_qualityDropdown", 0);
+        vSyncDropdown.value = GameSettings.Get("DialogBoxSettings_vSyncDropdown", 0);
+        resolutionDropdown.value = GameSettings.Get("DialogBoxSettings_resolutionDropdown", 0);
+        aliasingDropdown.value = GameSettings.Get("DialogBoxSettings_aliasingDropdown", 0);
     }
 
     private void CreateResolutionDropDown()

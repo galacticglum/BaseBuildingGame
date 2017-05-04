@@ -85,7 +85,7 @@ public class WorldController : MonoBehaviour
         inventoryGraphicController = new InventoryGraphicController(inventoryUI);
         ConstructionController = new ConstructionController();
 
-        if(GameSettings.GetAsBoolean("DevTools_enabled", false))
+        if(GameSettings.Get("DevTools_enabled", false))
         {
             InventoryDebugController = new InventoryDebugController();
         }
@@ -152,8 +152,8 @@ public class WorldController : MonoBehaviour
     private void CreateEmptyWorld()
     {
         // get world size from settings
-        int width = GameSettings.GetAsInt("worldWidth", 100);
-        int height = GameSettings.GetAsInt("worldHeight", 100);
+        int width = GameSettings.Get("worldWidth", 100);
+        int height = GameSettings.Get("worldHeight", 100);
 
         World = new World(width, height);
         Camera.main.transform.position = new Vector3(World.Width / 2.0f, World.Height / 2.0f, Camera.main.transform.position.z);

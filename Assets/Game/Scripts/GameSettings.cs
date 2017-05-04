@@ -23,6 +23,39 @@ public static class GameSettings
         return defaultValue;
     }
 
+    public static int Get(string key, int defaultValue)
+    {
+        string setting = Get(key, defaultValue.ToString());
+        int value;
+
+        if (int.TryParse(setting, out value)) return value;
+
+        Debug.LogWarning("GameSettings::GetAsInt: Could not parse setting " + key + " of value " + setting + " to type int");
+        return defaultValue;
+    }
+
+    public static float Get(string key, float defaultValue)
+    {
+        string setting = Get(key, defaultValue.ToString());
+        float value;
+
+        if (float.TryParse(setting, out value)) return value;
+
+        Debug.LogWarning("GameSettings::GetAsInt: Could not parse setting " + key + " of value " + setting + " to type float");
+        return defaultValue;
+    }
+
+    public static bool Get(string key, bool defaultValue)
+    {
+        string setting = Get(key, defaultValue.ToString());
+        bool value;
+
+        if (bool.TryParse(setting, out value)) return value;
+
+        Debug.LogWarning("GameSettings::GetAsInt: Could not parse setting " + key + " of value " + setting + " to type bool");
+        return defaultValue;
+    }
+
     private static string Get(string key)
     {
         string value;
@@ -50,40 +83,6 @@ public static class GameSettings
         }
 
         Save();
-    }
-
-
-    public static int GetAsInt(string key, int defaultValue)
-    {
-        string setting = Get(key, defaultValue.ToString());
-        int value;
-
-        if (int.TryParse(setting, out value)) return value;
-
-        Debug.LogWarning("GameSettings::GetAsInt: Could not parse setting " + key + " of value " + setting + " to type int");
-        return defaultValue;
-    }
-
-    public static float GetAsFloat(string key, float defaultValue)
-    {
-        string setting = Get(key, defaultValue.ToString());
-        float value;
-
-        if (float.TryParse(setting, out value)) return value;
-
-        Debug.LogWarning("GameSettings::GetAsInt: Could not parse setting " + key + " of value " + setting + " to type float");
-        return defaultValue;
-    }
-
-    public static bool GetAsBoolean(string key, bool defaultValue)
-    {
-        string setting = Get(key, defaultValue.ToString());
-        bool value;
-
-        if (bool.TryParse(setting, out value)) return value;
-
-        Debug.LogWarning("GameSettings::GetAsInt: Could not parse setting " + key + " of value " + setting + " to type bool");
-        return defaultValue;
     }
 
     private static void Load()
