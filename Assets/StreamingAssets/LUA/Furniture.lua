@@ -188,6 +188,7 @@ function Stockpile_UpdateAction(furniture, deltaTime)
 		JobPriority.Low,
 		false
 	)
+
 	job.Description = "job_stockpile_moving_desc"
 	job.AcceptsAnyInventoryItem = true
 

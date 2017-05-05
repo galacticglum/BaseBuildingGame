@@ -43,7 +43,7 @@ public static class LocalizationTable
             return string.Format(value, additionalValues);
         }
 
-        if (!missingKeysLogged.Contains(key))
+        if (!missingKeysLogged.Contains(key) && language != "en_US")
         {
             missingKeysLogged.Add(key);
             Debug.LogError(string.Format("LocalizationTable::GetLocalization: Translation for {0} in {1} language failed! Key not in dictionary", key, language));

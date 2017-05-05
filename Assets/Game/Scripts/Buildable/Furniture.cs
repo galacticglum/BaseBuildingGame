@@ -361,7 +361,7 @@ public class Furniture : IXmlSerializable, IPrototypable, ISelectable, IContextA
             return TileEnterability.Immediate;
         }
 
-        return (TileEnterability)Lua.Call(tryEnterFunction, this).Number;
+        return Lua.Call(tryEnterFunction, this).CheckUserDataType<TileEnterability>("TryEnter");
     }
 
     public bool HasTypeTag(string typeTag)

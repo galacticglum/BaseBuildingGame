@@ -1,6 +1,6 @@
-﻿public enum TileEnterability
+﻿public enum TileEnterability : byte
 {
-    Immediate,
-    Never,
-    Wait
+    Immediate = 0,
+    Never = 1,
+    Wait = 2
 };
