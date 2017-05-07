@@ -365,14 +365,14 @@ public class OverlayMap : MonoBehaviour
         textView.GetComponent<UnityEngine.UI.LayoutElement>().minHeight = 30;
         textView.GetComponent<UnityEngine.UI.LayoutElement>().minWidth = 150;
         textView.transform.SetParent(parentPanel.transform);
-        textView.GetComponent<UnityEngine.UI.Text>().text = "Currently slected:";
+        textView.GetComponent<UnityEngine.UI.Text>().text = "Currently selected:";
         textView.GetComponent<UnityEngine.UI.Text>().resizeTextForBestFit = true;
         textView.GetComponent<UnityEngine.UI.Text>().font = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
         colorMapView = new GameObject();
         colorMapView.AddComponent<UnityEngine.UI.Image>();
         colorMapView.transform.SetParent(parentPanel.transform);
-        colorMapView.AddComponent<UnityEngine.UI.Text>();
+        //colorMapView.AddComponent<UnityEngine.UI.Text>();
         colorMapView.AddComponent<UnityEngine.UI.LayoutElement>();
         colorMapView.GetComponent<UnityEngine.UI.LayoutElement>().minHeight = 30;
         colorMapView.GetComponent<UnityEngine.UI.LayoutElement>().minWidth = 150;
