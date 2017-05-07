@@ -31,10 +31,6 @@ public class RoomDetailInspector : MonoBehaviour
             return;
         }
 
-        string result = mouseOverTile.Room.GasNames.Aggregate("", (current, gasName) => current + 
-        string.Format("{0}: ({1}) {2:0.000} atm ({3:0.0}%)\n", gasName, mouseOverTile.Room.GetModifiedGases(gasName), 
-        mouseOverTile.Room.GetGasPressure(gasName), mouseOverTile.Room.GetGasFraction(gasName) * 100));
-
-        text.text = result;
+        text.text = "";
     }
 }

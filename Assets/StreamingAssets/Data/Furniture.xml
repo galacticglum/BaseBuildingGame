@@ -61,7 +61,6 @@
         </Params>
 
         <Action event="FurnitureUpdate" functionName="OnUpdate_Door" />
-        <Action event="FurnitureUpdate" functionName="OnUpdate_Leak_Door" />
 
         <IsEnterable FunctionName="IsEnterable_Door" />
         <GetSpriteName FunctionName="GetSpriteName_Door" />
@@ -99,7 +98,6 @@
         </Params>
 
         <Action event="FurnitureUpdate" functionName="OnUpdate_Door" />
-        <Action event="FurnitureUpdate" functionName="OnUpdate_Leak_Airlock" />
 
         <IsEnterable FunctionName="IsEnterable_Door" />
         <GetSpriteName FunctionName="GetSpriteName_Airlock" />
@@ -112,7 +110,7 @@
 
     <Furniture objectType="Stockpile">
         <Name>Stockpile</Name>
-        <Description>Characters will brings inventory here for storage.</Description>
+        <Description>Characters will bring inventory here for storage.</Description>
         <TypeTag>Storage</TypeTag>
         <MovementCost>1</MovementCost>
         <LinksToNeighbours>true</LinksToNeighbours>
@@ -123,39 +121,6 @@
 
         <LocalizationCode>furn_stockpile</LocalizationCode>
         <UnlocalizedDescription>furn_stockpile_desc</UnlocalizedDescription>
-
-    </Furniture>
-
-
-    <Furniture objectType="Oxygen Generator">
-        <Name>Oxygen Generator</Name>
-        <Description>Create O2 in the room in which it is built.</Description>
-        <TypeTag>Generator</TypeTag>
-        <MovementCost>10</MovementCost>
-        <Width>2</Width>
-        <Height>2</Height>
-        <Power>-1</Power>
-
-        <BuildingJob jobTime="0" />
-
-        <Params>
-            <!-- <Param name="gas_name" value="O2" /> -->
-            <Param name="gas_limit" value="0.2" />
-            <Param name="gas_per_second" value="0.16" />
-            <Param name="gas_gen">
-                <Param name="O2">
-                    <Param name="gas_limit" value="0.2" />
-                </Param>
-                <Param name="N2">
-                    <Param name="gas_limit" value="0.8" />
-                </Param>
-            </Param>
-        </Params>
-
-        <Action event="FurnitureUpdate" functionName="OnUpdate_GasGenerator" />
-
-        <LocalizationCode>furn_oxygen_generator</LocalizationCode>
-        <UnlocalizedDescription>furn_oxygen_generator_desc</UnlocalizedDescription>
 
     </Furniture>
 
@@ -344,33 +309,6 @@
 
         <LocalizationCode>furn_small_landing_pad</LocalizationCode>
         <UnlocalizedDescription>furn_small_landing_pad_desc</UnlocalizedDescription>
-
-    </Furniture>
-
-
-    <Furniture objectType="compressor_oxygen">
-        <Name>Oxygen Compressor</Name>
-        <Description>Stores and releases oxygen as needed</Description>
-        <MovementCost>5</MovementCost>
-        <Width>2</Width>
-        <Height>2</Height>
-
-        <BuildingJob jobTime="2" />
-
-        <Params>
-            <!-- <Param name="gas_name" value="O2" /> -->
-            <Param name="max_gas_content" value="5" />
-            <Param name="gas_content" value="0" />
-            <Param name="give_threshold" value="0.005" />
-            <Param name="take_threshold" value="0.01" />
-            <Param name="flow_rate" value="0.1" />
-        </Params>
-
-        <Action event="FurnitureUpdate" functionName="OxygenCompressor_OnUpdate" />
-        <GetSpriteName FunctionName="OxygenCompressor_GetSpriteName" />
-
-        <LocalizationCode>furn_oxygen_compressor</LocalizationCode>
-        <UnlocalizedDescription>furn_oxygen_compressor_desc</UnlocalizedDescription>
 
     </Furniture>
 

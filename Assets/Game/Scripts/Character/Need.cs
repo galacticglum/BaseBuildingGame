@@ -96,10 +96,6 @@ public class Need : IPrototypable
         if (luaOnly) return;
 
         Amount += growthRate * deltaTime;
-        if (Character != null && Character.CurrentTile.Room != null && Character.CurrentTile.Room.GetGasPressure("O2") < 0.15)
-        {
-            Amount += (vacuumGrowthRate - vacuumGrowthRate * (Character.CurrentTile.Room.GetGasPressure("O2") * 5)) * deltaTime;
-        }
 
         if (Character != null && Amount > 75 && Character.Job.IsNeed == false)
         {

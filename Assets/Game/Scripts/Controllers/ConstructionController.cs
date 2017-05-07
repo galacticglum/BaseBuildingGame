@@ -129,31 +129,6 @@ public class ConstructionController
             case ConstructionMode.Deconstruct:
                 if (tile.Furniture != null)
                 {
-                    if (tile.Furniture.HasTypeTag("Wall"))
-                    {
-                        Tile[] neighbors = tile.GetNeighbours(); 
-                        int pressuredNeighbors = 0;
-                        int vacuumNeighbors = 0;
-                        foreach (Tile neighbor in neighbors)
-                        {
-                            if (neighbor == null || neighbor.Room == null) continue;
-
-                            if (neighbor.Room == World.Current.RoomManager.OutsideRoom || neighbor.Room.Pressure.IsZero())
-                            {
-                                vacuumNeighbors++;
-                            }
-                            else
-                            {
-                                pressuredNeighbors++;
-                            }
-                        }
-
-                        if (vacuumNeighbors > 0 && pressuredNeighbors > 0)
-                        {
-                            return;
-                        }
-                    }
-
                     tile.Furniture.Deconstruct();
                 }
                 else if (tile.PendingBuildJob != null)

@@ -1,24 +1,3 @@
-function OnUpdate_GasGenerator(furniture, deltaTime)
-    if furniture.HasPower() == false then
-        return
-    end
-
-	if furniture.Tile.Room == nil then
-		return "Furniture's room was null."
-	end
-
-    local keys = furniture.Parameters["gas_gen"].Keys
-    for discard, key in pairs(keys) do
-        if furniture.Tile.room.GetGasPressure(key) < furniture.Parameters["gas_gen"][key]["gas_limit"].Float() then
-            furniture.Tile.room.ModifyGasValue(key, furniture.Parameters["gas_per_second"].Float() * deltaTime * furniture.Parameters["gas_gen"][key]["gas_limit"].Float())
-        else
-            -- Do we go into a standby mode to save power?
-        end
-    end
-
-	return
-end
-
 function OnUpdate_Door(furniture, deltaTime)
 	if furniture.Parameters["is_opening"].Float() >= 1.0 then
         -- FIXME: Maybe a door open speed parameter?
@@ -32,16 +11,6 @@ function OnUpdate_Door(furniture, deltaTime)
 
 	furniture.Parameters["openness"].SetValue(Mathf.Clamp01(furniture.Parameters["openness"].Float()))
 	furniture.OnFurnitureChanged(FurnitureEventArgs.new(furniture));
-end
-
-function OnUpdate_Leak_Door(furniture, deltaTime)
-    -- FIXME: We should not be hardcoding the gas-leak speed, instead should be a parameter of the world/furniture/room?
-	furniture.Tile.EqualizeGas(deltaTime * 10.0 * (furniture.Parameters["openness"].Float() + 0.1))
-end
-
-function OnUpdate_Leak_Airlock(furniture, deltaTime)
-    -- FIXME: We should not be hardcoding the gas-leak speed, instead should be a parameter of the world/furniture/room?
-	furniture.Tile.EqualizeGas(deltaTime * 10.0 * (furniture.Parameters["openness"].Float()))
 end
 
 function IsEnterable_Door(furniture)
@@ -523,35 +492,4 @@ end
 function Heater_UpdateTemperature(furniture, deltaTime)
     -- FIXME: Don't hardcode the heater's "target" temperature. 
 	World.Current.Temperature.SetTemperature(furniture.tile.X, furniture.tile.Y, 300)
-end
-
-function OxygenCompressor_OnUpdate(furniture, deltaTime)
-    local room = furniture.Tile.Room
-    local pressure = room.GetGasPressure("O2")
-    local gasAmount = furniture.Parameters["flow_rate"].ToFloat() * deltaTime
-
-    if pressure < furniture.Parameters["give_threshold"].ToFloat() then
-        if furniture.Parameters["gas_content"].ToFloat() > 0 then
-            furniture.Parameters["gas_content"].ModifyFloatValue(-gasAmount)
-            room.ModifyGasValue("O2", gasAmount / room.Size)
-            furniture.OnFurnitureChanged(FurnitureEventArgs.new(furniture))
-        end
-    elseif pressure > furniture.Parameters["take_threshold"].ToFloat() then
-        if furniture.Parameters["gas_content"].ToFloat() < furniture.Parameters["max_gas_content"].ToFloat() then
-            furniture.Parameters["gas_content"].ModifyFloatValue(gasAmount)
-            room.ModifyGasValue("O2", -gasAmount / room.Size)
-            furniture.OnFurnitureChanged(FurnitureEventArgs.new(furniture))
-        end
-    end
-end
-
-function OxygenCompressor_GetSpriteName(furniture)
-    local baseName = furniture.objectType
-    local suffix = 0
-    if furniture.Parameters["gas_content"].ToFloat() > 0 then
-        idxAsFloat = 8 * (furniture.Parameters["gas_content"].ToFloat() / furniture.Parameters["max_gas_content"].ToFloat())
-        suffix = Mathf.FloorToInt(idxAsFloat)
-    end
-
-    return baseName .. "_" .. suffix
 end

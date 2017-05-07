@@ -186,11 +186,6 @@ public class Tile :IXmlSerializable, ISelectable
         return Furniture != null ? Furniture.TryEnter() : TileEnterability.Immediate;
     }
 
-    public void EqualizeGas(float leakFactor)
-    {
-        Room.EqualizeGas(this, leakFactor);
-    }
-
     public static void OnJobComplete(object sender, JobEventArgs args)
     {
         args.Job.Tile.Type = args.Job.TileType;
